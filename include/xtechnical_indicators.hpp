@@ -48,13 +48,13 @@ namespace xtechnical_indicators {
      */
     template <typename T1, typename T2>
     int calculate_sma(
-            std::vector<T1> &input,
+            T1 &input,
             T2 &output,
             const size_t period,
             const size_t start_pos = 0) {
-        if(input.size() <= start_pos + period)
-            return INVALID_PARAMETER;
-        T2 sum = std::accumulate(input.begin() + start_pos, input.begin() + start_pos + period, T1(0));
+        if(input.size() <= start_pos + period) return INVALID_PARAMETER;
+        using NumType = typename T1::value_type;
+        auto sum = std::accumulate(input.begin() + start_pos, input.begin() + start_pos + period, NumType(0));
         output = sum / (T2)period;
         return OK;
     }
@@ -67,21 +67,48 @@ namespace xtechnical_indicators {
      * \return вернет 0 в случае успеха
      */
     template<typename T1, typename T2>
-    int calculate_standard_deviation(
-            std::vector<T1> &input,
+    int calculate_std_dev(
+            T1 &input,
             T2 &output,
             const size_t period,
             const size_t start_pos = 0) {
-        if(input.size() < start_pos + period)
-            return INVALID_PARAMETER;
-        T1 mean = std::accumulate(input.begin() + start_pos, input.begin() + start_pos + period, T1(0));
-        mean /= (T1)period;
+        if(input.size() < start_pos + period)return INVALID_PARAMETER;
+        using NumType = typename T1::value_type;
+        auto mean = std::accumulate(input.begin() + start_pos, input.begin() + start_pos + period, NumType(0));
+        mean /= (NumType)period;
         double _std_dev = 0;
         for(int i = 0; i < (int)input.size(); i++) {
             double diff = (input[i] - mean);
             _std_dev +=  diff * diff;
         }
         output = std::sqrt(_std_dev / (T2)(period - 1));
+        return OK;
+    }
+
+    /** @brief Расчитать стандартное отклонение и среднее значение
+     * \param input входные данные индикатора
+     * \param output стандартное отклонение
+     * \param period период STD
+     * \param start_pos начальная позиция в массиве
+     * \return вернет 0 в случае успеха
+     */
+    template<typename T1, typename T2>
+    int calculate_std_dev_and_mean(
+            T1 &input,
+            T2 &std_dev,
+            T2 &mean,
+            const size_t period,
+            const size_t start_pos = 0) {
+        if(input.size() < start_pos + period)return INVALID_PARAMETER;
+        using NumType = typename T1::value_type;
+        mean = (T2)std::accumulate(input.begin() + start_pos, input.begin() + start_pos + period, NumType(0));
+        mean /= (NumType)period;
+        double _std_dev = 0;
+        for(int i = 0; i < (int)input.size(); i++) {
+            double diff = (input[i] - mean);
+            _std_dev +=  diff * diff;
+        }
+        std_dev = std::sqrt(_std_dev / (T2)(period - 1));
         return OK;
     }
 
@@ -181,7 +208,7 @@ namespace xtechnical_indicators {
     class SMA : BaseIndicator<T> {
     private:
         RingBuffer<T, SIZE> data_;
-        T last_data_;
+        T last_data_ = 0;
         int period_ = 0;
         int pos_ = 0;
     public:
@@ -201,7 +228,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in, T &out) {
+        int update(const T &in, T &out) {
             if(period_ == 0) {
                 out = 0;
                 return NO_INIT;
@@ -211,7 +238,7 @@ namespace xtechnical_indicators {
                 if(data_.count() == period_) {
                     //T sum = std::accumulate(data_.data.begin(), data_.data.end(), T(0));
                     T sum = data_.get_sum();
-                    last_data_ = sum ;
+                    last_data_ = sum;
                     out = sum / (T)period_;
                     pos_ = 0;
                     return OK;
@@ -232,7 +259,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in, T &out) {
+        int test(const T &in, T &out) {
             if(period_ == 0) {
                 out = 0;
                 return NO_INIT;
@@ -447,7 +474,7 @@ namespace xtechnical_indicators {
             EMA<T>::a = 1.0/(T)EMA<T>::period_;
         }
     };
-//------------------------------------------------------------------------------
+
     /** \brief Скользящее окно
      */
     template <typename T>
@@ -847,7 +874,7 @@ namespace xtechnical_indicators {
         INDICATOR_TYPE iD;
         bool is_init_ = false;
         bool is_update_ = false;
-        T prev_;
+        T prev_ = 0;
     public:
         RSI() {}
 
@@ -873,7 +900,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in, T &out) {
+        int update(const T &in, T &out) {
             if(!is_init_) {
                 return NO_INIT;
             }
@@ -914,7 +941,7 @@ namespace xtechnical_indicators {
          * \param in сигнал на входе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in) {
+        int update(const T &in) {
             if(!is_init_) {
                 return NO_INIT;
             }
@@ -946,7 +973,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in, T &out) {
+        int test(const T &in, T &out) {
             if(!is_init_) {
                 return NO_INIT;
             }
@@ -984,6 +1011,22 @@ namespace xtechnical_indicators {
         }
     };
 
+    template <class T1, class T2>
+    int calc_ring_rsi(T1 &in, T2 &out, const int period) {
+        if( in.size() == 0 || (int)in.size() < period ||
+            out.size() != in.size())
+            return INVALID_PARAMETER;
+        using NumType = typename T1::value_type;
+        RSI<NumType,SMA<NumType>> iRSI(period);
+        for(size_t i = in.size() - period; i < in.size(); ++i) {
+            iRSI.update(in[i]);
+        }
+        for(size_t i = 0; i < in.size(); ++i) {
+            iRSI.update(in[i], out[i]);
+        }
+        return OK;
+    }
+
     /** \brief Линии Боллинджера
      */
     template <typename T>
@@ -1008,7 +1051,7 @@ namespace xtechnical_indicators {
          * \param period период  индикатора
          * \param factor множитель стандартного отклонения
          */
-        void init(int period, T factor) {
+        void init(const int period, const T factor) {
             period_ = period;
             d_ = factor;
             data_.clear();
@@ -1021,7 +1064,7 @@ namespace xtechnical_indicators {
          * \param bl нижняя полоса боллинджера
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in, T &tl, T &ml, T &bl) {
+        int update(const T &in, T &tl, T &ml, T &bl) {
             if(period_ == 0) {
                 tl = 0;
                 ml = 0;
@@ -1059,7 +1102,7 @@ namespace xtechnical_indicators {
          * \param std_dev стандартное отклонение
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in, T &ml, T &std_dev) {
+        int update(const T &in, T &ml, T &std_dev) {
             if(period_ == 0) {
                 ml = 0;
                 std_dev = 0;
@@ -1091,7 +1134,7 @@ namespace xtechnical_indicators {
          * \param in сигнал на входе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in) {
+        int update(const T &in) {
             if(period_ == 0) {
                 return NO_INIT;
             }
@@ -1115,7 +1158,7 @@ namespace xtechnical_indicators {
          * \param bl нижняя полоса боллинджера
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in, T &tl, T &ml, T &bl) {
+        int test(const T &in, T &tl, T &ml, T &bl) {
             if(period_ == 0) {
                 tl = 0;
                 ml = 0;
@@ -1155,7 +1198,7 @@ namespace xtechnical_indicators {
          * \param std_dev стандартное отклонение
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(T in, T &ml, T &std_dev) {
+        int test(const T &in, T &ml, T &std_dev) {
             if(period_ == 0) {
                         ml = 0;
                 std_dev = 0;
@@ -1191,6 +1234,22 @@ namespace xtechnical_indicators {
         }
     };
 
+    template <class T1, class T2>
+    int calc_ring_bollinger(T1 &in, T2 &tl, T2 &ml, T2 &bl, const int period, const double std_dev_factor) {
+        if( in.size() == 0 || (int)in.size() < period ||
+            tl.size() != bl.size() || tl.size() != in.size() || ml.size() != in.size())
+            return INVALID_PARAMETER;
+        using NumType = typename T1::value_type;
+        BollingerBands<NumType> iBB(period, std_dev_factor);
+        for(size_t i = in.size() - period; i < in.size(); ++i) {
+            iBB.update(in[i]);
+        }
+        for(size_t i = 0; i < in.size(); ++i) {
+            iBB.update(in[i], tl[i], ml[i], bl[i]);
+        }
+        return OK;
+    }
+
     /** \brief Средняя скорость
      */
     template <typename T>
@@ -1220,7 +1279,7 @@ namespace xtechnical_indicators {
             std::vector<T> mw_out;
             int err = iMW.update(in, mw_out);
             if(err == OK) {
-                std::vector<T> mw_diff;
+                std::vector<T> mw_diff(mw_out.size());
                 xtechnical_normalization::calculate_difference(mw_out, mw_diff);
                 T sum = std::accumulate(mw_diff.begin(), mw_diff.end(), T(0));
                 out = sum /(T)mw_diff.size();
@@ -1241,7 +1300,7 @@ namespace xtechnical_indicators {
             std::vector<T> mw_out;
             int err = iMW.test(in, mw_out);
             if(err == OK) {
-                std::vector<T> mw_diff;
+                std::vector<T> mw_diff(mw_out.size());
                 xtechnical_normalization::calculate_difference(mw_out, mw_diff);
                 T sum = std::accumulate(mw_diff.begin(), mw_diff.end(), T(0));
                 out = sum /(T)mw_diff.size();
@@ -1412,7 +1471,7 @@ namespace xtechnical_indicators {
                 const int num_symbol_1,
                 const int num_symbol_2,
                 const int correlation_type = SPEARMAN_RANK) {
-            std::vector<T> norm_vec_1, norm_vec_2;
+            std::vector<T> norm_vec_1(period_), norm_vec_2(period_);
             if(is_test_) {
                 if(data_test_[num_symbol_1].size() == (size_t)period_ &&
                     data_test_[num_symbol_2].size() == (size_t)period_) {
