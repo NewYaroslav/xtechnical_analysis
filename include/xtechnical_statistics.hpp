@@ -70,7 +70,7 @@ namespace xtechnical_statistics {
      * \return медиана
      */
     template<class T1, class T2>
-    T1 calc_median(const T2 array_data) {
+    T1 calc_median(T2 array_data) {
         size_t size = array_data.size();
         std::sort(array_data.begin(),array_data.end());
         return array_data[size/2];

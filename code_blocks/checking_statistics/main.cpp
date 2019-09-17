@@ -1,6 +1,7 @@
 #include <iostream>
 #include "xtechnical_statistics.hpp"
 #include <array>
+#include <vector>
 
 int main() {
     std::cout << "Hello world!" << std::endl;
@@ -22,5 +23,10 @@ int main() {
     std::array<double,6> test_data2 = {1.1,1.1,1.1,1.1,1.1,1.1};
     double geometric_mean = xtechnical_statistics::calc_geometric_mean<double>(test_data2);
     std::cout << "geometric mean: " << geometric_mean << std::endl;
+
+    std::array<double,3> test_out;
+    std::vector<double> test_data3 = {1.1,1.1,1.1,1.1,1.1,1.1};
+    test_out[0] = xtechnical_statistics::calc_median<double>(test_data3);
+    std::cout << "median: " << test_out[0] << std::endl;
     return 0;
 }
