@@ -1121,7 +1121,7 @@ namespace xtechnical_indicators {
             ml = std::accumulate(data_.begin(), data_.end(), T(0));
             ml /= (T)period_;
             T sum = 0;
-            for (int i = 0; i < period_; i++) {
+            for (size_t i = 0; i < period_; ++i) {
                 T diff = (data_[i] - ml);
                 sum +=  diff * diff;
             }
@@ -1157,7 +1157,7 @@ namespace xtechnical_indicators {
             ml = std::accumulate(data_.begin(), data_.end(), T(0));
             ml /= (T)period_;
             T sum = 0;
-            for (int i = 0; i < period_; i++) {
+            for (size_t i = 0; i < period_; ++i) {
                 T diff = (data_[i] - ml);
                 sum +=  diff * diff;
             }
@@ -1216,7 +1216,7 @@ namespace xtechnical_indicators {
             ml = std::accumulate(data_test.begin(), data_test.end(), T(0));
             ml /= (T)period_;
             T sum = 0;
-            for (int i = 0; i < period_; i++) {
+            for (size_t i = 0; i < period_; ++i) {
                 T diff = (data_test[i] - ml);
                 sum +=  diff * diff;
             }
@@ -1254,7 +1254,7 @@ namespace xtechnical_indicators {
             ml = std::accumulate(data_test.begin(), data_test.end(), T(0));
             ml /= (T)period_;
             T sum = 0;
-            for (int i = 0; i < period_; i++) {
+            for (size_t i = 0; i < period_; ++i) {
                 T diff = (data_test[i] - ml);
                 sum +=  diff * diff;
             }
