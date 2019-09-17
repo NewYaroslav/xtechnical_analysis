@@ -253,6 +253,30 @@ namespace xtechnical_indicators {
             return INDICATOR_NOT_READY_TO_WORK;
         }
 
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T &in) {
+            if(period_ == 0) return NO_INIT;
+            if(data_.count() < period_) {
+                data_.push(in);
+                if(data_.count() == period_) {
+                    //T sum = std::accumulate(data_.data.begin(), data_.data.end(), T(0));
+                    T sum = data_.get_sum();
+                    last_data_ = sum;
+                    pos_ = 0;
+                    return OK;
+                }
+            } else {
+                last_data_ = last_data_ + (in - data_[0]);
+                data_.push(in);
+                return OK;
+            }
+            return INDICATOR_NOT_READY_TO_WORK;
+        }
+
         /** \brief Протестировать индикатор
          * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
          * \param in сигнал на входе
