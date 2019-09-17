@@ -1275,7 +1275,7 @@ namespace xtechnical_indicators {
     int calc_ring_bollinger(T1 &in, T2 &tl, T2 &ml, T2 &bl, const size_t &period, const double &std_dev_factor) {
         size_t input_size = in.size();
         size_t tl_size = tl.size();
-        if( input_size == 0 || (int)input_size < period ||
+        if( input_size == 0 || input_size < period ||
             tl_size != bl.size() || tl_size != input_size || ml.size() != input_size)
             return INVALID_PARAMETER;
         using NumType = typename T1::value_type;
