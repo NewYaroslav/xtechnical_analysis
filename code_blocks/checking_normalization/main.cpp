@@ -43,5 +43,12 @@ int main() {
     for(size_t i = 0; i < out_data.size(); ++i) {
         std::cout << out_data[i] << std::endl;
     }
+
+
+    xtechnical_normalization::calc_automatic_gain_control<xtechnical_indicators::LowPassFilter<double>>(test_data, out_data, 3);
+    std::cout << "automatic_gain_control:" << std::endl;
+    for(size_t i = 0; i < out_data.size(); ++i) {
+        std::cout << out_data[i] << std::endl;
+    }
     return 0;
 }

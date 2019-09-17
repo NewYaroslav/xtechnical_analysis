@@ -41,8 +41,10 @@ namespace xtechnical_normalization {
      * \return вернет 0 в случае успеха, иначе см. xtechnical_common.hpp
      */
     template<class T1, class T2>
-    int calculate_min_max(T1 &in, T2 &out, const int &type) {
-        if(in.size() == 0 || out.size() != in.size()) return INVALID_PARAMETER;
+    int calculate_min_max(const T1 &in, T2 &out, const int &type) {
+        size_t input_size = in.size();
+        size_t output_size = out.size();
+        if(input_size == 0 || output_size != input_size) return INVALID_PARAMETER;
         auto it_max_data = std::max_element(in.begin(), in.end());
         auto it_min_data = std::min_element(in.begin(), in.end());
         auto max_data = in[0];
@@ -53,7 +55,7 @@ namespace xtechnical_normalization {
         }
         auto ampl = max_data - min_data;
         if(ampl != 0) {
-            for(size_t i = 0; i < in.size(); i++) {
+            for(size_t i = 0; i < input_size; i++) {
                 out[i] = type == 0 ? (double)(in[i] - min_data) / ampl : 2.0 * ((double)(in[i] - min_data) / ampl) - 1.0;
             }
         } else {
@@ -69,20 +71,22 @@ namespace xtechnical_normalization {
      * \return вернет 0 в случае успеха, иначе см. xtechnical_common.hpp
      */
     template<class T1, class T2>
-    int calculate_zscore(T1 &in, T2 &out, const double &d = 1.0) {
-        if(in.size() == 0 || out.size() != in.size()) return INVALID_PARAMETER;
+    int calculate_zscore(const T1 &in, T2 &out, const double &d = 1.0) {
+        size_t input_size = in.size();
+        size_t output_size = out.size();
+        if(input_size == 0 || output_size != input_size) return INVALID_PARAMETER;
         using NumType = typename T1::value_type;
         auto mean = std::accumulate(in.begin(), in.end(), NumType(0));
-        mean /= (NumType)in.size();
+        mean /= (NumType)input_size;
         auto diff = 0;
-        for(size_t k = 0; k < in.size(); ++k) {
+        for(size_t k = 0; k < input_size; ++k) {
             diff += ((in[k] - mean) * (in[k] - mean));
         }
 
-        auto std_dev = diff > 0 ? std::sqrt(diff / (NumType)(in.size() - 1)) : 0.0;
+        auto std_dev = diff > 0 ? std::sqrt(diff / (NumType)(input_size - 1)) : 0.0;
 
         double dix = d * std_dev;
-        for(size_t k = 0; k < in.size(); ++k) {
+        for(size_t k = 0; k < input_size; ++k) {
             out[k] = dix != 0 ? (in[k] - mean) / dix : 0.0;
             if(out[k] > 1) out[k] = 1;
             if(out[k] < -1) out[k] = -1;
@@ -96,9 +100,11 @@ namespace xtechnical_normalization {
      * \return вернет 0 в случае успеха, иначе см. xtechnical_common.hpp
      */
     template<class T1, class T2>
-    int calculate_difference(T1 &in, T2 &out) {
-        if(in.size() < 2 || out.size() < (in.size() - 1)) return INVALID_PARAMETER;
-        for(size_t i = 1; i < in.size(); i++) {
+    int calculate_difference(const T1 &in, T2 &out) {
+        size_t input_size = in.size();
+        size_t output_size = out.size();
+        if(input_size < 2 || output_size < (input_size - 1)) return INVALID_PARAMETER;
+        for(size_t i = 1; i < input_size; i++) {
             out[i - 1] = in[i] - in[i - 1];
         }
         return OK;
@@ -106,13 +112,16 @@ namespace xtechnical_normalization {
 
     /** \brief Нормализовать амплитуду
      * \param in входные данные
-     * \param out получившееся данные
+     * \param out обработанные данные
      * \param max_amplitude максимальная амплитуда
      * \return вернет 0 в случае успеха, иначе см. xtechnical_common.hpp
      */
     template<class T1, class T2, class T3>
-    int normalize_amplitudes(T1 &in, T2 &out, const T3 &max_amplitude) {
-        if(in.size() == 0 || out.size() != in.size()) {
+    int normalize_amplitudes(const T1 &in, T2 &out, const T3 &max_amplitude) {
+        size_t input_size = in.size();
+        size_t output_size = out.size();
+
+        if(input_size == 0 || output_size  != input_size) {
             return INVALID_PARAMETER;
         }
 
@@ -121,7 +130,7 @@ namespace xtechnical_normalization {
         auto max_data_ampl = std::max(abs(min_data),abs(max_data));
         if(max_data_ampl == 0) return OK;
         auto coeff = max_amplitude/max_data_ampl;
-        for(size_t i = 0; i < in.size(); i++) {
+        for(size_t i = 0; i < input_size; i++) {
             out[i] = coeff * in[i];
         }
         return OK;
@@ -129,14 +138,45 @@ namespace xtechnical_normalization {
 
     /** \brief Логарифм от данных
      * \param in входные данные
-     * \param out получившееся данные
-     * \return вернет 0 в случае успеха
+     * \param out обработанные данные
+     * \return вернет 0 в случае успеха, иначе см. xtechnical_common.hpp
      */
     template<class T1, class T2>
-    int calculate_log(T1 &in, T2 &out) {
-        if(in.size() == 0 || out.size() != in.size()) return INVALID_PARAMETER;
-        for(size_t i = 0; i < in.size(); i++) {
+    int calculate_log(const T1 &in, T2 &out) {
+        size_t input_size = in.size();
+        size_t output_size = out.size();
+        if(input_size == 0 || output_size != input_size) return INVALID_PARAMETER;
+        for(size_t i = 0; i < input_size; i++) {
             out[i] = std::log(in[i]);
+        }
+        return OK;
+    }
+
+    /** \brief Посчитать автоматическую регулировку усиления
+     * Данная функция может произвести регулировку усиления сигнала в массиве при помощи
+     * указанного индикатора. Советую использовать ФНЧ.
+     * \param in входные данные
+     * \param out обработанные данные
+     * \param period период индикатора
+     * \param is_looped использовать зацикленный сигнал
+     * \return вернет 0 в случае успеха, иначе см. xtechnical_common.hpp
+     */
+    template<class T1, class T2>
+    int calc_automatic_gain_control(const T2 &in, T2 &out, const size_t &period, const bool &is_looped = true) {
+        size_t input_size = in.size();
+        size_t output_size = out.size();
+        if(input_size == 0 || output_size != input_size || period > input_size) return INVALID_PARAMETER;
+        using NumType = typename T2::value_type;
+        T1 filter(period);
+        if(is_looped) {
+            for(size_t i = input_size - period; i < input_size; ++i) {
+                filter.update(in[i]);
+            }
+        }
+        for(size_t i = 0; i < input_size; ++i) {
+            NumType temp = 0;
+            filter.update(in[i], temp);
+            out[i] = in[i]/temp;
         }
         return OK;
     }

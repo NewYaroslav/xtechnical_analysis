@@ -119,18 +119,18 @@ namespace xtechnical_indicators {
     public:
         T data[SIZE];
     private:
-        int pos = 0;
-        int data_size = 0;
-        int read_count = 0;
+        size_t pos = 0;
+        size_t data_size = 0;
+        size_t read_count = 0;
     public:
         RingBuffer() {};
 
-        RingBuffer(const size_t size) {
+        RingBuffer(const size_t &size) {
             //data.resize(size);
             data_size = size;
         }
 
-        void resize(const size_t size) {
+        void resize(const size_t &size) {
             //data.resize(size);
             data_size = size;
         }
@@ -143,7 +143,7 @@ namespace xtechnical_indicators {
             return read_count;
         }
 
-        void push(T value) {
+        void push(const T &value) {
             data[pos] = value;
             pos =(pos + 1) % data_size;
             if(read_count < data_size) read_count++;
@@ -159,11 +159,11 @@ namespace xtechnical_indicators {
             read_count = 0;
         }
 
-        inline T& operator[] (int i) {
+        inline T& operator[] (size_t i) {
             return data[(pos + i) % data_size];
         }
 
-        inline const T operator[] (int i)const {
+        inline const T operator[] (size_t i)const {
             return data[(pos + i) % data_size];
         }
 
@@ -209,15 +209,15 @@ namespace xtechnical_indicators {
     private:
         RingBuffer<T, SIZE> data_;
         T last_data_ = 0;
-        int period_ = 0;
-        int pos_ = 0;
+        size_t period_ = 0;
+        size_t pos_ = 0;
     public:
         SMA() {};
 
         /** \brief Инициализировать простую скользящую среднюю
          * \param period период
          */
-        SMA(const int period) : period_(period) {
+        SMA(const size_t &period) : period_(period) {
             if(period_ < 0)
                 period_ = -period_;
             data_.resize(period_);
@@ -319,13 +319,13 @@ namespace xtechnical_indicators {
     class WMA : BaseIndicator<T> {
     private:
         std::vector<T> data_;
-        int period_ = 0;
+        size_t period_ = 0;
     public:
         WMA() {};
         /** \brief Инициализировать взвешенное скользящее среднее
          * \param period период
          */
-        WMA(const int period) : period_(period) {
+        WMA(const size_t &period) : period_(period) {
             if(period_ < 0)
                 period_ = -period_;
             data_.reserve(period_);
@@ -336,7 +336,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in, T &out) {
+        int update(const T &in, T &out) {
             if(period_ == 0) {
                 out = 0;
                 return NO_INIT;
@@ -371,7 +371,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in, T &out) {
+        int test(const T &in, T &out) {
             if(period_ == 0) {
                 out = 0;
                 return NO_INIT;
@@ -416,14 +416,14 @@ namespace xtechnical_indicators {
         std::vector<T> data_;
         T last_data_;
         T a;
-        int period_ = 0;
+        size_t period_ = 0;
     public:
         EMA() {};
 
         /** \brief Инициализировать экспоненциально взвешенное скользящее среднее
          * \param period период
          */
-        EMA(const int period) : period_(period) {
+        EMA(const size_t &period) : period_(period) {
             if(period_ < 0)
                 period_ = -period_;
             data_.reserve(period_);
@@ -435,7 +435,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in, T &out) {
+        int update(const T &in, T &out) {
             if(period_ == 0) {
                 out = 0;
                 return NO_INIT;
@@ -461,7 +461,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in, T &out) {
+        int test(const T &in, T &out) {
             if(period_ == 0) {
                 out = 0;
                 return NO_INIT;
@@ -491,7 +491,7 @@ namespace xtechnical_indicators {
         /** \brief Инициализировать модифицированное скользящее среднее
          * \param period период
          */
-        MMA(const int period) : EMA<T>::period_(period) {
+        MMA(const size_t &period) : EMA<T>::period_(period) {
             if(EMA<T>::period_ < 0)
                     EMA<T>::period_ = -EMA<T>::period_;
             EMA<T>::data_.reserve(EMA<T>::period_);
@@ -506,16 +506,14 @@ namespace xtechnical_indicators {
     private:
         std::vector<T> data_;
         std::vector<T> data_test_;
-        int period_ = 0;
+        size_t period_ = 0;
         bool is_test_ = false;
     public:
         MW() {};
         /** \brief Инициализировать скользящее окно
          * \param period период
          */
-        MW(const int period) : period_(period) {
-            if(period_ < 0)
-                period_ = -period_;
+        MW(const size_t &period) : period_(period) {
             data_.reserve(period_);
         }
 
@@ -524,14 +522,12 @@ namespace xtechnical_indicators {
          * \param out массив на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in, std::vector<T> &out) {
+        int update(const T &in, std::vector<T> &out) {
             is_test_ = false;
-            if(period_ == 0) {
-                return NO_INIT;
-            }
-            if(data_.size() < (size_t)period_) {
+            if(period_ == 0) return NO_INIT;
+            if(data_.size() < period_) {
                 data_.push_back(in);
-                if(data_.size() == (size_t)period_) {
+                if(data_.size() == period_) {
                     out = data_;
                     return OK;
                 }
@@ -548,14 +544,12 @@ namespace xtechnical_indicators {
          * \param in сигнал на входе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in) {
+        int update(const T &in) {
             is_test_ = false;
-            if(period_ == 0) {
-                return NO_INIT;
-            }
-            if(data_.size() < (size_t)period_) {
+            if(period_ == 0) return NO_INIT;
+            if(data_.size() < period_) {
                 data_.push_back(in);
-                if(data_.size() == (size_t)period_) {
+                if(data_.size() == period_) {
                     return OK;
                 }
             } else {
@@ -572,16 +566,13 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in, std::vector<T> &out)
-        {
+        int test(const T &in, std::vector<T> &out) {
             is_test_ = true;
-            if(period_ == 0) {
-                return NO_INIT;
-            }
+            if(period_ == 0) return NO_INIT;
             data_test_ = data_;
-            if(data_test_.size() < (size_t)period_) {
+            if(data_test_.size() < period_) {
                 data_test_.push_back(in);
-                if(data_test_.size() == (size_t)period_) {
+                if(data_test_.size() == period_) {
                     out = data_test_;
                     return OK;
                 }
@@ -599,15 +590,13 @@ namespace xtechnical_indicators {
          * \param in сигнал на входе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in) {
+        int test(const T &in) {
             is_test_ = true;
-            if(period_ == 0) {
-                return NO_INIT;
-            }
+            if(period_ == 0) return NO_INIT;
             data_test_ = data_;
-            if(data_test_.size() < (size_t)period_) {
+            if(data_test_.size() < period_) {
                 data_test_.push_back(in);
-                if(data_test_.size() == (size_t)period_) {
+                if(data_test_.size() == period_) {
                     return OK;
                 }
             } else {
@@ -630,7 +619,7 @@ namespace xtechnical_indicators {
          * \param out максимальное значение
          * \param offset смещение в массиве
          */
-        void get_max_data(T &out, const size_t offset = 0) {
+        void get_max_data(T &out, const size_t &offset = 0) {
             if(is_test_) out = *std::max_element(data_test_.begin() + offset, data_test_.end());
             else out = *std::max_element(data_.begin() + offset, data_.end());
         }
@@ -639,7 +628,7 @@ namespace xtechnical_indicators {
          * \param out минимальное значение
          * \param offset смещение в массиве
          */
-        void get_min_data(T &out, const size_t offset = 0) {
+        void get_min_data(T &out, const size_t &offset = 0) {
             if(is_test_) out = *std::min_element(data_test_.begin() + offset, data_test_.end());
             else out = *std::min_element(data_.begin() + offset, data_.end());
         }
@@ -648,7 +637,7 @@ namespace xtechnical_indicators {
          * \param out среднее значение
          * \param offset смещение в массиве
          */
-        void get_average_data(T &out, const size_t offset = 0) {
+        void get_average_data(T &out, const size_t &offset = 0) {
             if(is_test_) {
                 T sum = std::accumulate(data_test_.begin() + offset, data_test_.end(), T(0));
                 out = sum / (T)(data_test_.size() - offset);
@@ -669,57 +658,60 @@ namespace xtechnical_indicators {
         void get_average_and_std_data(
                 std::vector<T> &average_data,
                 std::vector<T> &std_data,
-                int min_period,
-                int max_period,
-                const int step_period) {
-            min_period--;
-            max_period--;
+                size_t min_period,
+                size_t max_period,
+                const size_t &step_period) {
+            size_t reserve_size = (max_period - min_period)/step_period;
+            --min_period;
+            --max_period;
             average_data.clear();
+            average_data.reserve(reserve_size);
             std_data.clear();
+            std_data.reserve(reserve_size);
             if(is_test_) {
                 T sum = 0;
-                //T sum_std = 0;
-                int num_element = 0;
-                for(int i = (int)data_test_.size() - 1; i >= 0; --i) { // начинаем список с конца
+                size_t num_element = 0;
+                size_t data_size = data_.size();
+                for(int i = data_size - 1; i >= 0; --i) { // начинаем список с конца
                     sum += data_test_[i]; // находим сумму элементов
                     if(num_element > max_period) break;
                     if(num_element >= min_period) {
-                        num_element++; // находим число элементов
+                        ++num_element; // находим число элементов
                         T ml = (T)(sum/(T)num_element); // находим среднее
                         average_data.push_back(ml); // добавляем среднее
                         T sum_std = 0;
-                        int max_len = (int)data_test_.size() - num_element;
-                        for(int j = (int)data_test_.size() - 1; j >= max_len; --j) {
+                        size_t max_len = data_size - num_element;
+                        for(size_t j = data_size - 1; j >= max_len; --j) {
                             T diff = (data_test_[j] - ml);
                             sum_std += diff * diff;
                         }
                         std_data.push_back((T)std::sqrt(sum_std / (T)(num_element - 1)));
                         min_period += step_period;
                     } else {
-                        num_element++;
+                        ++num_element;
                     }
                 } // for i
             } else {
                 T sum = 0;
-                //T sum_std = 0;
-                int num_element = 0;
-                for(int i = (int)data_.size() - 1; i >= 0; --i) { // начинаем список с конца
+                size_t num_element = 0;
+                size_t data_size = data_.size();
+                for(int i = data_size - 1; i >= 0; --i) { // начинаем список с конца
                     sum += data_[i]; // находим сумму элементов
                     if(num_element > max_period) break;
                     if(num_element >= min_period) {
-                        num_element++; // находим число элементов
+                        ++num_element; // находим число элементов
                         T ml = (T)(sum/(T)num_element); // находим среднее
                         average_data.push_back(ml); // добавляем среднее
                         T sum_std = 0;
-                        int max_len = (int)data_.size() - num_element;
-                        for(int j = (int)data_.size() - 1; j >= max_len; j--) {
+                        int max_len = data_size - num_element;
+                        for(int j = data_size - 1; j >= max_len; j--) {
                             T diff = (data_[j] - ml);
                             sum_std += diff * diff;
                         }
                         std_data.push_back((T)std::sqrt(sum_std / (T)(num_element - 1)));
                         min_period += step_period;
                     } else {
-                        num_element++;
+                        ++num_element;
                     }
                 } // for i
             }
@@ -733,16 +725,18 @@ namespace xtechnical_indicators {
          */
         void get_rsi_data(
                 std::vector<T> &rsi_data,
-                int min_period,
-                int max_period,
-                const int step_period) {
-            min_period--;
-            max_period--;
+                size_t min_period,
+                size_t max_period,
+                const size_t &step_period) {
+            size_t reserve_size = (max_period - min_period)/step_period;
+            --min_period;
+            --max_period;
             rsi_data.clear();
+            rsi_data.reserve(reserve_size);
             if(is_test_) {
                 T sum_u = 0, sum_d = 0;
-                int num_element = 0;
-                for(int i = (int)data_test_.size() - 1; i >= 1; --i) { // начинаем список с конца
+                size_t num_element = 0;
+                for(size_t i = data_test_.size() - 1; i >= 1; --i) { // начинаем список с конца
                     T u = 0, d = 0;
                     const T prev_ = data_test_[i - 1];
                     const T in_ = data_test_[i];
@@ -752,33 +746,33 @@ namespace xtechnical_indicators {
                     sum_d += d;
                     if(num_element > max_period) break;
                     if(num_element >= min_period) {
-                        num_element++;
+                        ++num_element;
                         u = sum_u /(T)num_element;
                         d = sum_d /(T)num_element;
                         if(d == 0) rsi_data.push_back(100.0);
                         else rsi_data.push_back(((T)100.0 - ((T)100.0 / ((T)1.0 + (u / d)))));
                         min_period += step_period;
                     } else {
-                        num_element++;
+                        ++num_element;
                     }
                 } // for i
             } else {
                 T sum_u = 0;
                 T sum_d = 0;
-                int num_element = 0;
-                for(int i = (int)data_.size() - 1; i >= 1; --i) { // начинаем список с конца
+                size_t num_element = 0;
+                for(size_t i = data_.size() - 1; i >= 1; --i) { // начинаем список с конца
                     if(data_[i - 1] < data_[i]) sum_u += data_[i] - data_[i - 1];
                     else if(data_[i - 1] > data_[i]) sum_d += data_[i - 1] - data_[i];
                     if(num_element > max_period) break;
                     if(num_element >= min_period) {
-                        num_element++;
+                        ++num_element;
                         T u = sum_u /(T)num_element;
                         T d = sum_d /(T)num_element;
                         if(d == 0) rsi_data.push_back(100.0);
                         else rsi_data.push_back(((T)100.0 - ((T)100.0 / ((T)1.0 + (u / d)))));
                         min_period += step_period;
                     } else {
-                        num_element++;
+                        ++num_element;
                     }
                 } // for i
             }
@@ -788,7 +782,7 @@ namespace xtechnical_indicators {
          * \param out стандартное отклонение
          * \param offset смещение в массиве
          */
-        void get_std_data(T &out, const size_t offset = 0) {
+        void get_std_data(T &out, const size_t &offset = 0) {
             if(is_test_) {
                 T ml = std::accumulate(data_test_.begin() + offset, data_test_.end(), T(0));
                 ml /= (T)(data_test_.size() - offset);
@@ -823,13 +817,15 @@ namespace xtechnical_indicators {
     template <typename T>
     class LowPassFilter : BaseIndicator<T> {
     private:
-        T alfa_;
-        T beta_;
-        T prev_;
-        T tranTime;
+        T alfa_ = 0;
+        T beta_ = 0;
+        T prev_ = 0;
+        T tranTime = 0;
         bool is_update_ = false;
         bool is_init_ = false;
     public:
+
+        LowPassFilter() {};
 
         /** \brief Инициализация фильтра низкой частоты
          * \param dt время переходного процесса
@@ -849,10 +845,8 @@ namespace xtechnical_indicators {
          * \param out массив на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in, T &out) {
-            if(!is_init_) {
-                return NO_INIT;
-            }
+        int update(const T &in, T &out) {
+            if(!is_init_) return NO_INIT;
             if (!is_update_) {
                 prev_ = in;
                 is_update_ = true;
@@ -861,6 +855,21 @@ namespace xtechnical_indicators {
             }
             out = alfa_ * prev_ + beta_ * in;
             prev_ = out;
+            return OK;
+        }
+
+        /** \brief Получить новые данные индикатора
+         * \param in сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T &in) {
+            if(!is_init_) return NO_INIT;
+            if (!is_update_) {
+                prev_ = in;
+                is_update_ = true;
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            prev_ = alfa_ * prev_ + beta_ * in;
             return OK;
         }
 
@@ -905,14 +914,14 @@ namespace xtechnical_indicators {
         /** \brief Инициализировать индикатор индекса относительной силы
          * \param period период индикатора
          */
-        RSI(int period) : iU(period), iD(period) {
+        RSI(const size_t &period) : iU(period), iD(period) {
             is_init_ = true;
         }
 
         /** \brief Инициализировать индикатор индекса относительной силы
          * \param period период индикатора
          */
-        void init(const int period) {
+        void init(const size_t &period) {
             is_init_ = true;
             is_update_ = false;
             iU = INDICATOR_TYPE(period);
@@ -1036,16 +1045,18 @@ namespace xtechnical_indicators {
     };
 
     template <class T1, class T2>
-    int calc_ring_rsi(T1 &in, T2 &out, const int period) {
-        if( in.size() == 0 || (int)in.size() < period ||
-            out.size() != in.size())
+    int calc_ring_rsi(const T1 &in, T2 &out, const size_t &period) {
+        size_t input_size = in.size();
+        size_t output_size = out.size();
+        if( input_size == 0 || input_size < period ||
+            output_size != input_size)
             return INVALID_PARAMETER;
         using NumType = typename T1::value_type;
         RSI<NumType,SMA<NumType>> iRSI(period);
-        for(size_t i = in.size() - period; i < in.size(); ++i) {
+        for(size_t i = input_size - period; i < input_size; ++i) {
             iRSI.update(in[i]);
         }
-        for(size_t i = 0; i < in.size(); ++i) {
+        for(size_t i = 0; i < input_size; ++i) {
             iRSI.update(in[i], out[i]);
         }
         return OK;
@@ -1057,7 +1068,7 @@ namespace xtechnical_indicators {
     class BollingerBands : BaseIndicator<T> {
     private:
         std::vector<T> data_;
-        int period_ = 0;
+        size_t period_ = 0;
         T d_;
     public:
         BollingerBands() {};
@@ -1066,7 +1077,7 @@ namespace xtechnical_indicators {
          * \param period период  индикатора
          * \param factor множитель стандартного отклонения
          */
-        BollingerBands(const int period, const T factor) {
+        BollingerBands(const size_t &period, const T &factor) {
             period_ = period;
             d_ = factor;
         }
@@ -1075,7 +1086,7 @@ namespace xtechnical_indicators {
          * \param period период  индикатора
          * \param factor множитель стандартного отклонения
          */
-        void init(const int period, const T factor) {
+        void init(const size_t &period, const T &factor) {
             period_ = period;
             d_ = factor;
             data_.clear();
@@ -1132,9 +1143,9 @@ namespace xtechnical_indicators {
                 std_dev = 0;
                 return NO_INIT;
             }
-            if(data_.size() < (size_t)period_) {
+            if(data_.size() < period_) {
                 data_.push_back(in);
-                if(data_.size() != (size_t)period_) {
+                if(data_.size() != period_) {
                     ml = 0;
                     std_dev = 0;
                     return INDICATOR_NOT_READY_TO_WORK;
@@ -1162,9 +1173,9 @@ namespace xtechnical_indicators {
             if(period_ == 0) {
                 return NO_INIT;
             }
-            if(data_.size() < (size_t)period_) {
+            if(data_.size() < period_) {
                 data_.push_back(in);
-                if(data_.size() != (size_t)period_) {
+                if(data_.size() != period_) {
                     return INDICATOR_NOT_READY_TO_WORK;
                 }
             } else {
@@ -1190,9 +1201,9 @@ namespace xtechnical_indicators {
                 return NO_INIT;
             }
             std::vector<T> data_test = data_;
-            if(data_test.size() < (size_t)period_) {
+            if(data_test.size() < period_) {
                 data_test.push_back(in);
-                if(data_test.size() != (size_t)period_) {
+                if(data_test.size() != period_) {
                     tl = 0;
                     ml = 0;
                     bl = 0;
@@ -1229,9 +1240,9 @@ namespace xtechnical_indicators {
                 return NO_INIT;
             }
             std::vector<T> data_test = data_;
-            if(data_test.size() < (size_t)period_) {
+            if(data_test.size() < period_) {
                 data_test.push_back(in);
-                if(data_test.size() != (size_t)period_) {
+                if(data_test.size() != period_) {
                     ml = 0;
                     std_dev = 0;
                     return INDICATOR_NOT_READY_TO_WORK;
@@ -1258,17 +1269,21 @@ namespace xtechnical_indicators {
         }
     };
 
+    /** \brief Обработать массив данных боллинджером по кругу
+     */
     template <class T1, class T2>
-    int calc_ring_bollinger(T1 &in, T2 &tl, T2 &ml, T2 &bl, const int period, const double std_dev_factor) {
-        if( in.size() == 0 || (int)in.size() < period ||
-            tl.size() != bl.size() || tl.size() != in.size() || ml.size() != in.size())
+    int calc_ring_bollinger(T1 &in, T2 &tl, T2 &ml, T2 &bl, const size_t &period, const double &std_dev_factor) {
+        size_t input_size = in.size();
+        size_t tl_size = tl.size();
+        if( input_size == 0 || (int)input_size < period ||
+            tl_size != bl.size() || tl_size != input_size || ml.size() != input_size)
             return INVALID_PARAMETER;
         using NumType = typename T1::value_type;
         BollingerBands<NumType> iBB(period, std_dev_factor);
-        for(size_t i = in.size() - period; i < in.size(); ++i) {
+        for(size_t i = input_size - period; i < input_size; ++i) {
             iBB.update(in[i]);
         }
-        for(size_t i = 0; i < in.size(); ++i) {
+        for(size_t i = 0; i < input_size; ++i) {
             iBB.update(in[i], tl[i], ml[i], bl[i]);
         }
         return OK;
@@ -1287,7 +1302,7 @@ namespace xtechnical_indicators {
         /** \brief Инициализировать класс индикатора
          * \param period период индикатора
          */
-        AverageSpeed(const int period) : iMW(period + 1) {
+        AverageSpeed(const size_t &period) : iMW(period + 1) {
             is_init_ = true;
         }
 
@@ -1296,10 +1311,8 @@ namespace xtechnical_indicators {
          * \param out Значение индикатора
          * \return вернет 0 в случае успеха
          */
-        int update(const T in, T &out) {
-            if(!is_init_) {
-                return NO_INIT;
-            }
+        int update(const T &in, T &out) {
+            if(!is_init_) return NO_INIT;
             std::vector<T> mw_out;
             int err = iMW.update(in, mw_out);
             if(err == OK) {
@@ -1317,10 +1330,8 @@ namespace xtechnical_indicators {
          * \param out Значение индикатора
          * \return вернет 0 в случае успеха
          */
-        int test(const T in, T &out) {
-            if(!is_init_) {
-                return NO_INIT;
-            }
+        int test(const T &in, T &out) {
+            if(!is_init_) return NO_INIT;
             std::vector<T> mw_out;
             int err = iMW.test(in, mw_out);
             if(err == OK) {
@@ -1419,7 +1430,7 @@ namespace xtechnical_indicators {
     private:
         std::vector<std::vector<T>> data_;
         std::vector<std::vector<T>> data_test_;
-        int period_ = 0;
+        size_t period_ = 0;
         bool is_test_ = false;
     public:
         enum CorrelationType {
@@ -1430,7 +1441,7 @@ namespace xtechnical_indicators {
          * \param period период индикатора
          * \param num_symbols колючество валютных пар
          */
-        CurrencyCorrelation(const int period, const int num_symbols) {
+        CurrencyCorrelation(const size_t &period, const size_t &num_symbols) {
             data_.resize(num_symbols);
             data_test_.resize(num_symbols);
             period_ = period;
@@ -1441,14 +1452,14 @@ namespace xtechnical_indicators {
          * \param num_symbol номер валютной пары
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(T in, const int num_symbol) {
+        int update(const T &in, const size_t &num_symbol) {
             is_test_ = false;
             if(period_ == 0) {
                 return NO_INIT;
             }
-            if(data_[num_symbol].size() < (size_t)period_) {
+            if(data_[num_symbol].size() < period_) {
                 data_[num_symbol].push_back(in);
-                if(data_[num_symbol].size() == (size_t)period_) {
+                if(data_[num_symbol].size() == period_) {
                     return OK;
                 }
             } else {
@@ -1464,15 +1475,15 @@ namespace xtechnical_indicators {
          * \param num_symbol номер валютной пары
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(T in, const int num_symbol) {
+        int test(const T &in, const size_t &num_symbol) {
             is_test_ = true;
             if(period_ == 0) {
                 return NO_INIT;
             }
             data_test_ = data_;
-            if(data_test_[num_symbol].size() < (size_t)period_) {
+            if(data_test_[num_symbol].size() < period_) {
                 data_test_[num_symbol].push_back(in);
-                if(data_test_[num_symbol].size() == (size_t)period_) {
+                if(data_test_[num_symbol].size() == period_) {
                     return OK;
                 }
             } else {
@@ -1492,9 +1503,9 @@ namespace xtechnical_indicators {
          */
         int calculate_correlation(
                 T &out,
-                const int num_symbol_1,
-                const int num_symbol_2,
-                const int correlation_type = SPEARMAN_RANK) {
+                const size_t &num_symbol_1,
+                const size_t &num_symbol_2,
+                const size_t &correlation_type = SPEARMAN_RANK) {
             std::vector<T> norm_vec_1(period_), norm_vec_2(period_);
             if(is_test_) {
                 if(data_test_[num_symbol_1].size() == (size_t)period_ &&
@@ -1539,17 +1550,19 @@ namespace xtechnical_indicators {
          * \param correlation_type тип корреляции (SPEARMAN_RANK, PEARSON)
          */
         void find_correlated_pairs(
-                std::vector<int> &symbol_1,
-                std::vector<int> &symbol_2,
+                std::vector<size_t> &symbol_1,
+                std::vector<size_t> &symbol_2,
                 std::vector<T> &coefficient,
                 T threshold_coefficient,
                 const int correlation_type = SPEARMAN_RANK) {
             symbol_1.clear();
             symbol_2.clear();
             coefficient.clear();
+            size_t data_test_size = data_test_.size();
+            size_t data_test_size_dec = data_test_.size() - 1;
             if(is_test_) {
-                for(size_t i = 0; i < data_test_.size() - 1; ++i) {
-                    for(size_t j = i + 1; j < data_test_.size(); ++j) {
+                for(size_t i = 0; i < data_test_size_dec; ++i) {
+                    for(size_t j = i + 1; j < data_test_size; ++j) {
                         T coeff;
                         if(calculate_correlation(coeff, i, j, correlation_type) == OK) {
                             if(std::abs(coeff) > threshold_coefficient) {
