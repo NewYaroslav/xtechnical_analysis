@@ -239,7 +239,6 @@ namespace xtechnical_statistics {
     T1 calc_excess(const T2 &array_data) {
         size_t size = array_data.size();
         T1 mean = calc_mean_value<T1>(array_data);
-        std::cout << "excess mean: " << mean << std::endl;
         T1 u4 = 0;
         T1 std_dev = 0;
         for(size_t i = 0; i < size; ++i) {
