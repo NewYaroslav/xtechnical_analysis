@@ -28,5 +28,10 @@ int main() {
     std::vector<double> test_data3 = {1.1,1.1,1.1,1.1,1.1,1.1};
     test_out[0] = xtechnical_statistics::calc_median<double>(test_data3);
     std::cout << "median: " << test_out[0] << std::endl;
+
+
+    std::vector<double> test_data4 = {1,1,2,2,3,3,4,5,6,7};
+    double excess = xtechnical_statistics::calc_excess<double>(test_data4);
+    std::cout << "excess: " << excess << std::endl;
     return 0;
 }

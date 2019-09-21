@@ -227,6 +227,35 @@ namespace xtechnical_statistics {
         return mean/std::sqrt(sum);
     }
 
+    /** \brief Коэффициент эксцесса
+     * Острый пик (значение выше 0) говорит о преимущественном стремлении к среднему значению
+     * и отсутствия трендовой составляющей
+     * Гладкий пик (значение меньше 0) говорито о тяжелых хвостах
+     * распредленеия и возможном наличии тренда
+     * \param array_data Массив с данными
+     * \return отношение сигнал / шум или SNR
+     */
+    template<class T1, class T2>
+    T1 calc_excess(const T2 &array_data) {
+        size_t size = array_data.size();
+        T1 mean = calc_mean_value<T1>(array_data);
+        std::cout << "excess mean: " << mean << std::endl;
+        T1 u4 = 0;
+        T1 std_dev = 0;
+        for(size_t i = 0; i < size; ++i) {
+            T1 diff = array_data[i] - mean;
+            diff *= diff;
+            std_dev += diff;
+            u4 += diff * diff;
+        }
+        u4 /= (T1)size;
+        std_dev /= (T1)(size - 1);
+        std_dev = std::sqrt(std_dev);
+        std_dev *= std_dev;
+        std_dev = std_dev * std_dev;
+        return u4/std_dev - 3.0;
+    }
+
 };
 
 #endif // XTECHNICAL_STATISTICS_HPP_INCLUDED
