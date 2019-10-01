@@ -33,5 +33,10 @@ int main() {
     std::vector<double> test_data4 = {1,1,2,2,3,3,4,5,6,7};
     double excess = xtechnical_statistics::calc_excess<double>(test_data4);
     std::cout << "excess: " << excess << std::endl;
+
+
+    std::vector<double> test_data5 = {1,1,1,0,0,1};
+    double standard_error = xtechnical_statistics::calc_standard_error<double>(test_data5);
+    std::cout << "standard_error: " << standard_error << std::endl;
     return 0;
 }
