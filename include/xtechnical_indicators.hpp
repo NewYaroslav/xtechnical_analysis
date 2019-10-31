@@ -33,12 +33,13 @@
 #include <numeric>
 #include <cmath>
 
-#define INDICATORSEASY_DEF_RING_BUFFER_SIZE 64
+#define INDICATORSEASY_DEF_RING_BUFFER_SIZE 1024
 
 namespace xtechnical_indicators {
     using namespace xtechnical_common;
 
     /** \brief Посчитать простую скользящую среднюю (SMA)
+     *
      * Данная функция для расчетов использует последние N = period значений
      * \param input массив значений
      * \param output значение SMA
@@ -59,7 +60,7 @@ namespace xtechnical_indicators {
         return OK;
     }
 
-    /** @brief Расчитать стандартное отклонение
+    /** \brief Расчитать стандартное отклонение
      * \param input входные данные индикатора
      * \param output стандартное отклонение
      * \param period период STD
@@ -85,7 +86,7 @@ namespace xtechnical_indicators {
         return OK;
     }
 
-    /** @brief Расчитать стандартное отклонение и среднее значение
+    /** \brief Расчитать стандартное отклонение и среднее значение
      * \param input входные данные индикатора
      * \param output стандартное отклонение
      * \param period период STD
@@ -193,12 +194,12 @@ namespace xtechnical_indicators {
     template <typename T>
     class BaseIndicator {
         public:
-        virtual int update(T in) {return INVALID_PARAMETER;};
-        virtual int test(T in) {return INVALID_PARAMETER;};
-        virtual int update(T in, T &out) {return INVALID_PARAMETER;};
-        virtual int test(T in, T &out) {return INVALID_PARAMETER;};
-        virtual int update(T in, std::vector<T> &out) {return INVALID_PARAMETER;};
-        virtual int test(T in, std::vector<T> &out) {return INVALID_PARAMETER;};
+        virtual int update(const T &in) {return INVALID_PARAMETER;};
+        virtual int test(const T &in) {return INVALID_PARAMETER;};
+        virtual int update(const T &in, T &out) {return INVALID_PARAMETER;};
+        virtual int test(const T &in, T &out) {return INVALID_PARAMETER;};
+        virtual int update(const T &in, std::vector<T> &out) {return INVALID_PARAMETER;};
+        virtual int test(const T &in, std::vector<T> &out) {return INVALID_PARAMETER;};
         virtual void clear() {};
     };
 
@@ -665,9 +666,9 @@ namespace xtechnical_indicators {
             --min_period;
             --max_period;
             average_data.clear();
-            average_data.reserve(reserve_size);
+            average_data.reserve(reserve_size + 1);
             std_data.clear();
-            std_data.reserve(reserve_size);
+            std_data.reserve(reserve_size + 1);
             if(is_test_) {
                 T sum = 0;
                 size_t num_element = 0;
@@ -732,7 +733,7 @@ namespace xtechnical_indicators {
             --min_period;
             --max_period;
             rsi_data.clear();
-            rsi_data.reserve(reserve_size);
+            rsi_data.reserve(reserve_size + 1);
             if(is_test_) {
                 T sum_u = 0, sum_d = 0;
                 size_t num_element = 0;
