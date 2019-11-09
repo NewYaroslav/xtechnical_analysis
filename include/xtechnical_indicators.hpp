@@ -175,11 +175,13 @@ namespace xtechnical_indicators {
             }
             return temp;
         }
+
     #if(0)
         inline std::vector<T> get_raw_data() {
                 return data;
         }
     #endif
+
         inline double get_sum() {
             double sum = 0;
             for(int i = 0; i < data_size; ++i) {
@@ -189,24 +191,10 @@ namespace xtechnical_indicators {
         }
     };
 
-    /** \brief Базовый класс индикатора
-     */
-    template <typename T>
-    class BaseIndicator {
-        public:
-        virtual int update(const T &in) {return INVALID_PARAMETER;};
-        virtual int test(const T &in) {return INVALID_PARAMETER;};
-        virtual int update(const T &in, T &out) {return INVALID_PARAMETER;};
-        virtual int test(const T &in, T &out) {return INVALID_PARAMETER;};
-        virtual int update(const T &in, std::vector<T> &out) {return INVALID_PARAMETER;};
-        virtual int test(const T &in, std::vector<T> &out) {return INVALID_PARAMETER;};
-        virtual void clear() {};
-    };
-
     /** \brief Простая скользящая средняя
      */
     template <typename T, int SIZE = INDICATORSEASY_DEF_RING_BUFFER_SIZE>
-    class SMA : BaseIndicator<T> {
+    class SMA {
     private:
         RingBuffer<T, SIZE> data_;
         T last_data_ = 0;
@@ -317,7 +305,7 @@ namespace xtechnical_indicators {
     /** \brief Взвешенное скользящее среднее
      */
     template <typename T>
-    class WMA : BaseIndicator<T> {
+    class WMA {
     private:
         std::vector<T> data_;
         size_t period_ = 0;
@@ -412,7 +400,7 @@ namespace xtechnical_indicators {
     /** \brief Экспоненциально взвешенное скользящее среднее
      */
     template <typename T>
-    class EMA : BaseIndicator<T> {
+    class EMA {
     private:
         std::vector<T> data_;
         T last_data_;
@@ -503,7 +491,7 @@ namespace xtechnical_indicators {
     /** \brief Скользящее окно
      */
     template <typename T>
-    class MW : BaseIndicator<T> {
+    class MW {
     private:
         std::vector<T> data_;
         std::vector<T> data_test_;
@@ -511,11 +499,19 @@ namespace xtechnical_indicators {
         bool is_test_ = false;
     public:
         MW() {};
+
         /** \brief Инициализировать скользящее окно
          * \param period период
          */
-        MW(const size_t &period) : period_(period) {
+        MW(const size_t period) : period_(period) {
             data_.reserve(period_);
+        }
+
+        /** \brief Проверить инициализацию буфера скользящего окна
+         * \return Вернет true, если буфер скользящего окна полностью заполнен значениями.
+         */
+        bool is_init() {
+            return (data_.size() == period_);
         }
 
         /** \brief Обновить состояние индикатора
@@ -609,66 +605,101 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Получить данные внутреннего буфера индикатора
-         * \param out буфер
+         * \param buffer буфер
          */
-        void get_data(std::vector<T> &out) {
-            if(is_test_) out = data_test_;
-            else out = data_;
+        void get_data(std::vector<T> &buffer) {
+            if(is_test_) buffer = data_test_;
+            else buffer = data_;
         }
 
         /** \brief Получить максимальное значение буфера
-         * \param out максимальное значение
-         * \param offset смещение в массиве
+         * \param max_value Максимальное значение
+         * \param period Период максимальных данных
+         * \param offset Смещение в массиве. По умолчанию 0
          */
-        void get_max_data(T &out, const size_t &offset = 0) {
-            if(is_test_) out = *std::max_element(data_test_.begin() + offset, data_test_.end());
-            else out = *std::max_element(data_.begin() + offset, data_.end());
+        void get_max_value(T &max_value, const size_t period, const size_t offset = 0) {
+            if(is_test_) max_value = *std::max_element(data_test_.begin() + offset, data_test_.end());
+            else max_value = *std::max_element(data_.begin() + offset, data_.end());
         }
 
         /** \brief Получить минимальное значение буфера
-         * \param out минимальное значение
-         * \param offset смещение в массиве
+         * \param out Минимальное значение
+         * \param period Период минимальных данных
+         * \param offset Смещение в массиве. По умолчанию 0
          */
-        void get_min_data(T &out, const size_t &offset = 0) {
-            if(is_test_) out = *std::min_element(data_test_.begin() + offset, data_test_.end());
-            else out = *std::min_element(data_.begin() + offset, data_.end());
+        void get_min_value(T &min_value, const size_t period, const size_t offset = 0) {
+            if(is_test_) min_value = *std::min_element(data_test_.end() - period - offset, data_test_.end() - offset);
+            else min_value = *std::min_element(data_.end() - period - offset, data_.end() - offset);
         }
 
         /** \brief Получить среднее значение буфера
-         * \param out среднее значение
-         * \param offset смещение в массиве
+         * \param average_value Среднее значение
+         * \param period Период среднего значения
+         * \param offset Смещение в массиве. По умолчанию 0
          */
-        void get_average_data(T &out, const size_t &offset = 0) {
+        void get_average(T &average_value, const size_t period, const size_t offset = 0) {
             if(is_test_) {
-                T sum = std::accumulate(data_test_.begin() + offset, data_test_.end(), T(0));
-                out = sum / (T)(data_test_.size() - offset);
+                T sum = std::accumulate(data_test_.end() - period - offset, data_test_.end() - offset, T(0));
+                average_value = sum / (T)period;
             } else {
-                T sum = std::accumulate(data_.begin() + offset, data_.end(), T(0));
-                out = sum / (T)(data_.size() - offset);
+                T sum = std::accumulate(data_.end() - period - offset, data_.end() - offset, T(0));
+                average_value = sum / (T)period;
             }
         }
 
-        /** \brief Получить набор средних значений и стандартного отклонения буфера
+        /** \brief Получить стандартное отклонение буфера
+         * \param std_dev_value Стандартное отклонение
+         * \param period Период стандартного отклонения
+         * \param offset Смещение в массиве. По умолчанию 0
+         */
+        void get_std_dev(T &std_dev_value, const size_t period, const size_t offset = 0) {
+            if(is_test_) {
+                T ml = std::accumulate(data_test_.end() - period - offset, data_test_.end() - offset, T(0));
+                ml /= (T)period;
+                T sum = 0;
+                const size_t stop = data_test_.size() - offset;
+                const size_t start = stop - period;
+                for (size_t i = start; i < stop; ++i) {
+                    T diff = (data_test_[i] - ml);
+                    sum +=  diff * diff;
+                }
+                std_dev_value = std::sqrt(sum / (T)(period - 1));
+            } else {
+                T ml = std::accumulate(data_.end() - period - offset, data_.end() - offset, T(0));
+                ml /= (T)period;
+                T sum = 0;
+                const size_t stop = data_.size() - offset;
+                const size_t start = stop - period;
+                for (size_t i = start; i < stop; ++i) {
+                    T diff = (data_[i] - ml);
+                    sum +=  diff * diff;
+                }
+                std_dev_value = std::sqrt(sum / (T)(period - 1));
+            }
+        }
+
+        /** \brief Получить массив средних значений и стандартного отклонения буфера
+         *
          * Минимальный период равен 2
          * \param average_data массив средних значений
          * \param std_data массив стандартного отклонения
          * \param min_period минимальный период
-         * \param min_period максимальный период
+         * \param max_period максимальный период
          * \param step_period шаг периода
          */
-        void get_average_and_std_data(
+        void get_average_and_std_dev_array(
                 std::vector<T> &average_data,
                 std::vector<T> &std_data,
                 size_t min_period,
                 size_t max_period,
                 const size_t &step_period) {
-            size_t reserve_size = (max_period - min_period)/step_period;
+            size_t reserve_size = 1 + (max_period - min_period)/step_period;
             --min_period;
             --max_period;
             average_data.clear();
-            average_data.reserve(reserve_size + 1);
+            average_data.reserve(reserve_size);
             std_data.clear();
-            std_data.reserve(reserve_size + 1);
+            std_data.reserve(reserve_size);
             if(is_test_) {
                 T sum = 0;
                 size_t num_element = 0;
@@ -721,19 +752,19 @@ namespace xtechnical_indicators {
         /** \brief Получить массив значений RSI
          * \param rsi_data массив значений RSI
          * \param min_period минимальный период
-         * \param min_period максимальный период
+         * \param max_period максимальный период
          * \param step_period шаг периода
          */
-        void get_rsi_data(
+        void get_rsi_array(
                 std::vector<T> &rsi_data,
                 size_t min_period,
                 size_t max_period,
                 const size_t &step_period) {
-            size_t reserve_size = (max_period - min_period)/step_period;
+            size_t reserve_size = 1 + (max_period - min_period)/step_period;
             --min_period;
             --max_period;
             rsi_data.clear();
-            rsi_data.reserve(reserve_size + 1);
+            rsi_data.reserve(reserve_size);
             if(is_test_) {
                 T sum_u = 0, sum_d = 0;
                 size_t num_element = 0;
@@ -779,29 +810,42 @@ namespace xtechnical_indicators {
             }
         }
 
-        /** \brief Получить стандартное отклонение буфера
-         * \param out стандартное отклонение
-         * \param offset смещение в массиве
+        /** \brief Получить значение RSI
+         * \param rsi_value Значение RSI
+         * \param period Период RSI
          */
-        void get_std_data(T &out, const size_t &offset = 0) {
+        void get_rsi(T &rsi_value, const size_t period) {
+            rsi_value = 50;
             if(is_test_) {
-                T ml = std::accumulate(data_test_.begin() + offset, data_test_.end(), T(0));
-                ml /= (T)(data_test_.size() - offset);
-                T sum = 0;
-                for (size_t i = offset; i < data_test_.size(); i++) {
-                    T diff = (data_test_[i] - ml);
-                    sum +=  diff * diff;
-                }
-                out = std::sqrt(sum / (T)(data_test_.size() - offset - 1));
+                T sum_u = 0, sum_d = 0;
+                const size_t start_ind = data_test_.size() - 1;
+                const size_t stop_ind = data_test_.size() - period;
+                for(size_t i = start_ind; i >= stop_ind; --i) { // начинаем список с конца
+                    T u = 0, d = 0;
+                    const T prev_ = data_test_[i - 1];
+                    const T in_ = data_test_[i];
+                    if(prev_ < in_) u = in_ - prev_;
+                    else if(prev_ > in_) d = prev_ - in_;
+                    sum_u += u;
+                    sum_d += d;
+                } // for i
+                T u = sum_u /(T)period;
+                T d = sum_d /(T)period;
+                if(d == 0) rsi_value = 100.0;
+                else rsi_value = ((T)100.0 - ((T)100.0 / ((T)1.0 + (u / d))));
             } else {
-                T ml = std::accumulate(data_.begin() + offset, data_.end(), T(0));
-                ml /= (T)(data_.size() - offset);
-                T sum = 0;
-                for (size_t i = offset; i < data_.size(); i++) {
-                    T diff = (data_[i] - ml);
-                    sum +=  diff * diff;
-                }
-                out = std::sqrt(sum / (T)(data_.size() - offset - 1));
+                T sum_u = 0;
+                T sum_d = 0;
+                const size_t start_ind = data_.size() - 1;
+                const size_t stop_ind = data_.size() - period;
+                for(size_t i = start_ind; i >= stop_ind; --i) { // начинаем список с конца
+                    if(data_[i - 1] < data_[i]) sum_u += data_[i] - data_[i - 1];
+                    else if(data_[i - 1] > data_[i]) sum_d += data_[i - 1] - data_[i];
+                } // for i
+                T u = sum_u /(T)period;
+                T d = sum_d /(T)period;
+                if(d == 0) rsi_value = 100.0;
+                else rsi_value = ((T)100.0 - ((T)100.0 / ((T)1.0 + (u / d))));
             }
         }
 
@@ -816,7 +860,7 @@ namespace xtechnical_indicators {
     /** \brief Класс фильтра низкой частоты
      */
     template <typename T>
-    class LowPassFilter : BaseIndicator<T> {
+    class LowPassFilter {
     private:
         T alfa_ = 0;
         T beta_ = 0;
@@ -902,7 +946,7 @@ namespace xtechnical_indicators {
     /** \brief Индекс относительной силы
      */
     template <typename T, class INDICATOR_TYPE>
-    class RSI : BaseIndicator<T> {
+    class RSI {
     private:
         INDICATOR_TYPE iU;
         INDICATOR_TYPE iD;
@@ -1066,7 +1110,7 @@ namespace xtechnical_indicators {
     /** \brief Линии Боллинджера
      */
     template <typename T>
-    class BollingerBands : BaseIndicator<T> {
+    class BollingerBands {
     private:
         std::vector<T> data_;
         size_t period_ = 0;
@@ -1293,7 +1337,7 @@ namespace xtechnical_indicators {
     /** \brief Средняя скорость
      */
     template <typename T>
-    class AverageSpeed : BaseIndicator<T> {
+    class AverageSpeed {
     private:
         MW<T> iMW;
         bool is_init_ = false;
