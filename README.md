@@ -167,14 +167,14 @@ void get_rsi_array(
 * Метод *clear()* очищает внутреннее состояние индикатора. Он обнуляет размер основного и тестового буфера.
 
 ```cpp
-	/** \brief Очистить данные индикатора
-	 */
-	void clear();
+/** \brief Очистить данные индикатора
+ */
+void clear();
 ```
 
 ### Пример программы
 
-```
+```cpp
 #include <iostream>
 #include "xtechnical_indicators.hpp"
 
