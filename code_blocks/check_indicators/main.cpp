@@ -6,10 +6,15 @@ using namespace std;
 int main() {
     cout << "Hello world!" << endl;
     xtechnical_indicators::MW<double> iMW(30);
-
+    xtechnical_indicators::MMA<double> iMMA(5);
+    xtechnical_indicators::SMA<double> iSMA(5);
     for(int i = 1; i <= 50; ++i) {
         int temp = i % 4;
         iMW.update(temp);
+        double mma_out = 0.0;
+        iMMA.update(temp, mma_out);
+        double sma_out = 0.0;
+        iSMA.update(temp, sma_out);
         std::vector<double> rsi;
         std::vector<double> sma;
         std::vector<double> std_dev;
@@ -20,6 +25,7 @@ int main() {
         for(size_t i = 0; i < sma.size(); ++i) {
             std::cout << "rsi: " << rsi[i] << " sma: " << sma[i] << " std_dev: " << std_dev[i] << std::endl;
         }
+        std::cout << "MMA: " << mma_out << " SMA " << sma_out << std::endl;
     }
 
     double rsi_value = 0;

@@ -206,9 +206,7 @@ namespace xtechnical_indicators {
         /** \brief Инициализировать простую скользящую среднюю
          * \param period период
          */
-        SMA(const size_t &period) : period_(period) {
-            if(period_ < 0)
-                period_ = -period_;
+        SMA(const size_t period) : period_(period) {
             data_.resize(period_);
         }
 
@@ -314,9 +312,7 @@ namespace xtechnical_indicators {
         /** \brief Инициализировать взвешенное скользящее среднее
          * \param period период
          */
-        WMA(const size_t &period) : period_(period) {
-            if(period_ < 0)
-                period_ = -period_;
+        WMA(const size_t period) : period_(period) {
             data_.reserve(period_);
         }
 
@@ -325,7 +321,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T &in, T &out) {
+        int update(const T in, T &out) {
             if(period_ == 0) {
                 out = 0;
                 return NO_INIT;
@@ -360,7 +356,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T &in, T &out) {
+        int test(const T in, T &out) {
             if(period_ == 0) {
                 out = 0;
                 return NO_INIT;
@@ -399,9 +395,9 @@ namespace xtechnical_indicators {
 
     /** \brief Экспоненциально взвешенное скользящее среднее
      */
-    template <typename T>
+    template <class T>
     class EMA {
-    private:
+    protected:
         std::vector<T> data_;
         T last_data_;
         T a;
@@ -412,9 +408,7 @@ namespace xtechnical_indicators {
         /** \brief Инициализировать экспоненциально взвешенное скользящее среднее
          * \param period период
          */
-        EMA(const size_t &period) : period_(period) {
-            if(period_ < 0)
-                period_ = -period_;
+        EMA(const size_t period) : period_(period) {
             data_.reserve(period_);
             a = 2.0/(T)(period_ + 1.0d);
         }
@@ -424,7 +418,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T &in, T &out) {
+        virtual int update(const T in, T &out) {
             if(period_ == 0) {
                 out = 0;
                 return NO_INIT;
@@ -472,7 +466,7 @@ namespace xtechnical_indicators {
 
     /** \brief Модифицированное скользящее среднее
      */
-    template <typename T>
+    template <class T>
     class MMA : public EMA<T> {
     public:
         MMA() {};
@@ -480,11 +474,10 @@ namespace xtechnical_indicators {
         /** \brief Инициализировать модифицированное скользящее среднее
          * \param period период
          */
-        MMA(const size_t &period) : EMA<T>::period_(period) {
-            if(EMA<T>::period_ < 0)
-                    EMA<T>::period_ = -EMA<T>::period_;
-            EMA<T>::data_.reserve(EMA<T>::period_);
-            EMA<T>::a = 1.0/(T)EMA<T>::period_;
+        MMA(const size_t period) {
+            EMA<T>::period_ = period;
+            EMA<T>::data_.reserve(period);
+            EMA<T>::a = 1.0/(T)period;
         }
     };
 
