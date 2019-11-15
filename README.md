@@ -226,6 +226,8 @@ int main() {
 * WMA
 * EMA
 * MMA
+* AMA
+* NoLagMa
 * LowPassFilter
 * AverageSpeed - (не проверен!)
 * CurrencyCorrelation - (вычисление корреляции)

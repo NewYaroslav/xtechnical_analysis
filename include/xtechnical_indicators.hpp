@@ -184,7 +184,7 @@ namespace xtechnical_indicators {
 
         inline double get_sum() {
             double sum = 0;
-            for(int i = 0; i < data_size; ++i) {
+            for(size_t i = 0; i < data_size; ++i) {
                 sum += (data[(pos + i) % data_size]);
             }
             return sum;
@@ -1619,6 +1619,203 @@ namespace xtechnical_indicators {
         void clear() {
             data_.clear();
             data_test_.clear();
+        }
+    };
+
+    template <typename T>
+    class AMA {
+    private:
+        uint32_t n;
+        uint32_t f;
+        uint32_t s;
+        uint32_t period_std_dev;
+        T coeff;
+        T prev_ama = 0;
+        T filter = 0;
+        bool is_square;
+        std::vector<T> data;
+        MW<T> iMW;
+        int err_std_dev = xtechnical_common::NO_INIT;
+    public:
+
+        AMA(const uint32_t period = 10,
+            const uint32_t fast_ma_period = 2,
+            const uint32_t slow_ma_period = 30,
+            const uint32_t period_filter = 10,
+            const T coeff_filter = 0.1,
+            const bool is_square_smooth = true) :
+            n(period),
+            f(fast_ma_period),
+            s(slow_ma_period),
+            period_std_dev(period_filter),
+            coeff(coeff_filter),
+            is_square(is_square_smooth),
+            iMW(period_filter){}
+
+       int update(const T in, T &out) {
+            data.push_back(in);
+            if(data.size() > n) {
+                T direction = std::abs(data[n - 1] - data[0]);
+                T volume = 0;
+                for(uint32_t i = n - 1; i > 0; i--) {
+                    volume += std::abs(data[i] - data[i - 1]);
+                }
+                T er = direction/volume;
+                T fastest = 2.0/(T)(f + 1);
+                T slowest = 2.0/(T)(s + 1);
+                T smooth = er * (fastest - slowest) + slowest;
+                T c = is_square ? smooth * smooth : smooth;
+                T temp = c * in + (1.0 - c) * prev_ama;
+                T di = temp - prev_ama;
+                prev_ama = temp;
+                out = prev_ama;
+                err_std_dev = iMW.update(di);
+                if(err_std_dev != xtechnical_common::OK) return xtechnical_common::OK;
+                T std_dev_value = 0;
+                iMW.get_std_dev(std_dev_value, period_std_dev);
+                filter = coeff * std_dev_value;
+                return xtechnical_common::OK;
+            } else {
+                filter = 0;
+                out = in;
+                return xtechnical_common::NO_INIT;
+            }
+        }
+
+        int test(const T in, T &out) {
+            std::vector<T> test_data = data;
+            test_data.push_back(in);
+            if(test_data.size() > n) {
+                T direction = std::abs(test_data[n - 1] - test_data[0]);
+                T volume = 0;
+                for(uint32_t i = n - 1; i > 0; i--) {
+                    volume += std::abs(test_data[i] - test_data[i - 1]);
+                }
+                T er = direction/volume;
+                T fastest = 2.0/(T)(f + 1);
+                T slowest = 2.0/(T)(s + 1);
+                T smooth = er * (fastest - slowest) + slowest;
+                T c = is_square ? smooth * smooth : smooth;
+                T temp = c * in + (1.0 - c) * prev_ama;
+                T di = temp - prev_ama;
+                out = temp;
+                err_std_dev = iMW.update(di);
+                if(err_std_dev != xtechnical_common::OK) return xtechnical_common::OK;
+                T std_dev_value = 0;
+                iMW.get_std_dev(std_dev_value, period_std_dev);
+                filter = coeff * std_dev_value;
+                return xtechnical_common::OK;
+            } else {
+                filter = 0;
+                out = in;
+                return xtechnical_common::NO_INIT;
+            }
+        }
+
+        int get_filter(T &out) {
+            out = filter;
+            return err_std_dev;
+        }
+
+        /** \brief Очистить данные индикатора
+         */
+        void clear() {
+            data.clear();
+            iMW.clear();
+            prev_ama = 0;
+            filter = 0;
+            err_std_dev = xtechnical_common::NO_INIT;
+        }
+    };
+
+    /** \brief Скользящая средняя NoLagMa
+     */
+    template <typename T>
+    class NoLagMa {
+        private:
+        T Pi = 3.14159265358979323846264338327950288;
+        std::vector<T> nlm_values;
+        std::vector<T> nlm_prices;
+        std::vector<T> nlm_alphas;
+        uint32_t _length = 0;
+        uint32_t _len = 1;
+        uint32_t _weight = 2;
+        uint32_t LengthMA = 10;
+        size_t bars = 0;
+        int err = xtechnical_common::NO_INIT;
+
+        inline T calc(const T price, const int length, int r) {
+            /* прошу прощения за говнокод, это копипаст из метатрейдера, переписанный на С++ */
+            if(nlm_prices.size() != bars) {
+                nlm_prices.resize(bars);
+            }
+            nlm_prices[r] = price;
+            if (nlm_values[_length] != length) {
+                T Cycle = 4.0;
+                T Coeff = 3.0*Pi;
+                int    Phase = length-1;
+
+                nlm_values[_length] = length;
+                nlm_values[_len] = length*4 + Phase;
+                nlm_values[_weight] = 0;
+
+                if (nlm_alphas.size() < nlm_values[_len]) {
+                    nlm_alphas.resize((size_t)nlm_values[_len]);
+                }
+                for (int k = 0; k< nlm_values[_len]; k++) {
+                    T t;
+                    if (k <= Phase-1) {
+                        t = 1.0 * k/(Phase-1);
+                    } else {
+                        t = 1.0 + (k - Phase + 1)*(2.0 * Cycle - 1.0)/(Cycle * (T)length - 1.0);
+                    }
+                    T beta = cos(Pi*t);
+                    T g = 1.0/(Coeff*t+1);
+                    if (t <= 0.5 ) {g = 1;}
+
+                    nlm_alphas[k] = g * beta;
+                    nlm_values[_weight] += nlm_alphas[k];
+                }
+            }
+
+            if (nlm_values[_weight]>0) {
+                double sum = 0;
+                for (int k=0; k < nlm_values[_len] && (r-k)>=0; k++) sum += nlm_alphas[k]*nlm_prices[r-k];
+                err = xtechnical_common::OK;
+                return(sum / nlm_values[_weight]);
+            } else return 0;
+        }
+
+        public:
+
+        NoLagMa(const uint32_t period = 10) {
+            LengthMA = period;
+            nlm_values.resize(3);
+        }
+
+        int update(const T in, T &out) {
+            ++bars;
+            out = calc(in, LengthMA, bars - 1);
+            return err;
+        }
+
+        int test(const T in, T &out) {
+            std::vector<T> old_nlm_values = nlm_values;
+            std::vector<T> old_nlm_prices = nlm_prices;
+            std::vector<T> old_nlm_alphas = nlm_alphas;
+            out = calc(in, LengthMA, bars);
+            nlm_values = old_nlm_values;
+            nlm_prices = old_nlm_prices;
+            nlm_alphas = old_nlm_alphas;
+            bars = 0;
+            return err;
+        }
+
+        void clear() {
+            nlm_values.resize(3);
+            nlm_prices.clear();
+            nlm_alphas.clear();
+            err = xtechnical_common::NO_INIT;
         }
     };
 
