@@ -11,8 +11,25 @@ int main() {
     xtechnical_indicators::AMA<double> iAMA(10);
     xtechnical_indicators::NoLagMa<double> iNoLagMa(10);
     for(int i = 1; i <= 50; ++i) {
-        int temp = i % 4;
+        int temp = -(i*2);//i % 4;
         iMW.update(temp);
+
+        double std_dev_value = 0;
+        int err_std_dev = iMW.get_std_dev(std_dev_value, 10, 0);
+        if(err_std_dev == 0) {
+            double mean_value = 0;
+            iMW.get_average(mean_value, 10, 0);
+            double angle_value = 0;
+            iMW.compare_data(
+                angle_value,
+                xtechnical_common::CALCULATE_ANGLE,
+                true,
+                mean_value - 2*std_dev_value,
+                mean_value + 2*std_dev_value,
+                10,
+                0);
+            std::cout << "ANGLE " << angle_value << std::endl;
+        }
 
         double mma_out = 0.0;
         iMMA.update(temp, mma_out);

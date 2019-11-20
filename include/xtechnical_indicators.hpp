@@ -609,28 +609,184 @@ namespace xtechnical_indicators {
          * \param max_value Максимальное значение
          * \param period Период максимальных данных
          * \param offset Смещение в массиве. По умолчанию 0
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        void get_max_value(T &max_value, const size_t period, const size_t offset = 0) {
-            if(is_test_) max_value = *std::max_element(data_test_.begin() + offset, data_test_.end());
-            else max_value = *std::max_element(data_.begin() + offset, data_.end());
+        int get_max_value(T &max_value, const size_t period, const size_t offset = 0) {
+            const size_t total_offset = period + offset;
+            if(is_test_ && data_test_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+
+            if(is_test_) max_value = *std::max_element(data_test_.end() - total_offset, data_test_.end() - offset);
+            else max_value = *std::max_element(data_.end() - total_offset, data_.end() - offset);
+            return xtechnical_common::OK;
         }
 
         /** \brief Получить минимальное значение буфера
          * \param out Минимальное значение
          * \param period Период минимальных данных
          * \param offset Смещение в массиве. По умолчанию 0
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        void get_min_value(T &min_value, const size_t period, const size_t offset = 0) {
-            if(is_test_) min_value = *std::min_element(data_test_.end() - period - offset, data_test_.end() - offset);
-            else min_value = *std::min_element(data_.end() - period - offset, data_.end() - offset);
+        int get_min_value(T &min_value, const size_t period, const size_t offset = 0) {
+            const size_t total_offset = period + offset;
+            if(is_test_ && data_test_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+
+            if(is_test_) min_value = *std::min_element(data_test_.end() - total_offset, data_test_.end() - offset);
+            else min_value = *std::min_element(data_.end() - total_offset, data_.end() - offset);
+            return xtechnical_common::OK;
+        }
+
+        /** \brief Получить нормализованные данные
+         * \param buffer буфер
+         * \param type Тип нормализации. На выбор: MINMAX_UNSIGNED, MINMAX_SIGNED, Z_SCORE_TRANSFORMING
+         * \param period Период минимальных данных
+         * \param offset Смещение в массиве. По умолчанию 0
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int get_normalized_data(
+                std::vector<T> &buffer,
+                const uint32_t type,
+                const size_t period,
+                const size_t offset = 0) {
+            const size_t total_offset = period + offset;
+            if(is_test_ && data_test_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+
+            std::vector<T> fragment;
+            if(is_test_) fragment.assign(data_test_.end() - total_offset, data_test_.end() - offset);
+            else fragment.assign(data_.end() - total_offset, data_.end() - offset);
+            if(type == xtechnical_common::MINMAX_UNSIGNED || type == xtechnical_common::MINMAX_UNSIGNED) {
+                buffer.resize(fragment.size());
+                xtechnical_normalization::calculate_min_max(fragment, buffer, type);
+            } else
+            if(type == xtechnical_common::Z_SCORE_TRANSFORMING) {
+                buffer.resize(fragment.size());
+                xtechnical_normalization::calculate_zscore(fragment, buffer);
+            }
+
+            return xtechnical_common::OK;
+        }
+
+        /** \brief Получить нормализованные данные
+         * \param buffer буфер
+         * \param type Тип нормализации. На выбор: MINMAX_UNSIGNED, MINMAX_SIGNED, Z_SCORE_TRANSFORMING
+         * \param min_level Заданный минимальный уровень
+         * \param max_level Заданный максимальный уровень
+         * \param period Период минимальных данных
+         * \param offset Смещение в массиве. По умолчанию 0
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int get_normalized_data(
+                std::vector<T> &buffer,
+                const uint32_t type,
+                const T min_level,
+                const T max_level,
+                const size_t period,
+                const size_t offset = 0) {
+            const size_t total_offset = period + offset;
+            if(is_test_ && data_test_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+
+            std::vector<T> fragment;
+            if(is_test_) fragment.assign(data_test_.end() - total_offset, data_test_.end() - offset);
+            else fragment.assign(data_.end() - total_offset, data_.end() - offset);
+            if(type == xtechnical_common::MINMAX_UNSIGNED || type == xtechnical_common::MINMAX_SIGNED) {
+                buffer.resize(fragment.size());
+                xtechnical_normalization::calculate_min_max(fragment, buffer, min_level, max_level, type);
+            } else
+            if(type == xtechnical_common::Z_SCORE_TRANSFORMING) {
+                buffer.resize(fragment.size());
+                xtechnical_normalization::calculate_zscore(fragment, buffer);
+            }
+
+            return xtechnical_common::OK;
+        }
+
+        int compare_data(
+                T &compare_result,
+                const uint32_t compare_type,
+                const bool is_use_min_max_level,
+                const T min_level,
+                const T max_level,
+                const size_t period,
+                const size_t offset = 0) {
+            std::vector<T> fragment;
+            int err = xtechnical_common::OK;
+            if(!is_use_min_max_level) err = get_normalized_data(fragment, MINMAX_SIGNED, period, offset);
+            else err = get_normalized_data(fragment, MINMAX_SIGNED, min_level, max_level, period, offset);
+            if(err != xtechnical_common::OK) return err;
+            if(compare_type == xtechnical_common::COMPARE_WITH_ZERO_LINE) {
+                compare_result = 0;
+                for(size_t i = 0; i < period; ++i) {
+                    compare_result += std::abs(fragment[i]);
+                }
+                compare_result /= (T)period;
+                compare_result = 1.0 - compare_result;
+            } else
+            if(compare_type == xtechnical_common::COMPARE_WITH_STRAIGHT_LINE) {
+                /* сначала найдем минимум или максимум */
+                T new_max_level = -1.1;
+                T new_min_level = 1.1;
+                for(size_t i = 0; i < period; ++i) {
+                    if(fragment[i] < new_min_level) new_min_level = fragment[i];
+                    if(fragment[i] > new_max_level) new_max_level = fragment[i];
+                }
+
+                /* находим два значения */
+                T result_min = 0;
+                T result_max = 0;
+                for(size_t i = 0; i < period; ++i) {
+                    result_min += std::abs(fragment[i] - new_min_level);
+                    result_max += std::abs(new_max_level - fragment[i]);
+                }
+                result_min /= (T)period;
+                result_max /= (T)period;
+                compare_result = std::max(result_min, result_max);
+                compare_result = 1.0 - compare_result;
+            } else
+            if(compare_type == xtechnical_common::COMPARE_WITH_CENTER_LINE) {
+                /* сначала найдем минимум или максимум */
+                T new_max_level = -1.1;
+                T new_min_level = 1.1;
+                for(size_t i = 0; i < period; ++i) {
+                    if(fragment[i] < new_min_level) new_min_level = fragment[i];
+                    if(fragment[i] > new_max_level) new_max_level = fragment[i];
+                }
+
+                /* находим два значения */
+                compare_result = 0;
+                T center_line = (new_max_level - new_min_level) / 2.0;
+                for(size_t i = 0; i < period; ++i) {
+                    compare_result += std::abs(fragment[i] - center_line);
+                }
+                compare_result /= (T)period;
+                compare_result = 1.0 - compare_result;
+            } else
+            if(compare_type == xtechnical_common::CALCULATE_ANGLE) {
+                /* найдем приращение */
+                T average_increase = 0;
+                for(size_t i = 1; i < period; ++i) {
+                    average_increase += (fragment[i] - fragment[i - 1]);
+                }
+                average_increase /= (T)(period - 1);
+                /* найдем угол */
+                compare_result = std::atan(-average_increase / -1.0);
+            }
+            return xtechnical_common::OK;
         }
 
         /** \brief Получить среднее значение буфера
          * \param average_value Среднее значение
          * \param period Период среднего значения
          * \param offset Смещение в массиве. По умолчанию 0
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        void get_average(T &average_value, const size_t period, const size_t offset = 0) {
+        int get_average(T &average_value, const size_t period, const size_t offset = 0) {
+            const size_t total_offset = period + offset;
+            if(is_test_ && data_test_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+
             if(is_test_) {
                 T sum = std::accumulate(data_test_.end() - period - offset, data_test_.end() - offset, T(0));
                 average_value = sum / (T)period;
@@ -638,6 +794,7 @@ namespace xtechnical_indicators {
                 T sum = std::accumulate(data_.end() - period - offset, data_.end() - offset, T(0));
                 average_value = sum / (T)period;
             }
+            return xtechnical_common::OK;
         }
 
         /** \brief Получить стандартное отклонение буфера
@@ -645,9 +802,13 @@ namespace xtechnical_indicators {
          * \param period Период стандартного отклонения
          * \param offset Смещение в массиве. По умолчанию 0
          */
-        void get_std_dev(T &std_dev_value, const size_t period, const size_t offset = 0) {
+        int get_std_dev(T &std_dev_value, const size_t period, const size_t offset = 0) {
+            const size_t total_offset = period + offset;
+            if(is_test_ && data_test_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+
             if(is_test_) {
-                T ml = std::accumulate(data_test_.end() - period - offset, data_test_.end() - offset, T(0));
+                T ml = std::accumulate(data_test_.end() - total_offset, data_test_.end() - offset, T(0));
                 ml /= (T)period;
                 T sum = 0;
                 const size_t stop = data_test_.size() - offset;
@@ -658,7 +819,7 @@ namespace xtechnical_indicators {
                 }
                 std_dev_value = std::sqrt(sum / (T)(period - 1));
             } else {
-                T ml = std::accumulate(data_.end() - period - offset, data_.end() - offset, T(0));
+                T ml = std::accumulate(data_.end() - total_offset, data_.end() - offset, T(0));
                 ml /= (T)period;
                 T sum = 0;
                 const size_t stop = data_.size() - offset;
@@ -669,6 +830,7 @@ namespace xtechnical_indicators {
                 }
                 std_dev_value = std::sqrt(sum / (T)(period - 1));
             }
+            return xtechnical_common::OK;
         }
 
         /** \brief Получить массив средних значений и стандартного отклонения буфера

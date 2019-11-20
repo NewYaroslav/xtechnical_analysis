@@ -35,8 +35,16 @@ namespace xtechnical_common {
 
     /// Типы нормализации данных
     enum {
-        MINMAX_UNSIGNED = 0, ///< Данные приводятся к уровню от 0 до 1
-        MINMAX_SIGNED = 1, ///< Данные приводятся к уровню от -1 до 1
+        MINMAX_UNSIGNED = 0,        ///< Нормализация данных. Данные приводятся к уровню от 0 до 1
+        MINMAX_SIGNED = 1,          ///< Нормализация данных. Данные приводятся к уровню от -1 до 1
+        Z_SCORE_TRANSFORMING = 2,   ///< Стандартизация данных. Преобразование данных с использованием z-показателя
+    };
+
+    enum {
+        COMPARE_WITH_ZERO_LINE = 0,
+        COMPARE_WITH_STRAIGHT_LINE = 1,
+        COMPARE_WITH_CENTER_LINE = 2,
+        CALCULATE_ANGLE = 3,
     };
 };
 

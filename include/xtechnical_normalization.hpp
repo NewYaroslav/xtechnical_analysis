@@ -64,6 +64,41 @@ namespace xtechnical_normalization {
         return OK;
     }
 
+    /** \brief MinMax нормализация данных
+     * \param in входные данные для нормализации
+     * \param out нормализованный вектор
+     * \param min_value минимальное значение
+     * \param max_value максимальное значение
+     * \param type тип нормализации (0 - нормализация данных к промежутку от 0 до 1, иначе от -1 до 1)
+     * \return вернет 0 в случае успеха, иначе см. xtechnical_common.hpp
+     */
+    template<class T1, class T2, class T3>
+    int calculate_min_max(const T1 &in, T2 &out, const T3 min_value, const T3 max_value, const int &type) {
+        size_t input_size = in.size();
+        size_t output_size = out.size();
+        if(input_size == 0 || output_size != input_size) return INVALID_PARAMETER;
+        auto it_max_data = std::max_element(in.begin(), in.end());
+        auto it_min_data = std::min_element(in.begin(), in.end());
+        auto max_data = in[0];
+        auto min_data = in[0];
+        if(it_max_data != in.end() && it_min_data != in.end()) {
+            max_data = *it_max_data;
+            min_data = *it_min_data;
+        }
+        using NumType = typename T1::value_type;
+        min_data = (NumType)std::min((NumType)min_value, (NumType)min_data);
+        max_data = (NumType)std::max((NumType)max_value, (NumType)max_data);
+        auto ampl = max_data - min_data;
+        if(ampl != 0) {
+            for(size_t i = 0; i < input_size; i++) {
+                out[i] = type == 0 ? (double)(in[i] - min_data) / ampl : 2.0 * ((double)(in[i] - min_data) / ampl) - 1.0;
+            }
+        } else {
+            std::fill(out.begin(), out.end(),0);
+        }
+        return OK;
+    }
+
     /** \brief Z-Score нормализация данных
      * \param in входные данные для нормализации
      * \param out нормализованный вектор
