@@ -1676,6 +1676,7 @@ namespace xtechnical_indicators {
                 filter = coeff * std_dev_value;
                 return xtechnical_common::OK;
             } else {
+                prev_ama = in;
                 filter = 0;
                 out = in;
                 return xtechnical_common::NO_INIT;
