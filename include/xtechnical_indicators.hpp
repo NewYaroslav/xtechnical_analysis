@@ -24,6 +24,7 @@
 #ifndef XTECHNICAL_INDICATORS_HPP_INCLUDED
 #define XTECHNICAL_INDICATORS_HPP_INCLUDED
 
+#include "xtechnical_dft.hpp"
 #include "xtechnical_correlation.hpp"
 #include "xtechnical_normalization.hpp"
 #include "xtechnical_common.hpp"
@@ -2181,8 +2182,58 @@ namespace xtechnical_indicators {
         }
     };
 
-    class FFT {
+    /** \brief Гистограмма частот
+     */
+    template<class T>
+    class FreqHist {
+    private:
+        MW<T> iMW;
+        xtechnical_dft::DftReal<T> iDftReal;
+        size_t dft_period = 0;
+    public:
 
+        FreqHist() {};
+
+        FreqHist(const size_t period, const size_t window_type) :
+            iMW(period), iDftReal(period, window_type) {
+            dft_period = period;
+        };
+
+        int update(
+                const T &input,
+                std::vector<T> &histogram,
+                const T sample_rate = 0) {
+            int err = iMW.update(input);
+            if(err != xtechnical_common::OK) return err;
+            std::vector<T> buffer;
+            iMW.get_data(buffer);
+            std::vector<T> frequencies;
+            xtechnical_normalization::calculate_min_max(
+                buffer,
+                buffer,
+                xtechnical_common::MINMAX_SIGNED);
+            return iDftReal.update(buffer, histogram, frequencies, sample_rate);
+        }
+
+        int update(
+                const T &input,
+                std::vector<T> &amplitude,
+                std::vector<T> &frequencies,
+                const T sample_rate = 0) {
+            int err = iMW.update(input);
+            if(err != xtechnical_common::OK) return err;
+            std::vector<T> buffer;
+            iMW.get_data(buffer);
+            xtechnical_normalization::calculate_min_max(
+                buffer,
+                buffer,
+                xtechnical_common::MINMAX_SIGNED);
+            return iDftReal.update(buffer, amplitude, frequencies, sample_rate);
+        }
+
+        void clear() {
+            iMW.clear();
+        }
     };
 
     /** \brief Мера склонности к чередовнию знаков (z-счет)
