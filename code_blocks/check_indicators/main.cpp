@@ -18,7 +18,7 @@ int main() {
         int err_std_dev = iMW.get_std_dev(std_dev_value, 10, 0);
         if(err_std_dev == 0) {
             double mean_value = 0;
-            iMW.get_average(mean_value, 10, 0);
+            iMW.get_average(mean_value, 4, 0);
             double angle_value = 0;
             iMW.compare_data(
                 angle_value,

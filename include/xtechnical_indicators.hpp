@@ -55,7 +55,10 @@ namespace xtechnical_indicators {
             const size_t start_pos = 0) {
         if(input.size() <= start_pos + period) return INVALID_PARAMETER;
         using NumType = typename T1::value_type;
-        auto sum = std::accumulate(input.begin() + start_pos, input.begin() + start_pos + period, NumType(0));
+        auto sum = std::accumulate(
+            input.begin() + start_pos,
+            input.begin() + start_pos + period,
+            NumType(0));
         output = sum / (T2)period;
         return OK;
     }
@@ -75,7 +78,10 @@ namespace xtechnical_indicators {
             const size_t start_pos = 0) {
         if(input.size() < start_pos + period)return INVALID_PARAMETER;
         using NumType = typename T1::value_type;
-        auto mean = std::accumulate(input.begin() + start_pos, input.begin() + start_pos + period, NumType(0));
+        auto mean = std::accumulate(
+            input.begin() + start_pos,
+            input.begin() + start_pos + period,
+            NumType(0));
         mean /= (NumType)period;
         double _std_dev = 0;
         for(int i = 0; i < (int)input.size(); i++) {
@@ -102,7 +108,10 @@ namespace xtechnical_indicators {
             const size_t start_pos = 0) {
         if(input.size() < start_pos + period)return INVALID_PARAMETER;
         using NumType = typename T1::value_type;
-        mean = (T2)std::accumulate(input.begin() + start_pos, input.begin() + start_pos + period, NumType(0));
+        mean = (T2)std::accumulate(
+            input.begin() + start_pos,
+            input.begin() + start_pos + period,
+            NumType(0));
         mean /= (NumType)period;
         double _std_dev = 0;
         for(int i = 0; i < (int)input.size(); i++) {
@@ -223,7 +232,6 @@ namespace xtechnical_indicators {
             if(data_.count() < period_) {
                 data_.push(in);
                 if(data_.count() == period_) {
-                    //T sum = std::accumulate(data_.data.begin(), data_.data.end(), T(0));
                     T sum = data_.get_sum();
                     last_data_ = sum;
                     out = sum / (T)period_;
@@ -250,7 +258,6 @@ namespace xtechnical_indicators {
             if(data_.count() < period_) {
                 data_.push(in);
                 if(data_.count() == period_) {
-                    //T sum = std::accumulate(data_.data.begin(), data_.data.end(), T(0));
                     T sum = data_.get_sum();
                     last_data_ = sum;
                     pos_ = 0;
@@ -265,7 +272,9 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Протестировать индикатор
-         * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
          * \param in сигнал на входе
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
@@ -279,7 +288,6 @@ namespace xtechnical_indicators {
             if(_data.count() < period_) {
                 _data.push(in);
                 if(_data.count() == period_) {
-                    //T sum = std::accumulate(_data.data.begin(), _data.data.end(), T(0));
                     T sum = _data.get_sum();
                     out = sum / (T)period_;
                     return OK;
@@ -351,7 +359,8 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Протестировать индикатор
-         * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
          * \param in сигнал на входе
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
@@ -405,7 +414,8 @@ namespace xtechnical_indicators {
     public:
         EMA() {};
 
-        /** \brief Инициализировать экспоненциально взвешенное скользящее среднее
+        /** \brief Инициализировать экспоненциально взвешенное
+         * скользящее среднее
          * \param period период
          */
         EMA(const size_t period) : period_(period) {
@@ -439,7 +449,9 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Протестировать индикатор
-         * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
+         *
+         * Данная функция отличается от update тем, что не влияет на внутреннее
+         * состояние индикатора
          * \param in сигнал на входе
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
@@ -501,7 +513,8 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Проверить инициализацию буфера скользящего окна
-         * \return Вернет true, если буфер скользящего окна полностью заполнен значениями.
+         * \return Вернет true, если буфер скользящего окна
+         * полностью заполнен значениями.
          */
         bool is_init() {
             return (data_.size() == period_);
@@ -551,7 +564,9 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Протестировать индикатор
-         * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
+         *
+         * Данная функция отличается от update тем, что не влияет на внутреннее
+         * состояние индикатора
          * \param in сигнал на входе
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
@@ -576,7 +591,9 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Протестировать индикатор
-         * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
+         *
+         * Данная функция отличается от update тем, что не влияет на внутреннее
+         * состояние индикатора
          * \param in сигнал на входе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
@@ -611,13 +628,22 @@ namespace xtechnical_indicators {
          * \param offset Смещение в массиве. По умолчанию 0
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int get_max_value(T &max_value, const size_t period, const size_t offset = 0) {
+        int get_max_value(
+                T &max_value,
+                const size_t period,
+                const size_t offset = 0) {
             const size_t total_offset = period + offset;
-            if(is_test_ && data_test_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
-            else if(!is_test_ && data_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+            if(is_test_ && data_test_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
 
-            if(is_test_) max_value = *std::max_element(data_test_.end() - total_offset, data_test_.end() - offset);
-            else max_value = *std::max_element(data_.end() - total_offset, data_.end() - offset);
+            if(is_test_) max_value = *std::max_element(
+                data_test_.end() - total_offset,
+                data_test_.end() - offset);
+            else max_value = *std::max_element(
+                data_.end() - total_offset,
+                data_.end() - offset);
             return xtechnical_common::OK;
         }
 
@@ -627,19 +653,29 @@ namespace xtechnical_indicators {
          * \param offset Смещение в массиве. По умолчанию 0
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int get_min_value(T &min_value, const size_t period, const size_t offset = 0) {
+        int get_min_value(
+                T &min_value,
+                const size_t period,
+                const size_t offset = 0) {
             const size_t total_offset = period + offset;
-            if(is_test_ && data_test_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
-            else if(!is_test_ && data_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+            if(is_test_ && data_test_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
 
-            if(is_test_) min_value = *std::min_element(data_test_.end() - total_offset, data_test_.end() - offset);
-            else min_value = *std::min_element(data_.end() - total_offset, data_.end() - offset);
+            if(is_test_) min_value = *std::min_element(
+                data_test_.end() - total_offset,
+                data_test_.end() - offset);
+            else min_value = *std::min_element(
+                data_.end() - total_offset,
+                data_.end() - offset);
             return xtechnical_common::OK;
         }
 
         /** \brief Получить нормализованные данные
          * \param buffer буфер
-         * \param type Тип нормализации. На выбор: MINMAX_UNSIGNED, MINMAX_SIGNED, Z_SCORE_TRANSFORMING
+         * \param type Тип нормализации.
+         * На выбор: MINMAX_UNSIGNED, MINMAX_SIGNED, Z_SCORE_TRANSFORMING
          * \param period Период минимальных данных
          * \param offset Смещение в массиве. По умолчанию 0
          * \return вернет 0 в случае успеха, иначе см. ErrorType
@@ -650,15 +686,25 @@ namespace xtechnical_indicators {
                 const size_t period,
                 const size_t offset = 0) {
             const size_t total_offset = period + offset;
-            if(is_test_ && data_test_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
-            else if(!is_test_ && data_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+            if(is_test_ && data_test_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
 
             std::vector<T> fragment;
-            if(is_test_) fragment.assign(data_test_.end() - total_offset, data_test_.end() - offset);
-            else fragment.assign(data_.end() - total_offset, data_.end() - offset);
-            if(type == xtechnical_common::MINMAX_UNSIGNED || type == xtechnical_common::MINMAX_UNSIGNED) {
+            if(is_test_) fragment.assign(
+                data_test_.end() - total_offset,
+                data_test_.end() - offset);
+            else fragment.assign(
+                data_.end() - total_offset,
+                data_.end() - offset);
+            if( type == xtechnical_common::MINMAX_UNSIGNED ||
+                type == xtechnical_common::MINMAX_UNSIGNED) {
                 buffer.resize(fragment.size());
-                xtechnical_normalization::calculate_min_max(fragment, buffer, type);
+                xtechnical_normalization::calculate_min_max(
+                    fragment,
+                    buffer,
+                    type);
             } else
             if(type == xtechnical_common::Z_SCORE_TRANSFORMING) {
                 buffer.resize(fragment.size());
@@ -669,8 +715,9 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Получить нормализованные данные
-         * \param buffer буфер
-         * \param type Тип нормализации. На выбор: MINMAX_UNSIGNED, MINMAX_SIGNED, Z_SCORE_TRANSFORMING
+         * \param buffer Буфер
+         * \param type Тип нормализации.
+         * На выбор: MINMAX_UNSIGNED, MINMAX_SIGNED, Z_SCORE_TRANSFORMING
          * \param min_level Заданный минимальный уровень
          * \param max_level Заданный максимальный уровень
          * \param period Период минимальных данных
@@ -685,15 +732,27 @@ namespace xtechnical_indicators {
                 const size_t period,
                 const size_t offset = 0) {
             const size_t total_offset = period + offset;
-            if(is_test_ && data_test_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
-            else if(!is_test_ && data_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+            if(is_test_ && data_test_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
 
             std::vector<T> fragment;
-            if(is_test_) fragment.assign(data_test_.end() - total_offset, data_test_.end() - offset);
-            else fragment.assign(data_.end() - total_offset, data_.end() - offset);
-            if(type == xtechnical_common::MINMAX_UNSIGNED || type == xtechnical_common::MINMAX_SIGNED) {
+            if(is_test_) fragment.assign(
+                data_test_.end() - total_offset,
+                data_test_.end() - offset);
+            else fragment.assign(
+                data_.end() - total_offset,
+                data_.end() - offset);
+            if(type == xtechnical_common::MINMAX_UNSIGNED ||
+                type == xtechnical_common::MINMAX_SIGNED) {
                 buffer.resize(fragment.size());
-                xtechnical_normalization::calculate_min_max(fragment, buffer, min_level, max_level, type);
+                xtechnical_normalization::calculate_min_max(
+                    fragment,
+                    buffer,
+                    min_level,
+                    max_level,
+                    type);
             } else
             if(type == xtechnical_common::Z_SCORE_TRANSFORMING) {
                 buffer.resize(fragment.size());
@@ -713,8 +772,18 @@ namespace xtechnical_indicators {
                 const size_t offset = 0) {
             std::vector<T> fragment;
             int err = xtechnical_common::OK;
-            if(!is_use_min_max_level) err = get_normalized_data(fragment, MINMAX_SIGNED, period, offset);
-            else err = get_normalized_data(fragment, MINMAX_SIGNED, min_level, max_level, period, offset);
+            if(!is_use_min_max_level) err = get_normalized_data(
+                fragment,
+                MINMAX_SIGNED,
+                period,
+                offset);
+            else err = get_normalized_data(
+                fragment,
+                MINMAX_SIGNED,
+                min_level,
+                max_level,
+                period,
+                offset);
             if(err != xtechnical_common::OK) return err;
             if(compare_type == xtechnical_common::COMPARE_WITH_ZERO_LINE) {
                 compare_result = 0;
@@ -782,16 +851,27 @@ namespace xtechnical_indicators {
          * \param offset Смещение в массиве. По умолчанию 0
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int get_average(T &average_value, const size_t period, const size_t offset = 0) {
+        int get_average(
+                T &average_value,
+                const size_t period,
+                const size_t offset = 0) {
             const size_t total_offset = period + offset;
-            if(is_test_ && data_test_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
-            else if(!is_test_ && data_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+            if(is_test_ && data_test_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
 
             if(is_test_) {
-                T sum = std::accumulate(data_test_.end() - period - offset, data_test_.end() - offset, T(0));
+                T sum = std::accumulate(
+                    data_test_.end() - period - offset,
+                    data_test_.end() - offset,
+                    T(0));
                 average_value = sum / (T)period;
             } else {
-                T sum = std::accumulate(data_.end() - period - offset, data_.end() - offset, T(0));
+                T sum = std::accumulate(
+                    data_.end() - period - offset,
+                    data_.end() - offset,
+                    T(0));
                 average_value = sum / (T)period;
             }
             return xtechnical_common::OK;
@@ -802,13 +882,21 @@ namespace xtechnical_indicators {
          * \param period Период стандартного отклонения
          * \param offset Смещение в массиве. По умолчанию 0
          */
-        int get_std_dev(T &std_dev_value, const size_t period, const size_t offset = 0) {
+        int get_std_dev(
+                T &std_dev_value,
+                const size_t period,
+                const size_t offset = 0) {
             const size_t total_offset = period + offset;
-            if(is_test_ && data_test_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
-            else if(!is_test_ && data_.size() < total_offset) return xtechnical_common::INVALID_PARAMETER;
+            if(is_test_ && data_test_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
 
             if(is_test_) {
-                T ml = std::accumulate(data_test_.end() - total_offset, data_test_.end() - offset, T(0));
+                T ml = std::accumulate(
+                    data_test_.end() - total_offset,
+                    data_test_.end() - offset,
+                    T(0));
                 ml /= (T)period;
                 T sum = 0;
                 const size_t stop = data_test_.size() - offset;
@@ -819,7 +907,10 @@ namespace xtechnical_indicators {
                 }
                 std_dev_value = std::sqrt(sum / (T)(period - 1));
             } else {
-                T ml = std::accumulate(data_.end() - total_offset, data_.end() - offset, T(0));
+                T ml = std::accumulate(
+                    data_.end() - total_offset,
+                    data_.end() - offset,
+                    T(0));
                 ml /= (T)period;
                 T sum = 0;
                 const size_t stop = data_.size() - offset;
@@ -833,7 +924,8 @@ namespace xtechnical_indicators {
             return xtechnical_common::OK;
         }
 
-        /** \brief Получить массив средних значений и стандартного отклонения буфера
+        /** \brief Получить массив средних значений
+         * и стандартного отклонения буфера
          *
          * Минимальный период равен 2
          * \param average_data массив средних значений
@@ -859,7 +951,8 @@ namespace xtechnical_indicators {
                 T sum = 0;
                 size_t num_element = 0;
                 size_t data_size = data_.size();
-                for(int i = data_size - 1; i >= 0; --i) { // начинаем список с конца
+                // начинаем список с конца
+                for(int i = data_size - 1; i >= 0; --i) {
                     sum += data_test_[i]; // находим сумму элементов
                     if(num_element > max_period) break;
                     if(num_element >= min_period) {
@@ -872,7 +965,8 @@ namespace xtechnical_indicators {
                             T diff = (data_test_[j] - ml);
                             sum_std += diff * diff;
                         }
-                        std_data.push_back((T)std::sqrt(sum_std / (T)(num_element - 1)));
+                        std_data.push_back((T)std::sqrt(sum_std /
+                            (T)(num_element - 1)));
                         min_period += step_period;
                     } else {
                         ++num_element;
@@ -882,7 +976,8 @@ namespace xtechnical_indicators {
                 T sum = 0;
                 size_t num_element = 0;
                 size_t data_size = data_.size();
-                for(int i = data_size - 1; i >= 0; --i) { // начинаем список с конца
+                // начинаем список с конца
+                for(int i = data_size - 1; i >= 0; --i) {
                     sum += data_[i]; // находим сумму элементов
                     if(num_element > max_period) break;
                     if(num_element >= min_period) {
@@ -895,7 +990,8 @@ namespace xtechnical_indicators {
                             T diff = (data_[j] - ml);
                             sum_std += diff * diff;
                         }
-                        std_data.push_back((T)std::sqrt(sum_std / (T)(num_element - 1)));
+                        std_data.push_back((T)std::sqrt(sum_std /
+                            (T)(num_element - 1)));
                         min_period += step_period;
                     } else {
                         ++num_element;
@@ -923,7 +1019,8 @@ namespace xtechnical_indicators {
             if(is_test_) {
                 T sum_u = 0, sum_d = 0;
                 size_t num_element = 0;
-                for(size_t i = data_test_.size() - 1; i >= 1; --i) { // начинаем список с конца
+                // начинаем список с конца
+                for(size_t i = data_test_.size() - 1; i >= 1; --i) {
                     T u = 0, d = 0;
                     const T prev_ = data_test_[i - 1];
                     const T in_ = data_test_[i];
@@ -937,7 +1034,8 @@ namespace xtechnical_indicators {
                         u = sum_u /(T)num_element;
                         d = sum_d /(T)num_element;
                         if(d == 0) rsi_data.push_back(100.0);
-                        else rsi_data.push_back(((T)100.0 - ((T)100.0 / ((T)1.0 + (u / d)))));
+                        else rsi_data.push_back(((T)100.0 - ((T)100.0 /
+                            ((T)1.0 + (u / d)))));
                         min_period += step_period;
                     } else {
                         ++num_element;
@@ -947,16 +1045,20 @@ namespace xtechnical_indicators {
                 T sum_u = 0;
                 T sum_d = 0;
                 size_t num_element = 0;
-                for(size_t i = data_.size() - 1; i >= 1; --i) { // начинаем список с конца
-                    if(data_[i - 1] < data_[i]) sum_u += data_[i] - data_[i - 1];
-                    else if(data_[i - 1] > data_[i]) sum_d += data_[i - 1] - data_[i];
+                // начинаем список с конца
+                for(size_t i = data_.size() - 1; i >= 1; --i) {
+                    if(data_[i - 1] < data_[i])
+                        sum_u += data_[i] - data_[i - 1];
+                    else if(data_[i - 1] > data_[i])
+                        sum_d += data_[i - 1] - data_[i];
                     if(num_element > max_period) break;
                     if(num_element >= min_period) {
                         ++num_element;
                         T u = sum_u /(T)num_element;
                         T d = sum_d /(T)num_element;
                         if(d == 0) rsi_data.push_back(100.0);
-                        else rsi_data.push_back(((T)100.0 - ((T)100.0 / ((T)1.0 + (u / d)))));
+                        else rsi_data.push_back(((T)100.0 - ((T)100.0 /
+                            ((T)1.0 + (u / d)))));
                         min_period += step_period;
                     } else {
                         ++num_element;
@@ -975,7 +1077,8 @@ namespace xtechnical_indicators {
                 T sum_u = 0, sum_d = 0;
                 const size_t start_ind = data_test_.size() - 1;
                 const size_t stop_ind = data_test_.size() - period;
-                for(size_t i = start_ind; i >= stop_ind; --i) { // начинаем список с конца
+                // начинаем список с конца
+                for(size_t i = start_ind; i >= stop_ind; --i) {
                     T u = 0, d = 0;
                     const T prev_ = data_test_[i - 1];
                     const T in_ = data_test_[i];
@@ -993,9 +1096,12 @@ namespace xtechnical_indicators {
                 T sum_d = 0;
                 const size_t start_ind = data_.size() - 1;
                 const size_t stop_ind = data_.size() - period;
-                for(size_t i = start_ind; i >= stop_ind; --i) { // начинаем список с конца
-                    if(data_[i - 1] < data_[i]) sum_u += data_[i] - data_[i - 1];
-                    else if(data_[i - 1] > data_[i]) sum_d += data_[i - 1] - data_[i];
+                // начинаем список с конца
+                for(size_t i = start_ind; i >= stop_ind; --i) {
+                    if(data_[i - 1] < data_[i])
+                        sum_u += data_[i] - data_[i - 1];
+                    else if(data_[i - 1] > data_[i])
+                        sum_d += data_[i - 1] - data_[i];
                 } // for i
                 T u = sum_u /(T)period;
                 T d = sum_d /(T)period;
@@ -1032,7 +1138,10 @@ namespace xtechnical_indicators {
          * \param period период дискретизации
          * \param error_signal ошибка сигнала
          */
-        LowPassFilter(const T dt, const T period = 1.0, const T error_signal = 0.03) {
+        LowPassFilter(
+                const T dt,
+                const T period = 1.0,
+                const T error_signal = 0.03) {
             T N = dt / period;
             T Ntay = std::log(1.0 / error_signal);
             alfa_ = std::exp(-Ntay / N);
@@ -1074,7 +1183,9 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Протестировать индикатор
-         * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
          * \param in сигнал на входе
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
@@ -1201,7 +1312,9 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Протестировать индикатор
-         * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
          * \param in сигнал на входе
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
@@ -1386,7 +1499,9 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Протестировать индикатор
-         * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
          * \param in сигнал на входе
          * \param tl верхняя полоса боллинджера
          * \param ml среняя полоса боллинджера
@@ -1427,7 +1542,9 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Протестировать индикатор
-         * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
          * \param in сигнал на входе
          * \param ml среняя полоса боллинджера
          * \param std_dev стандартное отклонение
@@ -1472,12 +1589,18 @@ namespace xtechnical_indicators {
     /** \brief Обработать массив данных боллинджером по кругу
      */
     template <class T1, class T2>
-    int calc_ring_bollinger(T1 &in, T2 &tl, T2 &ml, T2 &bl, const size_t &period, const double &std_dev_factor) {
+    int calc_ring_bollinger(
+            T1 &in,
+            T2 &tl,
+            T2 &ml,
+            T2 &bl,
+            const size_t &period,
+            const double &std_dev_factor) {
         size_t input_size = in.size();
         size_t tl_size = tl.size();
         if( input_size == 0 || input_size < period ||
-            tl_size != bl.size() || tl_size != input_size || ml.size() != input_size)
-            return INVALID_PARAMETER;
+            tl_size != bl.size() || tl_size != input_size ||
+            ml.size() != input_size) return INVALID_PARAMETER;
         using NumType = typename T1::value_type;
         BollingerBands<NumType> iBB(period, std_dev_factor);
         for(size_t i = input_size - period; i < input_size; ++i) {
@@ -1551,11 +1674,13 @@ namespace xtechnical_indicators {
         }
     };
 //------------------------------------------------------------------------------
+    /** \brief Экспериментальный индикатор, не применять!
+     */
     template <typename T>
     class DetectorWaveform {
     private:
         MW<T> iMW;
-        const int MIN_WAVEFORM_LEN = 3;
+        const size_t MIN_WAVEFORM_LEN = 3;
         T coeff_exp = 3.141592;
         std::vector<std::vector<T>> exp_data_up_;
         std::vector<std::vector<T>> exp_data_dn_;
@@ -1565,7 +1690,10 @@ namespace xtechnical_indicators {
             for(size_t i = 0; i < data.size(); ++i) {
                 data[i] = exp(coeff_exp*(T)i*dt);
             }
-            xtechnical_normalization::calculate_min_max(data, data, xtechnical_normalization::MINMAX_UNSIGNED);
+            xtechnical_normalization::calculate_min_max(
+                data,
+                data,
+                xtechnical_normalization::MINMAX_UNSIGNED);
         }
 
         void init_exp_data_dn(std::vector<T> &data) {
@@ -1573,7 +1701,10 @@ namespace xtechnical_indicators {
             for(size_t i = 0; i < data.size(); ++i) {
                 data[i] = -exp(coeff_exp*(T)i*dt);
             }
-            xtechnical_normalization::calculate_min_max(data, data, xtechnical_normalization::MINMAX_UNSIGNED);
+            xtechnical_normalization::calculate_min_max(
+                data,
+                data,
+                xtechnical_normalization::MINMAX_UNSIGNED);
         }
     public:
         /** \brief Инициализировать класс
@@ -1584,7 +1715,7 @@ namespace xtechnical_indicators {
             size_t max_num_exp_data = max_len - MIN_WAVEFORM_LEN + 1;
             exp_data_up_.resize(max_num_exp_data);
             exp_data_dn_.resize(max_num_exp_data);
-            for(int l = MIN_WAVEFORM_LEN; l <= max_len; ++l) {
+            for(size_t l = MIN_WAVEFORM_LEN; l <= max_len; ++l) {
                 exp_data_up_[l-MIN_WAVEFORM_LEN].resize(l);
                 exp_data_dn_[l-MIN_WAVEFORM_LEN].resize(l);
                 init_exp_data_up(exp_data_up_[l-MIN_WAVEFORM_LEN]);
@@ -1596,15 +1727,28 @@ namespace xtechnical_indicators {
             std::vector<T> mw_out;
             int err = iMW.update(in, mw_out);
             if(err == OK) {
-                if((int)mw_out.size() >= MIN_WAVEFORM_LEN && len_waveform <= (int)mw_out.size()) {
+                if(mw_out.size() >= MIN_WAVEFORM_LEN &&
+                    len_waveform <= mw_out.size()) {
                     std::vector<T> fragment_data;
-                    fragment_data.insert(fragment_data.begin(), mw_out.begin() + mw_out.size() - len_waveform, mw_out.end());
-                    int err_n = xtechnical_normalization::calculate_min_max(fragment_data, fragment_data, MINMAX_UNSIGNED);
+                    fragment_data.insert(
+                        fragment_data.begin(),
+                        mw_out.begin() + mw_out.size() - len_waveform,
+                        mw_out.end());
+                    int err_n = xtechnical_normalization::calculate_min_max(
+                        fragment_data,
+                        fragment_data,
+                        MINMAX_UNSIGNED);
                     if(err_n != OK) return err_n;
                     T coeff_up = 0, coeff_dn = 0;
-                    int err_up = xtechnical_correlation::calculate_spearman_rank_correlation_coefficient(fragment_data, exp_data_up_[len_waveform-MIN_WAVEFORM_LEN], coeff_up);
-                    //AlgorithmsEasy::calc_levenstein_distance(fragment_data, exp_data_up_[len_waveform-MIN_WAVEFORM_LEN])
-                    int err_dn = xtechnical_correlation::calculate_spearman_rank_correlation_coefficient(fragment_data, exp_data_dn_[len_waveform-MIN_WAVEFORM_LEN], coeff_dn);
+                    int err_up = xtechnical_correlation::calculate_spearman_rank_correlation_coefficient(
+                        fragment_data,
+                        exp_data_up_[len_waveform-MIN_WAVEFORM_LEN],
+                        coeff_up);
+
+                    int err_dn = xtechnical_correlation::calculate_spearman_rank_correlation_coefficient(
+                        fragment_data,
+                        exp_data_dn_[len_waveform-MIN_WAVEFORM_LEN],
+                        coeff_dn);
                     if(err_up != OK) return err_up;
                     if(err_dn != OK) return err_dn;
                     if(abs(coeff_up) > abs(coeff_dn)) {
@@ -1711,14 +1855,32 @@ namespace xtechnical_indicators {
                 if(data_test_[num_symbol_1].size() == (size_t)period_ &&
                     data_test_[num_symbol_2].size() == (size_t)period_) {
                     if(correlation_type == SPEARMAN_RANK) {
-                        xtechnical_normalization::calculate_min_max(data_test_[num_symbol_1], norm_vec_1, MINMAX_SIGNED);
-                        xtechnical_normalization::calculate_min_max(data_test_[num_symbol_2], norm_vec_2, MINMAX_SIGNED);
-                        return xtechnical_correlation::calculate_spearman_rank_correlation_coefficient(norm_vec_1, norm_vec_2, out);
+                        xtechnical_normalization::calculate_min_max(
+                            data_test_[num_symbol_1],
+                            norm_vec_1,
+                            MINMAX_SIGNED);
+                        xtechnical_normalization::calculate_min_max(
+                            data_test_[num_symbol_2],
+                            norm_vec_2,
+                            MINMAX_SIGNED);
+                        return xtechnical_correlation::calculate_spearman_rank_correlation_coefficient(
+                            norm_vec_1,
+                            norm_vec_2,
+                            out);
                     } else
                     if(correlation_type == PEARSON) {
-                        xtechnical_normalization::calculate_min_max(data_test_[num_symbol_1], norm_vec_1, MINMAX_SIGNED);
-                        xtechnical_normalization::calculate_min_max(data_test_[num_symbol_2], norm_vec_2, MINMAX_SIGNED);
-                        return xtechnical_correlation::calculate_pearson_correlation_coefficient(norm_vec_1, norm_vec_2, out);
+                        xtechnical_normalization::calculate_min_max(
+                            data_test_[num_symbol_1],
+                            norm_vec_1,
+                            MINMAX_SIGNED);
+                        xtechnical_normalization::calculate_min_max(
+                            data_test_[num_symbol_2],
+                            norm_vec_2,
+                            MINMAX_SIGNED);
+                        return xtechnical_correlation::calculate_pearson_correlation_coefficient(
+                            norm_vec_1,
+                            norm_vec_2,
+                            out);
                     } else {
                         return INVALID_PARAMETER;
                     }
@@ -1727,14 +1889,32 @@ namespace xtechnical_indicators {
                 if(data_[num_symbol_1].size() == (size_t)period_ &&
                     data_[num_symbol_2].size() == (size_t)period_) {
                     if(correlation_type == SPEARMAN_RANK) {
-                        xtechnical_normalization::calculate_min_max(data_[num_symbol_1], norm_vec_1, MINMAX_SIGNED);
-                        xtechnical_normalization::calculate_min_max(data_[num_symbol_2], norm_vec_2, MINMAX_SIGNED);
-                        return xtechnical_correlation::calculate_spearman_rank_correlation_coefficient(norm_vec_1, norm_vec_2, out);
+                        xtechnical_normalization::calculate_min_max(
+                            data_[num_symbol_1],
+                            norm_vec_1,
+                            MINMAX_SIGNED);
+                        xtechnical_normalization::calculate_min_max(
+                            data_[num_symbol_2],
+                            norm_vec_2,
+                            MINMAX_SIGNED);
+                        return xtechnical_correlation::calculate_spearman_rank_correlation_coefficient(
+                            norm_vec_1,
+                            norm_vec_2,
+                            out);
                     } else
                     if(correlation_type == PEARSON) {
-                        xtechnical_normalization::calculate_min_max(data_[num_symbol_1], norm_vec_1, MINMAX_SIGNED);
-                        xtechnical_normalization::calculate_min_max(data_[num_symbol_2], norm_vec_2, MINMAX_SIGNED);
-                        return xtechnical_correlation::calculate_pearson_correlation_coefficient(norm_vec_1, norm_vec_2, out);
+                        xtechnical_normalization::calculate_min_max(
+                            data_[num_symbol_1],
+                            norm_vec_1,
+                            MINMAX_SIGNED);
+                        xtechnical_normalization::calculate_min_max(
+                            data_[num_symbol_2],
+                            norm_vec_2,
+                            MINMAX_SIGNED);
+                        return xtechnical_correlation::calculate_pearson_correlation_coefficient(
+                            norm_vec_1,
+                            norm_vec_2,
+                            out);
                     } else {
                         return INVALID_PARAMETER;
                     }
@@ -1746,7 +1926,8 @@ namespace xtechnical_indicators {
         /** \brief Найти коррелирующие валютные пары
          * \param symbol_1 список первой валютной пары в коррелирующей паре
          * \param symbol_2 список второй валютной пары в коррелирующей паре
-         * \param threshold_coefficient порог срабатывания для коэффициента корреляции
+         * \param threshold_coefficient порог срабатывания
+         * для коэффициента корреляции
          * \param correlation_type тип корреляции (SPEARMAN_RANK, PEARSON)
          */
         void find_correlated_pairs(
@@ -1764,7 +1945,11 @@ namespace xtechnical_indicators {
                 for(size_t i = 0; i < data_test_size_dec; ++i) {
                     for(size_t j = i + 1; j < data_test_size; ++j) {
                         T coeff;
-                        if(calculate_correlation(coeff, i, j, correlation_type) == OK) {
+                        if(calculate_correlation(
+                                coeff,
+                                i,
+                                j,
+                                correlation_type) == OK) {
                             if(std::abs(coeff) > threshold_coefficient) {
                                 symbol_1.push_back(i);
                                 symbol_2.push_back(j);
@@ -1784,6 +1969,14 @@ namespace xtechnical_indicators {
         }
     };
 
+    /** \brief Адаптивная скользящая средняя Кауфмана
+     *
+     * Технический индикатор, разновидность адаптивной скользящей средней,
+     * построенной на базе экспоненциально сглаженной скользящей средней
+     * и оригинальной методики определения
+     * и применения волатильности в качестве динамически
+     * изменяющейся сглаживающей константы
+     */
     template <typename T>
     class AMA {
     private:
@@ -1832,7 +2025,8 @@ namespace xtechnical_indicators {
                 prev_ama = temp;
                 out = prev_ama;
                 err_std_dev = iMW.update(di);
-                if(err_std_dev != xtechnical_common::OK) return xtechnical_common::OK;
+                if(err_std_dev != xtechnical_common::OK)
+                    return xtechnical_common::OK;
                 T std_dev_value = 0;
                 iMW.get_std_dev(std_dev_value, period_std_dev);
                 filter = coeff * std_dev_value;
@@ -1863,7 +2057,8 @@ namespace xtechnical_indicators {
                 T di = temp - prev_ama;
                 out = temp;
                 err_std_dev = iMW.update(di);
-                if(err_std_dev != xtechnical_common::OK) return xtechnical_common::OK;
+                if(err_std_dev != xtechnical_common::OK)
+                    return xtechnical_common::OK;
                 T std_dev_value = 0;
                 iMW.get_std_dev(std_dev_value, period_std_dev);
                 filter = coeff * std_dev_value;
@@ -1908,7 +2103,9 @@ namespace xtechnical_indicators {
         int err = xtechnical_common::NO_INIT;
 
         inline T calc(const T price, const int length, int r) {
-            /* прошу прощения за говнокод, это копипаст из метатрейдера, переписанный на С++ */
+            /* прошу прощения за говнокод,
+             * это копипаст из метатрейдера, переписанный на С++
+             */
             if(nlm_prices.size() != bars) {
                 nlm_prices.resize(bars);
             }
@@ -1930,7 +2127,8 @@ namespace xtechnical_indicators {
                     if (k <= Phase-1) {
                         t = 1.0 * k/(Phase-1);
                     } else {
-                        t = 1.0 + (k - Phase + 1)*(2.0 * Cycle - 1.0)/(Cycle * (T)length - 1.0);
+                        t = 1.0 + (k - Phase + 1)*(2.0 * Cycle - 1.0)/
+                            (Cycle * (T)length - 1.0);
                     }
                     T beta = cos(Pi*t);
                     T g = 1.0/(Coeff*t+1);
@@ -1943,7 +2141,8 @@ namespace xtechnical_indicators {
 
             if (nlm_values[_weight]>0) {
                 double sum = 0;
-                for (int k=0; k < nlm_values[_len] && (r-k)>=0; k++) sum += nlm_alphas[k]*nlm_prices[r-k];
+                for (int k=0; k < nlm_values[_len] && (r-k)>=0; k++)
+                    sum += nlm_alphas[k]*nlm_prices[r-k];
                 err = xtechnical_common::OK;
                 return(sum / nlm_values[_weight]);
             } else return 0;
@@ -1982,10 +2181,17 @@ namespace xtechnical_indicators {
         }
     };
 
+    class FFT {
+
+    };
+
     /** \brief Мера склонности к чередовнию знаков (z-счет)
-     * Z - число СКО, на которое количество серий в выборке отклоняется от своего математчиеского ожидания
+     *
+     * Z - число СКО, на которое количество серий в выборке отклоняется
+     * от своего математчиеского ожидания
      * Если z > 3, то с вероятностью 0,9973 знаки имеют склонность к чередованию
-     * Если z <-3, то с аналогичной вероятнсотью проявляется склонность к сохранению знака
+     * Если z <-3, то с аналогичной вероятнсотью
+     * проявляется склонность к сохранению знака
      * \param n общее число элементов в последовательности
      * \param r общее число серий положительных и отрицательных приращений
      * \param w общее число положительных приращений
@@ -1994,10 +2200,12 @@ namespace xtechnical_indicators {
      */
     double calc_z_score(int n, int r, int w, int l) {
         double P = 2.0d * w * l;
-        return (n * ((double)r - 0.5d) -  P) / sqrt((P * (P - (double)n))/((double)n - 1.0d));
+        return (n * ((double)r - 0.5d) -  P) / sqrt((P * (P - (double)n))/
+            ((double)n - 1.0d));
     }
 
-    /** \brief Рассчитать долю капитала для стратегии на основе меры склонности к чередовнию знаков
+    /** \brief Рассчитать долю капитала для стратегии
+     * на основе меры склонности к чередовнию знаков
      * \param p вероятность правильного прогноза (от 0.0 до 1.0)
      * \param winperc процент выплаты брокера (от 0.0)
      * \return оптимальная доля капитала
