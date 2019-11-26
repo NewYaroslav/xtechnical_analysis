@@ -239,9 +239,10 @@ namespace xtechnical_dft {
                 output_imag);
             if(err != xtechnical_common::OK) return err;
             const size_t period_div2 = table_period / 2;
-            amplitude.resize(period_div2);
-            frequencies.resize(period_div2);
-            for(size_t i = 0; i < period_div2; ++i) {
+
+            amplitude.resize(period_div2 + 1);
+            frequencies.resize(period_div2 + 1);
+            for(size_t i = 0; i < period_div2 + 1; ++i) {
                 amplitude[i] = 2* std::sqrt(
                     output_real[i] * output_real[i] +
                     output_imag[i] * output_imag[i]);

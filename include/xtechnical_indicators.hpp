@@ -309,6 +309,85 @@ namespace xtechnical_indicators {
         }
     };
 
+    /** \brief Скользящая сумма
+     */
+    template <typename T>
+    class SUM {
+    private:
+        std::vector<T> data_;
+        size_t period_ = 0;
+    public:
+        SUM() {};
+        /** \brief Инициализировать скользящую сумму
+         * \param period период
+         */
+        SUM(const size_t period) : period_(period) {
+            data_.reserve(period_);
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &out) {
+            if(period_ == 0) {
+                out = in;
+                return NO_INIT;
+            }
+            if(data_.size() < (size_t)period_) {
+                data_.push_back(in);
+                if(data_.size() == (size_t)period_) {
+                    out = std::accumulate(data_.begin(), data_.end(), (T)0);
+                    return OK;
+                }
+            } else {
+                data_.push_back(in);
+                data_.erase(data_.begin());
+                out = std::accumulate(data_.begin(), data_.end(), (T)0);
+                return OK;
+            }
+            out = in;
+            return INDICATOR_NOT_READY_TO_WORK;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данный метод отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in, T &out) {
+            if(period_ == 0) {
+                out = in;
+                return NO_INIT;
+            }
+            std::vector<T> _data = data_;
+            if(_data.size() < (size_t)period_) {
+                _data.push_back(in);
+                if(_data.size() == (size_t)period_) {
+                    out = std::accumulate(_data.begin(), _data.end(), (T)0);
+                    return OK;
+                }
+            } else {
+                _data.push_back(in);
+                _data.erase(_data.begin());
+                out = std::accumulate(_data.begin(), _data.end(), (T)0);
+                return OK;
+            }
+            out = in;
+            return INDICATOR_NOT_READY_TO_WORK;
+        }
+
+        /** \brief Очистить данные индикатора
+         */
+        void clear() {
+            data_.clear();
+        }
+    };
+
     /** \brief Взвешенное скользящее среднее
      */
     template <typename T>
@@ -332,7 +411,7 @@ namespace xtechnical_indicators {
          */
         int update(const T in, T &out) {
             if(period_ == 0) {
-                out = 0;
+                out = in;
                 return NO_INIT;
             }
             if(data_.size() < (size_t)period_) {
@@ -355,12 +434,13 @@ namespace xtechnical_indicators {
                 out = (sum * 2.0d) / ((T)period_ * ((T)period_ + 1.0d));
                 return OK;
             }
-            out = 0;
+            out = in;
             return INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Протестировать индикатор
-         * Данная функция отличается от update тем,
+         *
+         * Данный метод отличается от update тем,
          * что не влияет на внутреннее состояние индикатора
          * \param in сигнал на входе
          * \param out сигнал на выходе
@@ -368,7 +448,7 @@ namespace xtechnical_indicators {
          */
         int test(const T in, T &out) {
             if(period_ == 0) {
-                out = 0;
+                out = in;
                 return NO_INIT;
             }
             std::vector<T> _data = data_;
@@ -392,7 +472,7 @@ namespace xtechnical_indicators {
                 out = (sum * 2.0d) / ((T)period_ * ((T)period_ + 1.0d));
                 return OK;
             }
-            out = 0;
+            out = in;
             return INDICATOR_NOT_READY_TO_WORK;
         }
 
@@ -431,7 +511,7 @@ namespace xtechnical_indicators {
          */
         virtual int update(const T in, T &out) {
             if(period_ == 0) {
-                out = 0;
+                out = in;
                 return NO_INIT;
             }
             if(data_.size() < (size_t)period_) {
@@ -445,7 +525,7 @@ namespace xtechnical_indicators {
                 out = last_data_;
                 return OK;
             }
-            out = 0;
+            out = in;
             return INDICATOR_NOT_READY_TO_WORK;
         }
 
@@ -459,14 +539,14 @@ namespace xtechnical_indicators {
          */
         int test(const T &in, T &out) {
             if(period_ == 0) {
-                out = 0;
+                out = in;
                 return NO_INIT;
             }
             if(data_.size() == period_) {
                 out = a * in + (1.0 - a) * last_data_;
                 return OK;
             }
-            out = 0;
+            out = in;
             return INDICATOR_NOT_READY_TO_WORK;
         }
 
@@ -649,7 +729,7 @@ namespace xtechnical_indicators {
         }
 
         /** \brief Получить минимальное значение буфера
-         * \param out Минимальное значение
+         * \param min_value Минимальное значение
          * \param period Период минимальных данных
          * \param offset Смещение в массиве. По умолчанию 0
          * \return вернет 0 в случае успеха, иначе см. ErrorType
@@ -670,6 +750,32 @@ namespace xtechnical_indicators {
             else min_value = *std::min_element(
                 data_.end() - total_offset,
                 data_.end() - offset);
+            return xtechnical_common::OK;
+        }
+
+        /** \brief Получить сумму
+         * \param sum_value Сумма
+         * \param period Период минимальных данных
+         * \param offset Смещение в массиве. По умолчанию 0
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int get_sum(T &sum_value,
+                const size_t period,
+                const size_t offset = 0) {
+            const size_t total_offset = period + offset;
+            if(is_test_ && data_test_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
+            else if(!is_test_ && data_.size() < total_offset)
+                return xtechnical_common::INVALID_PARAMETER;
+
+            if(is_test_) sum_value = std::accumulate(
+                data_test_.end() - total_offset,
+                data_test_.end() - offset,
+                (T)0);
+            else sum_value = std::accumulate(
+                data_.end() - total_offset,
+                data_.end() - offset,
+                (T)0);
             return xtechnical_common::OK;
         }
 
@@ -763,6 +869,8 @@ namespace xtechnical_indicators {
             return xtechnical_common::OK;
         }
 
+        /** \brief Экспериментальный метод
+         */
         int compare_data(
                 T &compare_result,
                 const uint32_t compare_type,
@@ -1160,7 +1268,7 @@ namespace xtechnical_indicators {
             if (!is_update_) {
                 prev_ = in;
                 is_update_ = true;
-                out = 0;
+                out = in;
                 return INDICATOR_NOT_READY_TO_WORK;
             }
             out = alfa_ * prev_ + beta_ * in;
@@ -1196,7 +1304,7 @@ namespace xtechnical_indicators {
                 return NO_INIT;
             }
             if (!is_init_) {
-                out = 0;
+                out = in;
                 return INDICATOR_NOT_READY_TO_WORK;
             }
             out = alfa_ * prev_ + beta_ * in;
@@ -1415,17 +1523,17 @@ namespace xtechnical_indicators {
          */
         int update(const T &in, T &tl, T &ml, T &bl) {
             if(period_ == 0) {
-                tl = 0;
-                ml = 0;
-                bl = 0;
+                tl = in;
+                ml = in;
+                bl = in;
                 return NO_INIT;
             }
             if(data_.size() < (size_t)period_) {
                 data_.push_back(in);
                 if(data_.size() != (size_t)period_) {
-                    tl = 0;
-                    ml = 0;
-                    bl = 0;
+                    tl = in;
+                    ml = in;
+                    bl = in;
                     return INDICATOR_NOT_READY_TO_WORK;
                 }
             } else {
@@ -1511,18 +1619,18 @@ namespace xtechnical_indicators {
          */
         int test(const T &in, T &tl, T &ml, T &bl) {
             if(period_ == 0) {
-                tl = 0;
-                ml = 0;
-                bl = 0;
+                tl = in;
+                ml = in;
+                bl = in;
                 return NO_INIT;
             }
             std::vector<T> data_test = data_;
             if(data_test.size() < period_) {
                 data_test.push_back(in);
                 if(data_test.size() != period_) {
-                    tl = 0;
-                    ml = 0;
-                    bl = 0;
+                    tl = in;
+                    ml = in;
+                    bl = in;
                     return INDICATOR_NOT_READY_TO_WORK;
                 }
             } else {
@@ -1553,7 +1661,7 @@ namespace xtechnical_indicators {
          */
         int test(const T &in, T &ml, T &std_dev) {
             if(period_ == 0) {
-                        ml = 0;
+                ml = in;
                 std_dev = 0;
                 return NO_INIT;
             }

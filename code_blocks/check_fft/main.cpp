@@ -9,7 +9,7 @@ int main() {
         iFreqHist(100, xtechnical_dft::RECTANGULAR_WINDOW);
     const double MATH_PI = 3.14159265358979323846264338327950288;
     for(size_t i = 0; i < 1000; ++i) {
-        double temp = std::cos(MATH_PI * 2 * (double)i / 10.0);
+        double temp = std::cos(3 * MATH_PI * 2 * (double)i / 100.0);
 
         std::vector<double> amplitude;
         std::vector<double> frequencies;
