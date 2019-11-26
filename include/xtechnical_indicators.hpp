@@ -1463,6 +1463,8 @@ namespace xtechnical_indicators {
          */
         void clear() {
             is_update_ = false;
+            iU.clear();
+            iD.clear();
         }
     };
 
@@ -2341,6 +2343,331 @@ namespace xtechnical_indicators {
 
         void clear() {
             iMW.clear();
+        }
+    };
+
+    /** \brief Ro — темп изменения цены. Другое имя — Momentum
+     *
+     * Отличие в том, что в RoC линией баланса является «0», а в Momentum «100»
+     * Формула:
+     * Pt  — текущая цена
+     * Pt-n — цена  n периодов назад
+     * Momentum=Pn-Pn-1
+     * RoCtn=((Momentum/Pt-n)*100)-100
+     */
+    template<class T>
+    class RoC {
+    private:
+        std::vector<T> buffer;
+        size_t buffer_size = 0;
+    public:
+
+        RoC() {};
+
+        /** \brief Инициализировать скользящую сумму
+         * \param period период
+         */
+        RoC(const size_t period) : buffer_size(period) {
+            buffer.reserve(period);
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &out) {
+            if(buffer_size == 0) {
+                out = 0;
+                return NO_INIT;
+            }
+            if(buffer.size() < buffer_size) {
+                buffer.push_back(in);
+                if(buffer.size() == buffer_size) {
+                    if(buffer.front() == 0) out = buffer.back() > 0 ? 100 :
+                        -100;
+                    else out = ((buffer.back() - buffer.front()) /
+                        buffer.front()) * 100.0;
+                    return OK;
+                }
+            } else {
+                buffer.push_back(in);
+                buffer.erase(buffer.begin());
+                if(buffer.front() == 0) out = buffer.back() > 0 ? 100 :
+                        -100;
+                else out = ((buffer.back() - buffer.front()) /
+                    buffer.front()) * 100.0;
+                return OK;
+            }
+            out = 0;
+            return INDICATOR_NOT_READY_TO_WORK;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данный метод отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in, T &out) {
+            if(buffer_size == 0) {
+                out = 0;
+                return NO_INIT;
+            }
+            std::vector<T> _buffer = buffer;
+            if(_buffer.size() < buffer_size) {
+                _buffer.push_back(in);
+                if(_buffer.size() == buffer_size) {
+                    if(_buffer.front() == 0) out = _buffer.back() > 0 ? 100 :
+                        -100;
+                    else out = ((_buffer.back() - _buffer.front()) /
+                        _buffer.front()) * 100.0;
+                    return OK;
+                }
+            } else {
+                _buffer.push_back(in);
+                _buffer.erase(_buffer.begin());
+                if(_buffer.front() == 0) out = _buffer.back() > 0 ? 100 :
+                    -100;
+                else out = ((_buffer.back() - _buffer.front()) /
+                    _buffer.front()) * 100.0;
+                return OK;
+            }
+            out = 0;
+            return INDICATOR_NOT_READY_TO_WORK;
+        }
+
+        /** \brief Очистить данные индикатора
+         */
+        void clear() {
+            buffer.clear();
+        }
+    };
+
+    /** \brief Индекс денежного потока
+     */
+    template <typename T, class INDICATOR_TYPE>
+    class MFI {
+    private:
+        INDICATOR_TYPE iU;
+        INDICATOR_TYPE iD;
+        bool is_init_ = false;
+        bool is_update_ = false;
+        T prev_ = 0;
+    public:
+        MFI() {}
+
+        /** \brief Инициализировать индикатор индекс денежного потока
+         * \param period период индикатора
+         */
+        MFI(const size_t &period) : iU(period), iD(period) {
+            is_init_ = true;
+        }
+
+        /** \brief Инициализировать индикатор индекса относительной силы
+         * \param period период индикатора
+         */
+        void init(const size_t &period) {
+            is_init_ = true;
+            is_update_ = false;
+            iU = INDICATOR_TYPE(period);
+            iD = INDICATOR_TYPE(period);
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param price Цена, в оригинале используется типичная цена
+         * \param volume Объем торгов
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T &price, const T &volume, T &out) {
+            if(!is_init_) {
+                return NO_INIT;
+            }
+            if(!is_update_) {
+                prev_ = price;
+                is_update_ = true;
+                out = 50.0;
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            /* поток необработанных денег */
+            T mf = price * volume;
+
+            /* На основе денежного потока вычисляются положительный и отрицательный денежные потоки */
+            T u = 0;
+            T d = 0;
+            if(prev_ < price) {
+                u = mf;
+            } else
+            if(prev_ > price) {
+                d = mf;
+            }
+
+            int erru, errd = 0;
+            T mu = 0;
+            T md = 0;
+            erru = iU.update(u, mu);
+            errd = iD.update(d, md);
+            prev_ = price;
+            if(erru != OK || errd != OK) {
+                out = 50.0;
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            if(md == 0) {
+                out = 100.0;
+                return OK;
+            }
+            /* коэффициент денежного потока */
+            T mfr = mu / md;
+            out = 100.0 - (100.0 / (1.0 + mfr));
+            return OK;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param high Наивысшая цена бара
+         * \param low Наинизшая цена бара
+         * \param close Цена закрытия бара
+         * \param volume Объем торгов
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(
+                const T &high,
+                const T &low,
+                const T &close,
+                const T &volume,
+                T &out) {
+            const T price = (high + low + close) / 3.0;
+            return update(price, volume, out);
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param price Цена, в оригинале используется типичная цена
+         * \param volume Объем торгов
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T &price, const T &volume) {
+            if(!is_init_) {
+                return NO_INIT;
+            }
+            if(!is_update_) {
+                prev_ = price;
+                is_update_ = true;
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            /* поток необработанных денег */
+            T mf = price * volume;
+
+            /* На основе денежного потока вычисляются положительный и отрицательный денежные потоки */
+            T u = 0;
+            T d = 0;
+            if(prev_ < price) {
+                u = mf;
+            } else
+            if(prev_ > price) {
+                d = mf;
+            }
+            int erru, errd = 0;
+            erru = iU.update(u, u);
+            errd = iD.update(d, d);
+            prev_ = price;
+            if(erru != OK || errd != OK) {
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param high Наивысшая цена бара
+         * \param low Наинизшая цена бара
+         * \param close Цена закрытия бара
+         * \param volume Объем торгов
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(
+                const T &high,
+                const T &low,
+                const T &close,
+                const T &volume) {
+            const T price = (high + low + close) / 3.0;
+            return update(price, volume);
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param price Цена, в оригинале используется типичная цена
+         * \param volume Объем торгов
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T &price, const T &volume, T &out) {
+            if(!is_init_) {
+                return NO_INIT;
+            }
+            if(!is_update_) {
+                out = 50.0;
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            /* поток необработанных денег */
+            T mf = price * volume;
+
+            /* На основе денежного потока вычисляются положительный и отрицательный денежные потоки */
+            T u = 0;
+            T d = 0;
+            if(prev_ < price) {
+                u = mf;
+            } else
+            if(prev_ > price) {
+                d = mf;
+            }
+
+            T mu = 0;
+            T md = 0;
+            int erru, errd = 0;
+            erru = iU.test(u, mu);
+            errd = iD.test(d, md);
+            if(erru != OK || errd != OK) {
+                out = 50.0;
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            if(d == 0) {
+                out = 100.0;
+                return OK;
+            }
+            /* коэффициент денежного потока */
+            T mfr = mu / md;
+            out = 100.0 - (100.0 / (1.0 + mfr));
+            return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         * \param high Наивысшая цена бара
+         * \param low Наинизшая цена бара
+         * \param close Цена закрытия бара
+         * \param volume Объем торгов
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(
+                const T &high,
+                const T &low,
+                const T &close,
+                const T &volume,
+                T &out) {
+            const T price = (high + low + close) / 3.0;
+            return test(price, volume, out);
+        }
+
+        /** \brief Очистить данные индикатора
+         */
+        void clear() {
+            is_update_ = false;
+            iU.clear();
+            iD.clear();
         }
     };
 

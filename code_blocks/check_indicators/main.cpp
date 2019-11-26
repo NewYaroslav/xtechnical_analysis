@@ -10,8 +10,10 @@ int main() {
     xtechnical_indicators::SMA<double> iSMA(5);
     xtechnical_indicators::AMA<double> iAMA(10);
     xtechnical_indicators::NoLagMa<double> iNoLagMa(10);
+    xtechnical_indicators::RoC<double> iRoC(3);
     for(int i = 1; i <= 50; ++i) {
-        int temp = -(i*2);//i % 4;
+        //int temp = -(i*2);//i % 4;
+        int temp = i % 4;
         iMW.update(temp);
 
         double std_dev_value = 0;
@@ -40,6 +42,9 @@ int main() {
         double sma_out = 0.0;
         iSMA.update(temp, sma_out);
 
+        double roc_out = 0.0;
+        iRoC.update(temp, roc_out);
+
         std::vector<double> rsi;
         std::vector<double> sma;
         std::vector<double> std_dev;
@@ -51,6 +56,7 @@ int main() {
             std::cout << "rsi: " << rsi[i] << " sma: " << sma[i] << " std_dev: " << std_dev[i] << std::endl;
         }
         std::cout << "MMA: " << mma_out << " SMA " << sma_out << " AMA " << ama_out << std::endl;
+        std::cout << "RoC: " << roc_out << std::endl;
     }
 
     double rsi_value = 0;
