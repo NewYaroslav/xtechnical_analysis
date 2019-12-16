@@ -1,0 +1,6 @@
+*.depend
+*.layout
+*.o
+*testing/*/bin
+*code_blocks/*/bin
+

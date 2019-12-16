@@ -12,7 +12,8 @@ namespace xtechnical_statistics {
      */
     template<class T1, class T2>
     T1 calc_root_mean_square(const T2 &array_data) {
-        size_t size = array_data.size();
+        const size_t size = array_data.size();
+        if(size == 0) return (T1)0;
         T1 sum = 0;
         for(size_t i = 0; i < size; ++i) {
             T1 temp = array_data[i] * array_data[i];
@@ -28,7 +29,8 @@ namespace xtechnical_statistics {
      */
     template<class T1, class T2>
     T1 calc_mean_value(const T2 &array_data) {
-        size_t size = array_data.size();
+        const size_t size = array_data.size();
+        if(size == 0) return (T1)0;
         T1 sum = 0;
         for(size_t i = 0; i < size; ++i) {
             sum += array_data[i];
@@ -43,11 +45,12 @@ namespace xtechnical_statistics {
      */
     template<class T1, class T2>
     T1 calc_harmonic_mean(const T2 &array_data) {
-        size_t size = array_data.size();
+        const size_t size = array_data.size();
         T1 sum = 0;
         for(size_t i = 0; i < size; ++i) {
             sum += 1.0/array_data[i];
         }
+        if(sum == 0) return (T1)0;
         return (T1)size/sum;
     };
 
@@ -57,7 +60,8 @@ namespace xtechnical_statistics {
      */
     template<class T1, class T2>
     T1 calc_geometric_mean(const T2 &array_data) {
-        size_t size = array_data.size();
+        const size_t size = array_data.size();
+        if(size == 0) return (T1)0;
         T1 sum = 1.0;
         for(size_t i = 0; i < size; ++i) {
             sum *= array_data[i];
@@ -71,7 +75,7 @@ namespace xtechnical_statistics {
      */
     template<class T1, class T2>
     T1 calc_median(T2 array_data) {
-        size_t size = array_data.size();
+        const size_t size = array_data.size();
         std::sort(array_data.begin(),array_data.end());
         return array_data[size/2];
     };
@@ -82,7 +86,8 @@ namespace xtechnical_statistics {
      */
     template<class T1, class T2>
     T1 calc_std_dev_sample(const T2 &array_data) {
-        size_t size = array_data.size();
+        const size_t size = array_data.size();
+		if(size < 2) return (T1)0;
         T1 mean = calc_mean_value<T1>(array_data);
         T1 sum = 0;
         for(size_t i = 0; i < size; ++i) {
@@ -100,7 +105,8 @@ namespace xtechnical_statistics {
      */
     template<class T1, class T2>
     T1 calc_std_dev_population(const T2 &array_data) {
-        size_t size = array_data.size();
+        const size_t size = array_data.size();
+		if(size == 0) return (T1)0;
         T1 mean = calc_mean_value<T1>(array_data);
         T1 sum = 0;
         for(size_t i = 0; i < size; ++i) {
@@ -119,7 +125,8 @@ namespace xtechnical_statistics {
     template<class T1, class T2>
     T1 calc_mean_absolute_deviation(const T2 &array_data) {
         T1 mean = calc_mean_value<T1>(array_data);
-        size_t size = array_data.size();
+        const size_t size = array_data.size();
+        if(size == 0) return (T1)0;
         T1 sum = 0;
         for(size_t i = 0; i < size; ++i) {
             sum += array_data[i] - mean;
@@ -143,7 +150,8 @@ namespace xtechnical_statistics {
     template<class T1, class T2>
     T1 calc_skewness(const T2 &array_data) {
         T1 mean = calc_mean_value<T1>(array_data);
-        size_t size = array_data.size();
+        const size_t size = array_data.size();
+        if(size < 2) return (T1)0;
         T1 sum = 0;
         for(size_t i = 0; i < size; ++i) {
             T1 diff = array_data[i] - mean;
@@ -167,7 +175,8 @@ namespace xtechnical_statistics {
     template<class T1, class T2>
     T1 calc_standard_error(const T2 &array_data) {
         T1 std_dev = calc_std_dev_sample<T1>(array_data);
-        size_t size = array_data.size();
+        const size_t size = array_data.size();
+        if(size == 0) return (T1)0;
         return std_dev/std::sqrt((T1)size);
     };
 
@@ -177,6 +186,7 @@ namespace xtechnical_statistics {
      */
     template<class T1, class T2>
     T1 calc_sampling_error(const T2 &size) {
+        if(size == 0) return (T1)0;
         return std::sqrt(2500.0/(T1)size) * 1.96;
     };
 
@@ -190,6 +200,7 @@ namespace xtechnical_statistics {
     template<class T1, class T2>
     T1 calc_coefficient_variance(const T2 &array_data) {
         size_t size = array_data.size();
+        if(size < 2) return (T1)0;
         T1 mean = calc_mean_value<T1>(array_data);
         T1 sum = 0;
         for(size_t i = 0; i < size; ++i) {
@@ -215,7 +226,8 @@ namespace xtechnical_statistics {
      */
     template<class T1, class T2>
     T1 calc_signal_to_noise_ratio(const T2 &array_data) {
-        size_t size = array_data.size();
+        const size_t size = array_data.size();
+        if(size < 2) return (T1)0;
         T1 mean = calc_mean_value<T1>(array_data);
         T1 sum = 0;
         for(size_t i = 0; i < size; ++i) {
@@ -237,7 +249,8 @@ namespace xtechnical_statistics {
      */
     template<class T1, class T2>
     T1 calc_excess(const T2 &array_data) {
-        size_t size = array_data.size();
+        const size_t size = array_data.size();
+        if(size == 0) return (T1)0;
         T1 mean = calc_mean_value<T1>(array_data);
         T1 u4 = 0;
         T1 std_dev = 0;
