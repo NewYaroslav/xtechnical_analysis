@@ -227,11 +227,13 @@ int main() {
 * EMA
 * MMA
 * AMA
-* NoLagMa
-* LowPassFilter
-* AverageSpeed - (не проверен!)
+* NoLagMa - МА без задержки
+* LowPassFilter - ФНЧ
+* AverageSpeed - (индикатор не проверен!)
 * CurrencyCorrelation - (вычисление корреляции)
-* DetectorWaveform - (не проверен! экспериментальный индикатор)
+* DetectorWaveform - (индикатор не проверен! экспериментальный индикатор)
+* DelayLine - Линия задержки (индикатор не проверен!)
+* OsMa - скользящее среднее индикатора осциллятора (индикатор не проверен!)
 
 ## Нормализация данных
 

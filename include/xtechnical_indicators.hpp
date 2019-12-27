@@ -309,6 +309,88 @@ namespace xtechnical_indicators {
         }
     };
 
+
+	/** \brief Линия задержки
+     */
+    template <typename T>
+    class DelayLine {
+    private:
+        std::vector<T> data_;
+        size_t period_ = 0;
+    public:
+
+        DelayLine() {};
+
+        /** \brief Конструктор линии задержки
+         * \param period период
+         */
+        DelayLine(const size_t period) : period_(period) {
+            data_.reserve(period_);
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &out) {
+            if(period_ == 0) {
+                out = in;
+                return OK;
+            }
+            if(data_.size() < (size_t)period_) {
+                data_.push_back(in);
+                if(data_.size() == (size_t)period_) {
+                    out = data_.front();
+                    return OK;
+                }
+            } else {
+                data_.push_back(in);
+                data_.erase(data_.begin());
+                out = data_.front();
+                return OK;
+            }
+            out = in;
+            return INDICATOR_NOT_READY_TO_WORK;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данный метод отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in, T &out) {
+            if(period_ == 0) {
+                out = in;
+                return OK;
+            }
+            std::vector<T> _data = data_;
+            if(_data.size() < (size_t)period_) {
+                _data.push_back(in);
+                if(_data.size() == (size_t)period_) {
+                    out = _data.front();
+                    return OK;
+                }
+            } else {
+                _data.push_back(in);
+                _data.erase(_data.begin());
+                out = _data.front();
+                return OK;
+            }
+            out = in;
+            return INDICATOR_NOT_READY_TO_WORK;
+        }
+
+        /** \brief Очистить данные индикатора
+         */
+        void clear() {
+            data_.clear();
+        }
+    };
+
     /** \brief Скользящая сумма
      */
     template <typename T>
@@ -2670,6 +2752,277 @@ namespace xtechnical_indicators {
             iD.clear();
         }
     };
+
+	/** \brief Индикатор осциллятор
+     */
+	template <class T, class INDICATOR_TYPE_1 = EMA<T>, class INDICATOR_TYPE_2 = EMA<T>, class INDICATOR_TYPE_3 = SMA<T>>
+	class OsMa {
+	private:
+		INDICATOR_TYPE_1 iFastMA;
+		INDICATOR_TYPE_2 iSlowMA;
+		INDICATOR_TYPE_3 iSignalMA;
+		DelayLine<T> iDelayLine;
+	public:
+
+		OsMa() {};
+
+        /** \brief Конструктор индикатора осциллятора
+         * \param period_fast Период быстрой скользящей средней
+		 * \param period_slow Период медленной скользящей средней
+		 * \param period_signal Период усреднения сигнальной линии
+		 * \param shift Смещение назад
+         */
+        OsMa(	const size_t period_fast = 5,
+				const size_t period_slow = 9,
+				const size_t period_signal = 3,
+				const size_t shift = 0) :
+				iFastMA(period_fast),
+				iSlowMA(period_slow),
+				iSignalMA(period_signal),
+				iDelayLine(shift) {}
+
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &out) {
+			out = 0;
+			T fast_ma = in, slow_ma = in, signal_ma = in;
+			int err_fast = iFastMA.update(in, fast_ma);
+			int err_slow = iSlowMA.update(in, slow_ma);
+			if(err_fast != OK || err_slow != OK) return NO_INIT;
+			int err_signal = iSignalMA.update((fast_ma - slow_ma), signal_ma);
+			if(err_signal != OK) return err_signal;
+			return iDelayLine.update(signal_ma, out);
+        }
+
+		/** \brief Протестировать состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in, T &out) {
+			out = 0;
+			T fast_ma = in, slow_ma = in, signal_ma = in;
+			int err_fast = iFastMA.test(in, fast_ma);
+			int err_slow = iSlowMA.test(in, slow_ma);
+			if(err_fast != OK || err_slow != OK) return NO_INIT;
+			int err_signal = iSignalMA.test((fast_ma - slow_ma), signal_ma);
+			if(err_signal != OK) return err_signal;
+			return iDelayLine.test(signal_ma, out);
+        }
+
+		void clear() {
+			iFastMA.clear();
+			iSlowMA.clear();
+			iSignalMA.clear();
+			iDelayLine.clear();
+		}
+	};
+
+	template<class T>
+	class MaBBandsYxf {
+	private:
+		OsMa<T> iOsMa;
+		DelayLine<T> iDelayLineOsMa;
+		SMA<T> iSmaHigh;
+		SMA<T> iSmaLow;
+		DelayLine<T> iDelayLineHigh;
+		DelayLine<T> iDelayLineLow;
+		WMA<T> iWmaHigh;
+		WMA<T> iWmaLow;
+		BollingerBands<T> iBbHigh;
+		BollingerBands<T> iBbLow;
+		double point = 0.00001;
+		size_t dist_2 = 20;     /**<  */
+    public:
+
+        MaBBandsYxf(
+                const size_t ma_period = 9,
+                const size_t move_shift = 12,
+                const size_t bb_period = 20,
+                const double bb_factor = 0.4,
+                const size_t os_period = 3,
+                const double symbol_point = 0.00001,
+                const size_t symbol_dist = 20) :
+            iOsMa(5, 9, os_period), iDelayLineOsMa(1),
+            iSmaHigh(ma_period), iSmaLow(ma_period),
+            iDelayLineHigh(move_shift), iDelayLineLow(move_shift),
+            iWmaHigh(4), iWmaLow(4),
+            iBbHigh(bb_period, bb_factor), iBbLow(bb_period, bb_factor),
+            point(symbol_point), dist_2(symbol_dist) {
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param high Наивысшая цена бара
+         * \param low Наинизшая цена бара
+         * \param close Цена закрытия бара
+         * \param out Прогноз, BUY == 1, SELL == 1
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(
+                const T &high,
+                const T &low,
+                const T &close,
+                T &out) {
+			out = 0;
+			T sma_high = high, sma_low = low, wma_high = high, wma_low = low;
+			T bb_high_tl = high, bb_high_ml = high, bb_high_bl = high;
+			T bb_low_tl = low, bb_low_ml = low, bb_low_bl = low;
+			T os_ma_now = 0, os_ma_pre = 0;
+
+			int err_sma_high = iSmaHigh.update(high, sma_high);
+			int err_wma_high = iWmaHigh.update(high, wma_high);
+			int err_bb_high = iBbHigh.update(high, bb_high_tl, bb_high_ml, bb_high_bl);
+
+			int err_sma_low = iSmaLow.update(low, sma_low);
+			int err_wma_low = iWmaLow.update(low, wma_low);
+            int err_bb_low = iBbLow.update(low, bb_low_tl, bb_low_ml, bb_low_bl);
+
+            int err_os_ma = iOsMa.update(close, os_ma_now);
+            int err_os_ma_pre = NO_INIT;
+            if(err_os_ma == OK) {
+                err_os_ma_pre = iDelayLineOsMa.update(os_ma_now, os_ma_pre);
+            }
+
+            if(err_sma_high != OK || err_sma_low != OK ||
+                err_os_ma != OK || err_os_ma_pre != OK) return NO_INIT;
+            T maup1 = sma_high;
+            T madn1 = sma_low;
+            int err_maup1 = iDelayLineHigh.update(sma_high, maup1);
+            int err_madn1 = iDelayLineLow.update(sma_low, madn1);
+            if(err_maup1 != OK || err_madn1 != OK) return NO_INIT;
+
+            T line_1 = 0, line_2 = 0;
+            if(maup1 > bb_high_tl) {
+                line_1 = maup1 + dist_2 * point;
+                bb_high_tl = 0;
+            } else if(maup1 < bb_high_tl) {
+                line_1 = bb_high_tl;
+                maup1 = 0;
+            }
+
+            if(madn1 > 0.0) {
+                if(madn1 < bb_low_bl) {
+                    line_2 = madn1 - dist_2 * point;
+                    bb_low_bl = 0;
+                } else if(madn1 > bb_low_bl) {
+                    line_2 = bb_low_bl ;
+                    madn1 = 0;
+                }
+            }
+            if(madn1 == 0.0) {
+                line_2 = bb_low_bl;
+                madn1 = 0;
+            }
+
+            /* сигнал вверх */
+            if((os_ma_now > 0 && os_ma_pre < 0) &&
+                (wma_low < line_2) &&
+                (low < line_2)) {
+                out = BUY;
+            }
+            /* сигнал вниз */
+            if((os_ma_now < 0 && os_ma_pre > 0) &&
+                (wma_high > line_1) &&
+                (high > line_1) ) {
+                out = SELL;
+            }
+            return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         * \param high Наивысшая цена бара
+         * \param low Наинизшая цена бара
+         * \param close Цена закрытия бара
+         * \param out Прогноз, BUY == 1, SELL == 1
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(
+                const T &high,
+                const T &low,
+                const T &close,
+                T &out) {
+			out = 0;
+			T sma_high = high, sma_low = low, wma_high = high, wma_low = low;
+			T bb_high_tl = high, bb_high_ml = high, bb_high_bl = high;
+			T bb_low_tl = low, bb_low_ml = low, bb_low_bl = low;
+			T os_ma_now = 0, os_ma_pre = 0;
+
+			int err_sma_high = iSmaHigh.test(high, sma_high);
+			int err_wma_high = iWmaHigh.test(high, wma_high);
+			int err_bb_high = iBbHigh.test(high, bb_high_tl, bb_high_ml, bb_high_bl);
+
+			int err_sma_low = iSmaLow.test(low, sma_low);
+			int err_wma_low = iWmaLow.test(low, wma_low);
+            int err_bb_low = iBbLow.test(low, bb_low_tl, bb_low_ml, bb_low_bl);
+
+            int err_os_ma = iOsMa.test(close, os_ma_now);
+            int err_os_ma_pre = NO_INIT;
+            if(err_os_ma == OK) {
+                err_os_ma_pre = iDelayLineOsMa.test(os_ma_now, os_ma_pre);
+            }
+
+            if(err_sma_high != OK || err_sma_low != OK ||
+                err_os_ma != OK || err_os_ma_pre != OK) return NO_INIT;
+            T maup1 = sma_high;
+            T madn1 = sma_low;
+            int err_maup1 = iDelayLineHigh.test(sma_high, maup1);
+            int err_madn1 = iDelayLineLow.test(sma_low, madn1);
+            if(err_maup1 != OK || err_madn1 != OK) return NO_INIT;
+
+            T line_1 = 0, line_2 = 0;
+            if(maup1 > bb_high_tl) {
+                line_1 = maup1 + dist_2 * point;
+                bb_high_tl = 0;
+            } else if(maup1 < bb_high_tl) {
+                line_1 = bb_high_tl;
+                maup1 = 0;
+            }
+
+            if(madn1 > 0.0) {
+                if(madn1 < bb_low_bl) {
+                    line_2 = madn1 - dist_2 * point;
+                    bb_low_bl = 0;
+                } else if(madn1 > bb_low_bl) {
+                    line_2 = bb_low_bl ;
+                    madn1 = 0;
+                }
+            }
+            if(madn1 == 0.0) {
+                line_2 = bb_low_bl;
+                madn1 = 0;
+            }
+
+            /* сигнал вверх */
+            if((os_ma_now > 0 && os_ma_pre < 0) &&
+                (wma_low < line_2) &&
+                (low < line_2)) {
+                out = BUY;
+            }
+            /* сигнал вниз */
+            if((os_ma_now < 0 && os_ma_pre > 0) &&
+                (wma_high > line_1) &&
+                (high > line_1) ) {
+                out = SELL;
+            }
+            return OK;
+        }
+
+        void clear() {
+        	iSmaHigh.clear();
+			iWmaHigh.clear();
+			iBbHigh.clear();
+			iSmaLow.clear();
+			iWmaLow.clear();
+            iBbLow.clear();
+            iOsMa.clear();
+            iDelayLineOsMa.clear();
+            iDelayLineHigh.clear();
+            iDelayLineLow.clear();
+        }
+	};
 
     /** \brief Мера склонности к чередовнию знаков (z-счет)
      *

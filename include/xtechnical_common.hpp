@@ -46,6 +46,11 @@ namespace xtechnical_common {
         COMPARE_WITH_CENTER_LINE = 2,
         CALCULATE_ANGLE = 3,
     };
+
+    enum {
+        BUY = 1,
+        SELL = -1,
+    };
 };
 
 #endif // XTECHNICAL_COMMON_HPP_INCLUDED
