@@ -125,10 +125,11 @@ namespace xtechnical_indicators {
 
     /** \brief Кольцевой буфер
      */
-    template <typename T, int SIZE = INDICATORSEASY_DEF_RING_BUFFER_SIZE>
+    template <typename T>
     class RingBuffer {
     public:
-        T data[SIZE];
+        //T data[SIZE];
+        std::vector<T> data;
     private:
         size_t pos = 0;
         size_t data_size = 0;
@@ -137,20 +138,20 @@ namespace xtechnical_indicators {
         RingBuffer() {};
 
         RingBuffer(const size_t &size) {
-            //data.resize(size);
+            data.resize(size);
             data_size = size;
         }
 
         void resize(const size_t &size) {
-            //data.resize(size);
+            data.resize(size);
             data_size = size;
         }
 
-        inline int size() {
+        inline size_t size() {
             return data_size;
         }
 
-        inline int count() {
+        inline size_t count() {
             return read_count;
         }
 
@@ -203,10 +204,10 @@ namespace xtechnical_indicators {
 
     /** \brief Простая скользящая средняя
      */
-    template <typename T, int SIZE = INDICATORSEASY_DEF_RING_BUFFER_SIZE>
+    template <typename T>
     class SMA {
     private:
-        RingBuffer<T, SIZE> data_;
+        RingBuffer<T> data_;
         T last_data_ = 0;
         size_t period_ = 0;
         size_t pos_ = 0;
@@ -285,7 +286,7 @@ namespace xtechnical_indicators {
                 out = 0;
                 return NO_INIT;
             }
-            RingBuffer<T, SIZE> _data = data_;
+            RingBuffer<T> _data = data_;
             if(_data.count() < period_) {
                 _data.push(in);
                 if(_data.count() == period_) {
@@ -653,6 +654,102 @@ namespace xtechnical_indicators {
             EMA<T>::period_ = period;
             EMA<T>::data_.reserve(period);
             EMA<T>::a = 1.0/(T)period;
+        }
+    };
+
+    /** \brief Индикатор Volume Weighted MA - модифицированная скользящая средняя, с реализацией взвешенности по объему.
+     */
+    template <typename T>
+    class VWMA {
+    private:
+        std::vector<T> price_data;
+        std::vector<T> weight_data;
+        size_t period = 0;
+    public:
+        VWMA() {};
+
+        /** \brief Инициализировать скользящее среднее
+         * \param period период
+         */
+        VWMA(const size_t user_period) : period(user_period) {
+            price_data.reserve(period);
+            weight_data.reserve(period);
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param input Сигнал на входе
+         * \param weight Вес сигнала на входе
+         * \param output Сигнал на выходе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T input, const T weight, T &output) {
+            if(period == 0) {
+                output = input;
+                return NO_INIT;
+            }
+            price_data.push_back(input);
+            weight_data.push_back(weight);
+            if(price_data.size() > period) {
+                price_data.erase(price_data.begin());
+                weight_data.erase(weight_data.begin());
+            }
+            if(price_data.size() == period) {
+                T sum = 0;
+                T sum_weight = 0;
+                for(size_t i = 0; i < price_data.size(); ++i) {
+                    sum += price_data[i] * weight_data[i];
+                    sum_weight += weight_data[i];
+                }
+                output = sum / (sum_weight);
+            } else {
+                output = input;
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данный метод отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+         int test(const T input, const T weight, T &output) {
+            if(period == 0) {
+                output = input;
+                return NO_INIT;
+            }
+            std::vector<T> _price_data = price_data;
+            std::vector<T> _weight_data = weight_data;
+
+            _price_data.push_back(input);
+            _weight_data.push_back(weight);
+            if(_price_data.size() > period) {
+                _price_data.erase(price_data.begin());
+                _weight_data.erase(weight_data.begin());
+            }
+            if(_price_data.size() == period) {
+                T sum = 0;
+                T sum_weight = 0;
+                for(size_t i = 0; i < _price_data.size(); ++i) {
+                    sum += _price_data[i] * _weight_data[i];
+                    sum_weight += _weight_data[i];
+                }
+                output = sum / ((T)period * sum_weight);
+            } else {
+                output = input;
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Очистить данные индикатора
+         */
+        void clear() {
+            price_data.clear();
+            weight_data.clear();
         }
     };
 
