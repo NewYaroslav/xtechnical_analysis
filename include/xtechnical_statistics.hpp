@@ -300,8 +300,9 @@ namespace xtechnical_statistics {
      */
     template<class T1, class T2>
     T1 calc_probability_winrate(const T1 threshold_winrate, const T2 win_bet, const T2 number_bet, double precision = 0.01) {
-        if(number_bet <= 0) return 0;
+        if(number_bet <= 0 || number_bet == 1) return 0;
         const double w = (double)win_bet/(double)number_bet;
+        if(w == 1) return 1;
         const double t = (w - threshold_winrate) * std::sqrt(((double)number_bet / w) / (1.0 - w));
         return calc_integral_laplace<T1>(t, precision) + 0.5;
     }

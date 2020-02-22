@@ -52,5 +52,8 @@ int main() {
 
     p_bet = xtechnical_statistics::calc_probability_winrate<double>(0.54, 5700, 10000);
     std::cout << "p_bet: " << p_bet << std::endl;
+
+    p_bet = xtechnical_statistics::calc_probability_winrate<double>(0.57, 1, 1);
+    std::cout << "p_bet (1): " << p_bet << std::endl;
     return 0;
 }
