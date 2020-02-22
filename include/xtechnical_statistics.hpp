@@ -268,6 +268,43 @@ namespace xtechnical_statistics {
         return u4/std_dev - 3.0;
     }
 
+
+    template<class T1, class T2>
+    T1 calc_laplace(T2 t) {
+        constexpr double pi = 3.14159265358979323846;
+        constexpr double pi_x2 = pi * 2.0;
+        constexpr double c = std::sqrt(pi_x2);
+        return std::exp(-t * t * 0.5) / c;
+    }
+
+    template<class T1, class T2>
+    T1 calc_integral_laplace(T2 t, T2 precision) {
+        constexpr double pi = 3.14159265358979323846;
+        constexpr double pi_x2 = pi * 2.0;
+        constexpr double c = std::sqrt(pi_x2);
+        double result = 0;
+        for(double i = 0; i < t; i += precision){
+            double temp = (i + precision);
+            result += precision * std::abs(std::exp(-0.5 * i * i) + std::exp(-0.5 * temp * temp)) /2.0;
+        }
+        result *= 1.0 / c;
+        return result;
+    }
+
+    /** \brief Посчитать вероятность, с которой винрейт играемой стратегии выше заданного числа
+     *
+     * \param threshold_winrate Заданнывй винрейт
+     * \param win_bet Количество удачных ставок
+     * \param number_bet Количество ставок
+     * \return Вероятность
+     */
+    template<class T1, class T2>
+    T1 calc_probability_winrate(const T1 threshold_winrate, const T2 win_bet, const T2 number_bet, double precision = 0.01) {
+        if(number_bet <= 0) return 0;
+        const double w = (double)win_bet/(double)number_bet;
+        const double t = (w - threshold_winrate) * std::sqrt(((double)number_bet / w) / (1.0 - w));
+        return calc_integral_laplace<T1>(t, precision) + 0.5;
+    }
 };
 
 #endif // XTECHNICAL_STATISTICS_HPP_INCLUDED

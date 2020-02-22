@@ -38,5 +38,19 @@ int main() {
     std::vector<double> test_data5 = {1,1,1,0,0,1};
     double standard_error = xtechnical_statistics::calc_standard_error<double>(test_data5);
     std::cout << "standard_error: " << standard_error << std::endl;
+
+    double integral_laplace = xtechnical_statistics::calc_integral_laplace<double>(0.01, 0.00001);
+    std::cout << "integral_laplace: " << integral_laplace << std::endl;
+    double integral_laplace2 = xtechnical_statistics::calc_integral_laplace<double>(1.51, 0.01);
+    std::cout << "integral_laplace2: " << integral_laplace2 << std::endl;
+
+    double p_bet = xtechnical_statistics::calc_probability_winrate<double>(0.6, 31, 44);
+    std::cout << "p_bet: " << p_bet << std::endl; // получим ответ 93.6
+
+    p_bet = xtechnical_statistics::calc_probability_winrate<double>(0.56, 5700, 10000);
+    std::cout << "p_bet: " << p_bet << std::endl;
+
+    p_bet = xtechnical_statistics::calc_probability_winrate<double>(0.54, 5700, 10000);
+    std::cout << "p_bet: " << p_bet << std::endl;
     return 0;
 }
