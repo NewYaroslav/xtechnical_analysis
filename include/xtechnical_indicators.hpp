@@ -700,7 +700,15 @@ namespace xtechnical_indicators {
                     sum += price_data[i] * weight_data[i];
                     sum_weight += weight_data[i];
                 }
-                output = sum / (sum_weight);
+                if(sum_weight == 0) {
+                    sum = 0;
+                    for(size_t i = 0; i < price_data.size(); ++i) {
+                        sum += price_data[i];
+                    }
+                    output = sum / (T)period;
+                } else {
+                    output = sum / (sum_weight);
+                }
             } else {
                 output = input;
                 return INDICATOR_NOT_READY_TO_WORK;
@@ -737,7 +745,15 @@ namespace xtechnical_indicators {
                     sum += _price_data[i] * _weight_data[i];
                     sum_weight += _weight_data[i];
                 }
-                output = sum / ((T)period * sum_weight);
+                if(sum_weight == 0) {
+                    sum = 0;
+                    for(size_t i = 0; i < _price_data.size(); ++i) {
+                        sum += _price_data[i];
+                    }
+                    output = sum / (T)period;
+                } else {
+                    output = sum / sum_weight;
+                }
             } else {
                 output = input;
                 return INDICATOR_NOT_READY_TO_WORK;
@@ -3124,7 +3140,7 @@ namespace xtechnical_indicators {
     /** \brief Мера склонности к чередовнию знаков (z-счет)
      *
      * Z - число СКО, на которое количество серий в выборке отклоняется
-     * от своего математчиеского ожидания
+     * от своего математического ожидания
      * Если z > 3, то с вероятностью 0,9973 знаки имеют склонность к чередованию
      * Если z <-3, то с аналогичной вероятнсотью
      * проявляется склонность к сохранению знака
