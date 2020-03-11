@@ -75,5 +75,10 @@ int main() {
     double std_dev_value = 0;
     iMW.get_std_dev(std_dev_value, 22);
     std::cout << "std_dev: " << std_dev_value << std::endl;
+
+    xtechnical_indicators::VCMA<double> iVCMA;
+    std::cout << iVCMA.update(2,1) << std::endl;
+    std::cout << iVCMA.update(3,0.5) << std::endl;
+    std::cout << iVCMA.update(1,0.5) << std::endl;
     return 0;
 }

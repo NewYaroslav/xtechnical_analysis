@@ -392,6 +392,123 @@ namespace xtechnical_indicators {
         }
     };
 
+    /** \brief Кумулятивное скользящее среднее
+     */
+    template <typename T>
+    class CMA {
+    private:
+        uint64_t n = 0;
+        uint64_t tn = 0;
+        T sum = 0;
+        bool is_test = false;
+    public:
+        CMA() {};
+
+        double update(const T in) {
+            sum += in;
+            ++n;
+            is_test = false;
+            return sum / (T)n;
+        }
+
+        void update(const T in, T &out) {
+            sum += in;
+            ++n;
+            out = sum / (T)n;
+            is_test = false;
+        }
+
+        double test(const T in) {
+            T _sum = sum;
+            tn = n;
+            _sum += in;
+            ++tn;
+            is_test = true;
+            return _sum / (T)tn;
+        }
+
+        void test(const T in, T &out) {
+            T _sum = sum;
+            tn = n;
+            _sum += in;
+            ++tn;
+            out = _sum / (T)tn;
+            is_test = true;
+        }
+
+        int get_period() {return is_test ? tn : n;};
+
+        void clear() {
+            n = 0;
+            sum = 0;
+        }
+    };
+
+    /** \brief Кумулятивное скользящее среднее с объемом
+     */
+    template <typename T>
+    class VCMA {
+    private:
+        uint64_t n = 0;
+        uint64_t tn = 0;
+        T sum = 0;
+        T sum_weight = 0;
+        bool is_test = false;
+    public:
+
+        VCMA() {};
+
+        double update(const T input, const T weight) {
+            sum += input * weight;
+            sum_weight += weight;
+            ++n;
+            is_test = false;
+            return sum / sum_weight;
+        }
+
+        void update(const T input, const T weight, T &out) {
+            sum += input * weight;
+            sum_weight += weight;
+            ++n;
+            out = sum / sum_weight;
+            is_test = false;
+        }
+
+        double test(const T input, const T weight) {
+            tn = n;
+            T _sum = sum;
+            T _sum_weight = sum_weight;
+
+            _sum += input * weight;
+            _sum_weight += weight;
+            ++tn;
+            is_test = true;
+            return _sum / _sum_weight;
+        }
+
+        void test(const T input, const T weight, T &out) {
+            tn = n;
+            T _sum = sum;
+            T _sum_weight = sum_weight;
+
+            _sum += input * weight;
+            _sum_weight += weight;
+            ++tn;
+            out = sum / sum_weight;
+            is_test = true;
+        }
+
+        int get_period() {return is_test ? tn : n;};
+
+        void clear() {
+            n = 0;
+            tn = 0;
+            sum = 0;
+            sum_weight = 0;
+            is_test = false;
+        }
+    };
+
     /** \brief Скользящая сумма
      */
     template <typename T>
