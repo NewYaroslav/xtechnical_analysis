@@ -463,6 +463,7 @@ namespace xtechnical_indicators {
             sum_weight += weight;
             ++n;
             is_test = false;
+            if(sum_weight == 0) return 0.0;
             return sum / sum_weight;
         }
 
@@ -470,7 +471,8 @@ namespace xtechnical_indicators {
             sum += input * weight;
             sum_weight += weight;
             ++n;
-            out = sum / sum_weight;
+            if(sum_weight == 0) out = 0.0;
+            else out = sum / sum_weight;
             is_test = false;
         }
 
@@ -483,6 +485,7 @@ namespace xtechnical_indicators {
             _sum_weight += weight;
             ++tn;
             is_test = true;
+            if(_sum_weight == 0) return 0.0;
             return _sum / _sum_weight;
         }
 
@@ -494,7 +497,8 @@ namespace xtechnical_indicators {
             _sum += input * weight;
             _sum_weight += weight;
             ++tn;
-            out = sum / sum_weight;
+            if(_sum_weight == 0) out = 0.0;
+            else out = _sum / _sum_weight;
             is_test = true;
         }
 
