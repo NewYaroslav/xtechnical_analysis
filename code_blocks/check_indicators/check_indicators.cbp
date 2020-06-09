@@ -37,7 +37,9 @@
 		</Compiler>
 		<Unit filename="../../include/xtechnical_common.hpp" />
 		<Unit filename="../../include/xtechnical_correlation.hpp" />
+		<Unit filename="../../include/xtechnical_dft.hpp" />
 		<Unit filename="../../include/xtechnical_indicators.hpp" />
+		<Unit filename="../../include/xtechnical_moving_window.hpp" />
 		<Unit filename="../../include/xtechnical_normalization.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>

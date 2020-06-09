@@ -187,12 +187,13 @@ namespace xtechnical_dft {
                     output_real[j] = 0.0;
                     output_imag[j] = 0.0;
                     for(size_t k = 0; k < table_period; ++k) {
+                        size_t temp = j * k;
                         output_real[j] +=
                             input_real[k] *
-                            cosine_table[(j * k) % table_period];
+                            cosine_table[temp % table_period];
                         output_imag[j] +=
                             input_real[k] *
-                            sine_table[(j * k) % table_period];
+                            sine_table[temp % table_period];
                     }
                     output_real[j] /= (FLOAT_TYPE)table_period;
                     output_imag[j] /= (FLOAT_TYPE)table_period;
@@ -206,12 +207,13 @@ namespace xtechnical_dft {
                     output_real[j] = 0.0;
                     output_imag[j] = 0.0;
                     for(size_t k = 0; k < table_period; ++k) {
+                        size_t temp = j * k;
                         output_real[j] +=
                             temp_input_real[k] *
-                            cosine_table[(j * k) % table_period];
+                            cosine_table[temp % table_period];
                         output_imag[j] +=
                             temp_input_real[k] *
-                            sine_table[(j * k) % table_period];
+                            sine_table[temp % table_period];
                     }
                     output_real[j] /= (FLOAT_TYPE)table_period;
                     output_imag[j] /= (FLOAT_TYPE)table_period;
