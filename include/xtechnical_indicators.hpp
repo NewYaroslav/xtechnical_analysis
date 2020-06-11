@@ -399,14 +399,10 @@ namespace xtechnical_indicators {
             }
             if(data_.size() < (size_t)period_) {
                 data_.push_back(in);
-                if(data_.size() == (size_t)period_) {
-                    out = data_.front();
-                    return OK;
-                }
             } else {
+                out = data_.front();
                 data_.push_back(in);
                 data_.erase(data_.begin());
-                out = data_.front();
                 return OK;
             }
             out = in;
@@ -429,14 +425,10 @@ namespace xtechnical_indicators {
             std::vector<T> _data = data_;
             if(_data.size() < (size_t)period_) {
                 _data.push_back(in);
-                if(_data.size() == (size_t)period_) {
-                    out = _data.front();
-                    return OK;
-                }
             } else {
+                out = _data.front();
                 _data.push_back(in);
                 _data.erase(_data.begin());
-                out = _data.front();
                 return OK;
             }
             out = in;
