@@ -24,7 +24,11 @@
 #ifndef XTECHNICAL_COMMON_HPP_INCLUDED
 #define XTECHNICAL_COMMON_HPP_INCLUDED
 
+#include <algorithm>
+
 namespace xtechnical_common {
+    const double NAN_DATA = std::numeric_limits<double>::quiet_NaN();
+
     /// Набор возможных состояний ошибки
     enum {
         OK = 0,                             ///< Ошибок нет, все в порядке

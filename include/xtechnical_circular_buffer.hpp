@@ -95,12 +95,13 @@ namespace xtechnical {
          * \return Вернет true, если циклическй буфер полн
          */
         inline bool full() const {
-            return is_test ? (count_test >= buffer_size) : (count >= buffer_size);
+            if(is_test) return (count_test >= buffer_size);
+            return (count >= buffer_size);
         }
 
-        void fill(const T& value) {
-            if(is_test) buffer_test.fill(value);
-            else buffer.fill(value);
+        void fill(const T value) {
+            if(is_test) std::fill(buffer_test.begin(), buffer_test.end(), value);
+            else std::fill(buffer.begin(), buffer.end(), value);
         }
 
         /** \brief Обновить состояние циклического буфера
@@ -247,11 +248,56 @@ namespace xtechnical {
             }
         }
 
+        /** \brief Получить сумму
+         * \param start_index Начальный индекс
+         * \param stop_index Конечный индекс
+         * \return Возвращает сумму элементов циклического буфера
+         */
+        inline const T sum(const uint32_t start_index, const uint32_t stop_index) const {
+            T temp = 0;
+            if(is_test) {
+                if(is_power_of_two) {
+                    for(uint32_t index = start_index; index < stop_index; ++index) {
+                        temp += buffer_test[(offset_test + index) & mask];
+                    }
+                    return temp;
+                } else {
+                    for(uint32_t index = start_index; index < stop_index; ++index) {
+                        temp += buffer_test[(offset_test + (index - buffer_offset)) & mask];
+                    }
+                    return temp;
+                }
+            } else {
+                if(is_power_of_two) {
+                    for(uint32_t index = start_index; index < stop_index; ++index) {
+                        temp += buffer[(offset + index) & mask];
+                    }
+                    return temp;
+                } else {
+                    for(uint32_t index = start_index; index < stop_index; ++index) {
+                        temp += buffer[(offset + (index - buffer_offset)) & mask];
+                    }
+                    return temp;
+                }
+            }
+        }
+
         /** \brief Получить среднее значение
          * \return Возвращает среднее значение элементов циклического буфера
          */
         inline const T mean() const {
             return sum() / (T)buffer_size;
+        }
+
+        /** \brief Очистить данные циклического буфера
+         */
+        inline void clear() {
+            count = 0;
+            count_test = 0;
+            offset = 0;
+            offset_test = 0;
+            is_test = false;
+            //fill(0);
         }
     };
 };

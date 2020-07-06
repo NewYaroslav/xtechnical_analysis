@@ -18,6 +18,14 @@ int main() {
     for(size_t i = 0; i < test_data.size(); ++i) {
         delay_line.test(test_data[i]);
         std::cout
+            << "test date " << test_data[i]
+            << " get test " << delay_line.get()
+            << std::endl;
+    }
+    delay_line.clear();
+    for(size_t i = 0; i < test_data.size(); ++i) {
+        delay_line.update(test_data[i]);
+        std::cout
             << "date " << test_data[i]
             << " get " << delay_line.get()
             << std::endl;

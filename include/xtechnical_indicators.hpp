@@ -126,82 +126,159 @@ namespace xtechnical_indicators {
         return OK;
     }
 
-    /** \brief Кольцевой буфер
+
+    /** \brief Cкользящий Z-score
      */
     template <typename T>
-    class RingBuffer {
-    public:
-        //T data[SIZE];
-        std::vector<T> data;
+    class Zscore {
     private:
-        size_t pos = 0;
-        size_t data_size = 0;
-        size_t read_count = 0;
+        xtechnical::circular_buffer<T> buffer;
+        T last_data = 0;
+        T output_value = std::numeric_limits<double>::quiet_NaN();
+        size_t period = 0;
     public:
-        RingBuffer() {};
+        Zscore() {};
 
-        RingBuffer(const size_t &size) {
-            data.resize(size);
-            data_size = size;
+        /** \brief Инициализировать простую скользящую среднюю
+         * \param user_period период
+         */
+        Zscore(const size_t user_period) :
+                buffer(user_period + 1), period(user_period) {
         }
 
-        void resize(const size_t &size) {
-            data.resize(size);
-            data_size = size;
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &out) {
+            if(period == 0) {
+                out = output_value = std::numeric_limits<double>::quiet_NaN();
+                return NO_INIT;
+            }
+            buffer.update(in);
+            if(buffer.full()) {
+                last_data = last_data + (in - buffer.front());
+                T mean = last_data/(T)period;
+                T diff = 0, sum = 0;
+                for(size_t i = 1; i <= period; ++i) {
+                    diff = (buffer[i] - mean);
+                    sum += diff * diff;
+                }
+                sum /= (T)(period - 1);
+                T std_dev = sum > 0 ? std::sqrt(sum) : 0;
+                out = output_value = std_dev > 0 ? ((in - mean) / std_dev) : 0;
+            } else {
+                last_data += in;
+                out = output_value = std::numeric_limits<double>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
         }
 
-        inline size_t size() {
-            return data_size;
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in) {
+            if(period == 0) {
+                output_value = std::numeric_limits<double>::quiet_NaN();
+                return NO_INIT;
+            }
+            buffer.update(in);
+            if(buffer.full()) {
+                last_data = last_data + (in - buffer.front());
+                T mean = last_data/(T)period;
+                T diff = 0, sum = 0;
+                for(size_t i = 1; i <= period; ++i) {
+                    diff = (buffer[i] - mean);
+                    sum += diff * diff;
+                }
+                sum /= (T)(period - 1);
+                T std_dev = sum > 0 ? std::sqrt(sum) : 0;
+                output_value = std_dev > 0 ? ((in - mean) / std_dev) : 0;
+            } else {
+                last_data += in;
+                output_value = std::numeric_limits<double>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
         }
 
-        inline size_t count() {
-            return read_count;
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in, T &out) {
+            if(period == 0) {
+                out = output_value = std::numeric_limits<double>::quiet_NaN();
+                return NO_INIT;
+            }
+            buffer.test(in);
+            if(buffer.full()) {
+                T mean = (last_data + (in - buffer.front()))/(T)period;
+                T diff = 0, sum = 0;
+                for(size_t i = 1; i <= period; ++i) {
+                    diff = (buffer[i] - mean);
+                    sum += diff * diff;
+                }
+                sum /= (T)(period - 1);
+                T std_dev = sum > 0 ? std::sqrt(sum) : 0;
+                out = output_value = std_dev > 0 ? ((in - mean) / std_dev) : 0;
+            } else {
+                out = output_value = std::numeric_limits<double>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
         }
 
-        void push(const T &value) {
-            data[pos] = value;
-            pos =(pos + 1) % data_size;
-            if(read_count < data_size) read_count++;
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in) {
+            if(period == 0) {
+                output_value = std::numeric_limits<double>::quiet_NaN();
+                return NO_INIT;
+            }
+            buffer.test(in);
+            if(buffer.full()) {
+                T mean = (last_data + (in - buffer.front()))/(T)period;
+                T diff = 0, sum = 0;
+                for(size_t i = 1; i <= period; ++i) {
+                    diff = (buffer[i] - mean);
+                    sum += diff * diff;
+                }
+                sum /= (T)(period - 1);
+                T std_dev = sum > 0 ? std::sqrt(sum) : 0;
+                output_value = std_dev > 0 ? ((in - mean) / std_dev) : 0;
+            } else {
+                output_value = std::numeric_limits<double>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
         }
 
-        bool empty() {
-            if(read_count > 0) return false;
-            return true;
+        /** \brief Получить значение индикатора
+         * \return Значение индикатора
+         */
+        inline T get() const {
+            return output_value;
         }
 
+        /** \brief Очистить данные индикатора
+         */
         void clear() {
-            pos = 0;
-            read_count = 0;
-        }
-
-        inline T& operator[] (size_t i) {
-            return data[(pos + i) % data_size];
-        }
-
-        inline const T operator[] (size_t i)const {
-            return data[(pos + i) % data_size];
-        }
-
-        std::vector<T> get_data() {
-            std::vector<T> temp(data_size);
-            for(int i = 0; i < data_size; ++i) {
-                temp[i] = (data[(pos + i) % data_size]);
-            }
-            return temp;
-        }
-
-    #if(0)
-        inline std::vector<T> get_raw_data() {
-                return data;
-        }
-    #endif
-
-        inline double get_sum() {
-            double sum = 0;
-            for(size_t i = 0; i < data_size; ++i) {
-                sum += (data[(pos + i) % data_size]);
-            }
-            return sum;
+            buffer.clear();
+            output_value = std::numeric_limits<double>::quiet_NaN();
+            last_data = 0;
         }
     };
 
@@ -212,7 +289,7 @@ namespace xtechnical_indicators {
     private:
         xtechnical::circular_buffer<T> buffer;
         T last_data = 0;
-        T output_value = 0;
+        T output_value = std::numeric_limits<double>::quiet_NaN();
         size_t period = 0;
     public:
         SMA() {};
@@ -229,7 +306,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T &in, T &out) {
+        int update(const T in, T &out) {
             if(period == 0) {
                 out = output_value = std::numeric_limits<double>::quiet_NaN();
                 return NO_INIT;
@@ -239,7 +316,7 @@ namespace xtechnical_indicators {
                 last_data = last_data + (in - buffer.front());
                 out = output_value = last_data/(T)period;
             } else {
-                if(buffer.size() == period)  last_data = buffer.sum();
+                last_data += in;
                 out = output_value = std::numeric_limits<double>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
             }
@@ -250,7 +327,7 @@ namespace xtechnical_indicators {
          * \param in сигнал на входе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T &in) {
+        int update(const T in) {
             if(period == 0) {
                 output_value = std::numeric_limits<double>::quiet_NaN();
                 return NO_INIT;
@@ -260,7 +337,7 @@ namespace xtechnical_indicators {
                 last_data = last_data + (in - buffer.front());
                 output_value = last_data/(T)period;
             } else {
-                if(buffer.size() == period)  last_data = buffer.sum();
+                last_data += in;
                 output_value = std::numeric_limits<double>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
             }
@@ -275,7 +352,7 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T &in, T &out) {
+        int test(const T in, T &out) {
             if(period == 0) {
                 out = output_value = std::numeric_limits<double>::quiet_NaN();
                 return NO_INIT;
@@ -297,7 +374,7 @@ namespace xtechnical_indicators {
          * \param in сигнал на входе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T &in) {
+        int test(const T in) {
             if(period == 0) {
                 output_value = std::numeric_limits<double>::quiet_NaN();
                 return NO_INIT;
@@ -324,6 +401,7 @@ namespace xtechnical_indicators {
         void clear() {
             buffer.clear();
             output_value = std::numeric_limits<double>::quiet_NaN();
+            last_data = 0;
         }
     };
 

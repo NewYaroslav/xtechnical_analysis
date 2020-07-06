@@ -15,6 +15,7 @@ int main() {
             << " back " << circular_buffer.back()
             << " [0] " << circular_buffer[0]
             << " [" << (buffer_size - 1) << "] " << circular_buffer[buffer_size - 1]
+            << " full " << circular_buffer.full()
             << std::endl;
     }
 
@@ -47,5 +48,17 @@ int main() {
     std::cout << "middle " << circular_buffer.middle() << std::endl;
     std::cout << "sum " << circular_buffer.sum() << std::endl;
     std::cout << "mean " << circular_buffer.mean() << std::endl;
+    circular_buffer.clear();
+    for(size_t i = 0; i < test_data.size(); ++i) {
+        circular_buffer.push_back(test_data[i]);
+        std::cout
+            << "push " << test_data[i]
+            << " front " << circular_buffer.front()
+            << " back " << circular_buffer.back()
+            << " [0] " << circular_buffer[0]
+            << " [" << (buffer_size - 1) << "] " << circular_buffer[buffer_size - 1]
+            << " full " << circular_buffer.full()
+            << std::endl;
+    }
     return 0;
 }

@@ -18,10 +18,18 @@ int main() {
     for(size_t i = 0; i < test_data.size(); ++i) {
         sma.test(test_data[i]);
         std::cout
-            << "date " << test_data[i]
+            << "date test " << test_data[i]
             << " get test " << sma.get()
             << std::endl;
     }
+    for(size_t i = 0; i < test_data.size(); ++i) {
+        sma.update(test_data[i]);
+        std::cout
+            << "date " << test_data[i]
+            << " get " << sma.get()
+            << std::endl;
+    }
+    sma.clear();
     for(size_t i = 0; i < test_data.size(); ++i) {
         sma.update(test_data[i]);
         std::cout

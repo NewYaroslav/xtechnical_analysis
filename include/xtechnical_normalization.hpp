@@ -100,13 +100,14 @@ namespace xtechnical_normalization {
     }
 
     /** \brief Z-Score нормализация данных
-     * \param in входные данные для нормализации
-     * \param out нормализованный вектор
-     * \param d множитель для стандартного отклонения
+     * \param in Входные данные для нормализации
+     * \param out Нормализованный вектор
+     * \param d Множитель для стандартного отклонения
+     * \param t Ограничитель размера z-score
      * \return вернет 0 в случае успеха, иначе см. xtechnical_common.hpp
      */
     template<class T1, class T2>
-    int calculate_zscore(const T1 &in, T2 &out, const double &d = 1.0) {
+    int calculate_zscore(const T1 &in, T2 &out, const double d = 1.0, const double t = 1) {
         size_t input_size = in.size();
         size_t output_size = out.size();
         if(input_size == 0 || output_size != input_size) return INVALID_PARAMETER;
@@ -123,8 +124,8 @@ namespace xtechnical_normalization {
         double dix = d * std_dev;
         for(size_t k = 0; k < input_size; ++k) {
             out[k] = dix != 0 ? (in[k] - mean) / dix : 0.0;
-            if(out[k] > 1) out[k] = 1;
-            if(out[k] < -1) out[k] = -1;
+            if(out[k] > t) out[k] = t;
+            if(out[k] < -t) out[k] = -t;
         }
         return OK;
     }
