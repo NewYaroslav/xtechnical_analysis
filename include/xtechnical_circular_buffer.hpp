@@ -49,9 +49,9 @@ namespace xtechnical {
          * \param user_size Размер циклического буфера
          */
         circular_buffer(const size_t user_size) :
-            buffer_size(user_size), buffer_size_div2(0), buffer_offset(0),
-            count(0), count_test(0), offset(0), offset_test(0),
-            is_test(false) {
+                buffer_size(user_size), buffer_size_div2(0), buffer_offset(0),
+                count(0), count_test(0), offset(0), offset_test(0),
+                is_test(false) {
             if(check_power_of_two(user_size)) {
                 buffer.resize(buffer_size);
                 buffer_test.resize(buffer_size);
