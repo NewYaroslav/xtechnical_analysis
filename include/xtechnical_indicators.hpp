@@ -703,15 +703,18 @@ namespace xtechnical_indicators {
     template <typename T>
     class SUM {
     private:
-        std::vector<T> data_;
-        size_t period_ = 0;
+        xtechnical::circular_buffer<T> buffer;
+        T last_data = 0;
+        T output_value = std::numeric_limits<double>::quiet_NaN();
+        size_t period = 0;
     public:
         SUM() {};
-        /** \brief Инициализировать скользящую сумму
-         * \param period период
+
+        /** \brief Конструктор cкользящей суммы
+         * \param user_period период
          */
-        SUM(const size_t period) : period_(period) {
-            data_.reserve(period_);
+        SUM(const size_t user_period) :
+                buffer(user_period + 1), period(user_period) {
         }
 
         /** \brief Обновить состояние индикатора
@@ -720,60 +723,101 @@ namespace xtechnical_indicators {
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
         int update(const T in, T &out) {
-            if(period_ == 0) {
-                out = in;
+            if(period == 0) {
+                out = output_value = std::numeric_limits<double>::quiet_NaN();
                 return NO_INIT;
             }
-            if(data_.size() < (size_t)period_) {
-                data_.push_back(in);
-                if(data_.size() == (size_t)period_) {
-                    out = std::accumulate(data_.begin(), data_.end(), (T)0);
-                    return OK;
-                }
+            buffer.update(in);
+            if(buffer.full()) {
+                last_data = last_data + (in - buffer.front());
+                out = output_value = last_data;
             } else {
-                data_.push_back(in);
-                data_.erase(data_.begin());
-                out = std::accumulate(data_.begin(), data_.end(), (T)0);
-                return OK;
+                last_data += in;
+                out = output_value = std::numeric_limits<double>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
             }
-            out = in;
-            return INDICATOR_NOT_READY_TO_WORK;
+            return OK;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in) {
+            if(period == 0) {
+                output_value = std::numeric_limits<double>::quiet_NaN();
+                return NO_INIT;
+            }
+            buffer.update(in);
+            if(buffer.full()) {
+                last_data = last_data + (in - buffer.front());
+                output_value = last_data;
+            } else {
+                last_data += in;
+                output_value = std::numeric_limits<double>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
         }
 
         /** \brief Протестировать индикатор
          *
-         * Данный метод отличается от update тем,
+         * Данная функция отличается от update тем,
          * что не влияет на внутреннее состояние индикатора
          * \param in сигнал на входе
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
         int test(const T in, T &out) {
-            if(period_ == 0) {
-                out = in;
+            if(period == 0) {
+                out = output_value = std::numeric_limits<double>::quiet_NaN();
                 return NO_INIT;
             }
-            std::vector<T> _data = data_;
-            if(_data.size() < (size_t)period_) {
-                _data.push_back(in);
-                if(_data.size() == (size_t)period_) {
-                    out = std::accumulate(_data.begin(), _data.end(), (T)0);
-                    return OK;
-                }
+            buffer.test(in);
+            if(buffer.full()) {
+                out = output_value = (last_data + (in - buffer.front()));
             } else {
-                _data.push_back(in);
-                _data.erase(_data.begin());
-                out = std::accumulate(_data.begin(), _data.end(), (T)0);
-                return OK;
+                out = output_value = std::numeric_limits<double>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
             }
-            out = in;
-            return INDICATOR_NOT_READY_TO_WORK;
+            return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in) {
+            if(period == 0) {
+                output_value = std::numeric_limits<double>::quiet_NaN();
+                return NO_INIT;
+            }
+            buffer.test(in);
+            if(buffer.full()) {
+                output_value = (last_data + (in - buffer.front()));
+            } else {
+                output_value = std::numeric_limits<double>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Получить значение индикатора
+         * \return Значение индикатора
+         */
+        inline T get() const {
+            return output_value;
         }
 
         /** \brief Очистить данные индикатора
          */
         void clear() {
-            data_.clear();
+            buffer.clear();
+            output_value = std::numeric_limits<double>::quiet_NaN();
+            last_data = 0;
         }
     };
 
