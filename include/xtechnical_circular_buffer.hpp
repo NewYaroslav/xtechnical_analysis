@@ -43,7 +43,7 @@ namespace xtechnical {
         circular_buffer() :
             buffer_size(0), buffer_size_div2(0), buffer_offset(0),
             count(0), count_test(0), offset(0), offset_test(0), mask(0),
-            is_test(false), is_power_of_two(false) {};
+            is_power_of_two(false), is_test(false) {};
 
         /** \brief Конструктор циклического буфера
          * \param user_size Размер циклического буфера
@@ -51,7 +51,7 @@ namespace xtechnical {
         circular_buffer(const size_t user_size) :
                 buffer_size(user_size), buffer_size_div2(0), buffer_offset(0),
                 count(0), count_test(0), offset(0), offset_test(0),
-                is_test(false) {
+                is_power_of_two(false), is_test(false) {
             if(check_power_of_two(user_size)) {
                 buffer.resize(buffer_size);
                 buffer_test.resize(buffer_size);

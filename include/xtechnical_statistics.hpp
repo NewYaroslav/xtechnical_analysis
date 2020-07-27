@@ -1,6 +1,7 @@
 #ifndef XTECHNICAL_STATISTICS_HPP_INCLUDED
 #define XTECHNICAL_STATISTICS_HPP_INCLUDED
 
+#include <vector>
 #include <cmath>
 #include <algorithm>
 
@@ -92,7 +93,7 @@ namespace xtechnical_statistics {
         T1 sum = 0;
         for(size_t i = 0; i < size; ++i) {
             T1 diff = array_data[i] - mean;
-            diff*=diff;
+            diff *= diff;
             sum += diff;
         }
         sum /= (T1)(size - 1);
@@ -116,6 +117,22 @@ namespace xtechnical_statistics {
         }
         sum /= (T1)(size);
         return std::sqrt(sum);
+    };
+
+    /** \brief Посчитать медиану абсолютного отклонения
+     * \param array_data Массив с данными
+     * \return Медиана абсолютного отклонения
+     */
+    template<class T1, class T2>
+    T1 calc_median_absolute_deviation(const T2 &array_data) {
+        T1 median = calc_median<T1>(array_data);
+        const size_t size = array_data.size();
+        if(size == 0) return (T1)0;
+        std::vector<T1> array_deviation(size);
+        for(size_t i = 0; i < size; ++i) {
+            array_deviation[i] = array_data[i] - median;
+        }
+        return calc_median<T1>(array_deviation);
     };
 
     /** \brief Посчитать среднее абсолютное отклонение

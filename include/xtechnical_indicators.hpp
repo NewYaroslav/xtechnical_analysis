@@ -636,7 +636,7 @@ namespace xtechnical_indicators {
         T output_value = std::numeric_limits<T>::quiet_NaN();
     public:
 
-        DelayLine() {};
+        DelayLine() : buffer() {};
 
         /** \brief Конструктор линии задержки
          * \param period период

@@ -7,11 +7,17 @@ int main() {
     std::cout << "Hello world!" << std::endl;
     std::array<double,6> test_data = {3,8,10,17,24,27};
 
+    double median_absolute_deviation_value = xtechnical_statistics::calc_median_absolute_deviation<double>(test_data);
+    std::cout << "median absolute deviation value: " << median_absolute_deviation_value << std::endl;
+
+    double median_value = xtechnical_statistics::calc_median<double>(test_data);
+    std::cout << "median value: " << median_value << std::endl;
+
     double harmonic_mean = xtechnical_statistics::calc_harmonic_mean<double>(test_data);
     std::cout << "harmonic mean: " << harmonic_mean << std::endl;
+
     double mean_value = xtechnical_statistics::calc_mean_value<double>(test_data);
     std::cout << "mean value: " << mean_value << std::endl;
-
 
     double skewness = xtechnical_statistics::calc_skewness<double>(test_data);
     std::cout << "skewness: " << skewness << std::endl;
@@ -34,13 +40,13 @@ int main() {
     double excess = xtechnical_statistics::calc_excess<double>(test_data4);
     std::cout << "excess: " << excess << std::endl;
 
-
     std::vector<double> test_data5 = {1,1,1,0,0,1};
     double standard_error = xtechnical_statistics::calc_standard_error<double>(test_data5);
     std::cout << "standard_error: " << standard_error << std::endl;
 
     double integral_laplace = xtechnical_statistics::calc_integral_laplace<double>(0.01, 0.00001);
     std::cout << "integral_laplace: " << integral_laplace << std::endl;
+
     double integral_laplace2 = xtechnical_statistics::calc_integral_laplace<double>(1.51, 0.01);
     std::cout << "integral_laplace2: " << integral_laplace2 << std::endl;
 
