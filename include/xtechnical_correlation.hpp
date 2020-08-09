@@ -67,6 +67,44 @@ namespace xtechnical_correlation {
         return OK;
     }
 
+    /** \brief Коэффициент корреляции Пирсона
+     * Коэффициент корреляции Пирсона характеризует существование линейной зависимости между двумя величинами
+     * \param step Шаг для пропуска данных
+     * \param x первая выборка данных
+     * \param y вторая выборка данных
+     * \param rxy коэффициент корреляции Пирсона (от -1 до +1)
+     * \return вернет 0 в случае успеха
+     */
+    template<class T1, class T2, class T3>
+    int calculate_pearson_correlation_coefficient(const size_t step, std::vector<T1>& x, std::vector<T2> &y, T3 &rxy)
+    {
+        if(x.size() != y.size() || x.size() == 0) {
+            return INVALID_PARAMETER;
+        }
+        T1 xm = 0;
+        T2 ym = 0;
+        for(size_t i = 0; i < x.size(); i += step) {
+            xm += x[i];
+            ym += y[i];
+        }
+        const size_t real_size = x.size() / step;
+        xm /= (T1)real_size;
+        ym /= (T2)real_size;
+        T3 sum = 0, sumx2 = 0, sumy2 = 0;
+        for(size_t i = 0; i < x.size(); i += step) {
+            T1 dx = x[i] - xm;
+            T2 dy = y[i] - ym;
+            sum += dx * dy;
+            sumx2 += dx * dx;
+            sumy2 += dy * dy;
+        }
+        if(sumx2 == 0 || sumy2 == 0) {
+            return INVALID_PARAMETER;
+        }
+        rxy = sum / std::sqrt(sumx2 * sumy2);
+        return OK;
+    }
+
     /** \brief Ранжирование для корреляции Спирмена
      * \param x вектор данных
      * \param xp ранги
