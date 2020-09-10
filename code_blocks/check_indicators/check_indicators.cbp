@@ -35,6 +35,7 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="../../include/xtechnical_circular_buffer.hpp" />
 		<Unit filename="../../include/xtechnical_common.hpp" />
 		<Unit filename="../../include/xtechnical_correlation.hpp" />
 		<Unit filename="../../include/xtechnical_dft.hpp" />

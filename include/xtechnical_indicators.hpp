@@ -1084,7 +1084,7 @@ namespace xtechnical_indicators {
     private:
         xtechnical::circular_buffer<T> buffer;
         T last_data = 0;
-        T output_value = std::numeric_limits<double>::quiet_NaN();
+        T output_value = std::numeric_limits<T>::quiet_NaN();
         size_t period = 0;
     public:
         SUM() {};
@@ -1103,7 +1103,7 @@ namespace xtechnical_indicators {
          */
         int update(const T in, T &out) {
             if(period == 0) {
-                out = output_value = std::numeric_limits<double>::quiet_NaN();
+                out = output_value = std::numeric_limits<T>::quiet_NaN();
                 return NO_INIT;
             }
             buffer.update(in);
@@ -1112,7 +1112,7 @@ namespace xtechnical_indicators {
                 out = output_value = last_data;
             } else {
                 last_data += in;
-                out = output_value = std::numeric_limits<double>::quiet_NaN();
+                out = output_value = std::numeric_limits<T>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
             }
             return OK;
@@ -1124,7 +1124,7 @@ namespace xtechnical_indicators {
          */
         int update(const T in) {
             if(period == 0) {
-                output_value = std::numeric_limits<double>::quiet_NaN();
+                output_value = std::numeric_limits<T>::quiet_NaN();
                 return NO_INIT;
             }
             buffer.update(in);
@@ -1133,7 +1133,7 @@ namespace xtechnical_indicators {
                 output_value = last_data;
             } else {
                 last_data += in;
-                output_value = std::numeric_limits<double>::quiet_NaN();
+                output_value = std::numeric_limits<T>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
             }
             return OK;
@@ -1149,14 +1149,14 @@ namespace xtechnical_indicators {
          */
         int test(const T in, T &out) {
             if(period == 0) {
-                out = output_value = std::numeric_limits<double>::quiet_NaN();
+                out = output_value = std::numeric_limits<T>::quiet_NaN();
                 return NO_INIT;
             }
             buffer.test(in);
             if(buffer.full()) {
                 out = output_value = (last_data + (in - buffer.front()));
             } else {
-                out = output_value = std::numeric_limits<double>::quiet_NaN();
+                out = output_value = std::numeric_limits<T>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
             }
             return OK;
@@ -1171,14 +1171,14 @@ namespace xtechnical_indicators {
          */
         int test(const T in) {
             if(period == 0) {
-                output_value = std::numeric_limits<double>::quiet_NaN();
+                output_value = std::numeric_limits<T>::quiet_NaN();
                 return NO_INIT;
             }
             buffer.test(in);
             if(buffer.full()) {
                 output_value = (last_data + (in - buffer.front()));
             } else {
-                output_value = std::numeric_limits<double>::quiet_NaN();
+                output_value = std::numeric_limits<T>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
             }
             return OK;
@@ -1195,7 +1195,7 @@ namespace xtechnical_indicators {
          */
         void clear() {
             buffer.clear();
-            output_value = std::numeric_limits<double>::quiet_NaN();
+            output_value = std::numeric_limits<T>::quiet_NaN();
             last_data = 0;
         }
     };
@@ -1762,6 +1762,313 @@ namespace xtechnical_indicators {
     template <typename T>
     class BollingerBands {
     private:
+        xtechnical::circular_buffer<T> buffer;
+        DelayLine<T> delay_line;
+        size_t period = 0;
+        size_t offset = 0;
+        double deviations = 0;
+        T output_tl = std::numeric_limits<T>::quiet_NaN();
+        T output_ml = std::numeric_limits<T>::quiet_NaN();
+        T output_bl = std::numeric_limits<T>::quiet_NaN();
+    public:
+        BollingerBands() {};
+
+        /** \brief Инициализация линий Боллинджера
+         * \param user_period Период
+         * \param user_deviations Множитель стандартного отклонения
+         * \param user_offset Смещение назад
+         */
+        BollingerBands(const size_t user_period, const size_t user_deviations, const size_t user_offset = 0) :
+                buffer(user_period), delay_line(user_offset),
+                period(user_period), offset(user_offset), deviations(user_deviations) {
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \param tl верхняя полоса боллинджера
+         * \param ml среняя полоса боллинджера
+         * \param bl нижняя полоса боллинджера
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &tl, T &ml, T &bl) {
+            if(period == 0) {
+                tl = output_tl = std::numeric_limits<T>::quiet_NaN();
+                ml = output_ml = std::numeric_limits<T>::quiet_NaN();
+                bl = output_bl = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if(delay_line.update(in) != OK) {
+               tl = output_tl = std::numeric_limits<T>::quiet_NaN();
+                ml = output_ml = std::numeric_limits<T>::quiet_NaN();
+                bl = output_bl = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            buffer.update(delay_line.get());
+            if(buffer.full()) {
+                std::vector<T> data = buffer.to_vector();
+                output_ml = std::accumulate(data.begin(), data.end(), T(0));
+                output_ml /= (T)period;
+                ml = output_ml;
+                T sum = 0;
+                for (size_t i = 0; i < period; ++i) {
+                    const T diff = (data[i] - output_ml);
+                    sum += diff * diff;
+                }
+                const T std_dev = std::sqrt(sum / (T)(period - 1));
+                const T std_dev_offset = std_dev * deviations;
+                tl = output_tl = std_dev_offset + output_ml;
+                bl = output_bl = output_ml - std_dev_offset;
+            } else {
+                tl = output_tl = std::numeric_limits<T>::quiet_NaN();
+                ml = output_ml = std::numeric_limits<T>::quiet_NaN();
+                bl = output_bl = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \param ml среняя полоса боллинджера
+         * \param std_dev стандартное отклонение
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &ml, T &std_dev) {
+            if(period == 0) {
+                output_tl = std::numeric_limits<T>::quiet_NaN();
+                ml = output_ml = std::numeric_limits<T>::quiet_NaN();
+                output_bl = std::numeric_limits<T>::quiet_NaN();
+                std_dev = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if(delay_line.update(in) != OK) {
+                output_tl = std::numeric_limits<T>::quiet_NaN();
+                ml = output_ml = std::numeric_limits<T>::quiet_NaN();
+                output_bl = std::numeric_limits<T>::quiet_NaN();
+                std_dev = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            buffer.update(delay_line.get());
+            if(buffer.full()) {
+                std::vector<T> data = buffer.to_vector();
+                output_ml = std::accumulate(data.begin(), data.end(), T(0));
+                output_ml /= (T)period;
+                ml = output_ml;
+                T sum = 0;
+                for (size_t i = 0; i < period; ++i) {
+                    const T diff = (data[i] - output_ml);
+                    sum += diff * diff;
+                }
+                std_dev = std::sqrt(sum / (T)(period - 1));
+                const T std_dev_offset = std_dev * deviations;
+                output_tl = std_dev_offset + output_ml;
+                output_bl = output_ml - std_dev_offset;
+            } else {
+                output_tl = std::numeric_limits<T>::quiet_NaN();
+                ml = output_ml = std::numeric_limits<T>::quiet_NaN();
+                output_bl = std::numeric_limits<T>::quiet_NaN();
+                std_dev = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in) {
+            if(period == 0) {
+                output_tl = std::numeric_limits<T>::quiet_NaN();
+                output_ml = std::numeric_limits<T>::quiet_NaN();
+                output_bl = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if(delay_line.update(in) != OK) {
+                output_tl = std::numeric_limits<T>::quiet_NaN();
+                output_ml = std::numeric_limits<T>::quiet_NaN();
+                output_bl = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            buffer.update(delay_line.get());
+            if(buffer.full()) {
+                std::vector<T> data = buffer.to_vector();
+                output_ml = std::accumulate(data.begin(), data.end(), T(0));
+                output_ml /= (T)period;
+                T sum = 0;
+                for (size_t i = 0; i < period; ++i) {
+                    const T diff = (data[i] - output_ml);
+                    sum += diff * diff;
+                }
+                const T std_dev = std::sqrt(sum / (T)(period - 1));
+                const T std_dev_offset = std_dev * deviations;
+                output_tl = std_dev_offset + output_ml;
+                output_bl = output_ml - std_dev_offset;
+            } else {
+                output_tl = std::numeric_limits<T>::quiet_NaN();
+                output_ml = std::numeric_limits<T>::quiet_NaN();
+                output_bl = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \param tl верхняя полоса боллинджера
+         * \param ml среняя полоса боллинджера
+         * \param bl нижняя полоса боллинджера
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T &in, T &tl, T &ml, T &bl) {
+            if(period == 0) {
+                tl = output_tl = std::numeric_limits<T>::quiet_NaN();
+                ml = output_ml = std::numeric_limits<T>::quiet_NaN();
+                bl = output_bl = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if(delay_line.test(in) != OK) {
+               tl = output_tl = std::numeric_limits<T>::quiet_NaN();
+                ml = output_ml = std::numeric_limits<T>::quiet_NaN();
+                bl = output_bl = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            buffer.test(delay_line.get());
+            if(buffer.full()) {
+                std::vector<T> data = buffer.to_vector();
+                output_ml = std::accumulate(data.begin(), data.end(), T(0));
+                output_ml /= (T)period;
+                ml = output_ml;
+                T sum = 0;
+                for (size_t i = 0; i < period; ++i) {
+                    const T diff = (data[i] - output_ml);
+                    sum += diff * diff;
+                }
+                const T std_dev = std::sqrt(sum / (T)(period - 1));
+                const T std_dev_offset = std_dev * deviations;
+                tl = output_tl = std_dev_offset + output_ml;
+                bl = output_bl = output_ml - std_dev_offset;
+            } else {
+                tl = output_tl = std::numeric_limits<T>::quiet_NaN();
+                ml = output_ml = std::numeric_limits<T>::quiet_NaN();
+                bl = output_bl = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \param ml среняя полоса боллинджера
+         * \param std_dev стандартное отклонение
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T &in, T &ml, T &std_dev) {
+            if(period == 0) {
+                output_tl = std::numeric_limits<T>::quiet_NaN();
+                ml = output_ml = std::numeric_limits<T>::quiet_NaN();
+                output_bl = std::numeric_limits<T>::quiet_NaN();
+                std_dev = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if(delay_line.test(in) != OK) {
+                output_tl = std::numeric_limits<T>::quiet_NaN();
+                ml = output_ml = std::numeric_limits<T>::quiet_NaN();
+                output_bl = std::numeric_limits<T>::quiet_NaN();
+                std_dev = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            buffer.test(delay_line.get());
+            if(buffer.full()) {
+                std::vector<T> data = buffer.to_vector();
+                output_ml = std::accumulate(data.begin(), data.end(), T(0));
+                output_ml /= (T)period;
+                ml = output_ml;
+                T sum = 0;
+                for (size_t i = 0; i < period; ++i) {
+                    const T diff = (data[i] - output_ml);
+                    sum += diff * diff;
+                }
+                std_dev = std::sqrt(sum / (T)(period - 1));
+                const T std_dev_offset = std_dev * deviations;
+                output_tl = std_dev_offset + output_ml;
+                output_bl = output_ml - std_dev_offset;
+            } else {
+                output_tl = std::numeric_limits<T>::quiet_NaN();
+                ml = output_ml = std::numeric_limits<T>::quiet_NaN();
+                output_bl = std::numeric_limits<T>::quiet_NaN();
+                std_dev = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         * \param in сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in) {
+            if(period == 0) {
+                output_tl = std::numeric_limits<T>::quiet_NaN();
+                output_ml = std::numeric_limits<T>::quiet_NaN();
+                output_bl = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if(delay_line.test(in) != OK) {
+                output_tl = std::numeric_limits<T>::quiet_NaN();
+                output_ml = std::numeric_limits<T>::quiet_NaN();
+                output_bl = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            buffer.test(delay_line.get());
+            if(buffer.full()) {
+                std::vector<T> data = buffer.to_vector();
+                output_ml = std::accumulate(data.begin(), data.end(), T(0));
+                output_ml /= (T)period;
+                T sum = 0;
+                for (size_t i = 0; i < period; ++i) {
+                    const T diff = (data[i] - output_ml);
+                    sum += diff * diff;
+                }
+                const T std_dev = std::sqrt(sum / (T)(period - 1));
+                const T std_dev_offset = std_dev * deviations;
+                output_tl = std_dev_offset + output_ml;
+                output_bl = output_ml - std_dev_offset;
+            } else {
+                output_tl = std::numeric_limits<T>::quiet_NaN();
+                output_ml = std::numeric_limits<T>::quiet_NaN();
+                output_bl = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        inline T get_tl() {return output_tl;};
+        inline T get_ml() {return output_ml;};
+        inline T get_bl() {return output_bl;};
+
+        /** \brief Очистить данные индикатора
+         */
+        void clear() {
+            buffer.clear();
+            delay_line.clear();
+            output_tl = std::numeric_limits<T>::quiet_NaN();
+            output_ml = std::numeric_limits<T>::quiet_NaN();
+            output_bl = std::numeric_limits<T>::quiet_NaN();
+        }
+    };
+#if(0)
+    /** \brief Линии Боллинджера
+     */
+    template <typename T>
+    class BollingerBands {
+    private:
         std::vector<T> data_;
         size_t period_ = 0;
         T d_;
@@ -1967,6 +2274,7 @@ namespace xtechnical_indicators {
             data_.clear();
         }
     };
+#endif
 
     /** \brief Обработать массив данных боллинджером по кругу
      */

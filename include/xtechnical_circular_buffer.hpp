@@ -289,6 +289,49 @@ namespace xtechnical {
             return sum() / (T)buffer_size;
         }
 
+        /** \brief Преобразовать к вектору
+         * \return Вектор
+         */
+        std::vector<T> to_vector() {
+            std::vector<T> temp;
+            temp.reserve(buffer_size);
+            const uint32_t max_index = buffer_size - 1;
+            if(is_test) {
+                uint32_t start_index = 0;
+                uint32_t stop_index = 0;
+                if(is_power_of_two) {
+                    start_index = (offset_test) & mask;
+                    stop_index = (offset_test + max_index) & mask;
+                } else {
+                    start_index = (offset_test - buffer_offset) & mask;
+                    stop_index = (offset_test + (max_index - buffer_offset)) & mask;
+                }
+                if(start_index > stop_index) {
+                    std::copy(buffer_test.begin() + start_index, buffer_test.end(), std::back_inserter(temp));
+                    std::copy(buffer_test.begin(), buffer_test.begin() + stop_index + 1, std::back_inserter(temp));
+                } else {
+                    std::copy(buffer_test.begin() + start_index, buffer_test.begin() + stop_index + 1, std::back_inserter(temp));
+                }
+            } else {
+                uint32_t start_index = 0;
+                uint32_t stop_index = 0;
+                if(is_power_of_two) {
+                    start_index = offset & mask;
+                    stop_index = (offset + max_index) & mask;
+                } else {
+                    start_index = (offset- buffer_offset) & mask;
+                    stop_index = (offset + (max_index - buffer_offset)) & mask;
+                }
+                if(start_index > stop_index) {
+                    std::copy(buffer.begin() + start_index, buffer.end(), std::back_inserter(temp));
+                    std::copy(buffer.begin(), buffer.begin() + stop_index + 1, std::back_inserter(temp));
+                } else {
+                    std::copy(buffer.begin() + start_index, buffer.begin() + stop_index + 1, std::back_inserter(temp));
+                }
+            }
+            return temp;
+        }
+
         /** \brief Очистить данные циклического буфера
          */
         inline void clear() {
