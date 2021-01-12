@@ -2063,6 +2063,7 @@ namespace xtechnical_indicators {
             output_bl = std::numeric_limits<T>::quiet_NaN();
         }
     };
+
 #if(0)
     /** \brief Линии Боллинджера
      */
@@ -3318,6 +3319,111 @@ namespace xtechnical_indicators {
 		}
 	};
 
+	/** \brief Percent Range Index Function
+     */
+	template<class T>
+	class PRI {
+    private:
+        MinMax<T> min_max;
+        size_t period = 0;
+        size_t offset = 0;
+        T output = std::numeric_limits<T>::quiet_NaN();
+    public:
+        PRI() {};
+
+        /** \brief Инициализация линий Боллинджера
+         * \param user_period Период
+         * \param user_offset Смещение назад
+         */
+        PRI(const size_t user_period, const size_t user_offset = 0) :
+                min_max(user_period, user_offset),
+                period(user_period), offset(user_offset) {
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in Сигнал на входе
+         * \param out Сигнал на выходе от -1 до 1
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &out) {
+            if(period == 0) {
+                out = output = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if(min_max.update(in) != OK) {
+                out = output = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            const T diff = min_max.get_max() - min_max.get_min();
+            out = output = diff == 0 ? 0 : 2.0 * (((in - min_max.get_min()) / diff) - 0.5);
+            return OK;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in Сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in) {
+            if(period == 0) {
+                output = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if(min_max.update(in) != OK) {
+                output = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            const T diff = min_max.get_max() - min_max.get_min();
+            output = diff == 0 ? 0 : 2.0 * (((in - min_max.get_min()) / diff) - 0.5);
+            return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         * \param in Сигнал на входе
+         * \param out Сигнал на выходе от -1 до 1
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in, T &out) {
+            if(period == 0) {
+                out = output = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if(min_max.test(in) != OK) {
+                out = output = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            const T diff = min_max.get_max() - min_max.get_min();
+            out = output = diff == 0 ? 0 : 2.0 * (((in - min_max.get_min()) / diff) - 0.5);
+            return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         * \param in Сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in) {
+            if(period == 0) {
+                output = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if(min_max.test(in) != OK) {
+                output = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            const T diff = min_max.get_max() - min_max.get_min();
+            output = diff == 0 ? 0 : 2.0 * (((in - min_max.get_min()) / diff) - 0.5);
+            return OK;
+        }
+
+        inline T get() {return output;};
+
+        /** \brief Очистить данные индикатора
+         */
+        void clear() {
+            min_max.clear();
+            output = std::numeric_limits<T>::quiet_NaN();
+        }
+    };
+
 	template<class T>
 	class MaBBandsYxf {
 	private:
@@ -3520,6 +3626,228 @@ namespace xtechnical_indicators {
             iDelayLineLow.clear();
         }
 	};
+
+
+    /** \brief Индекс относительной силы
+     */
+    template <typename T, class INDICATOR_TYPE>
+    class TrendDetector {
+    private:
+        INDICATOR_TYPE ma1;
+        INDICATOR_TYPE ma2;
+        xtechnical::circular_buffer<T> buffer;
+        T prev_ma1 = std::numeric_limits<T>::quiet_NaN();
+        T prev_ma2 = std::numeric_limits<T>::quiet_NaN();
+        T output = std::numeric_limits<T>::quiet_NaN();
+        T point = 1;
+    public:
+        TrendDetector() {}
+
+        /** \brief Инициализировать индикатор индекса относительной силы
+         * \param user_period период индикатора
+         */
+        TrendDetector(const size_t user_period, const T user_point = 1) :
+                ma1(user_period), ma2(user_period),
+                buffer(3 * user_period) {
+            point = user_point;
+        }
+
+        /** \brief Инициализировать индикатор индекса относительной силы
+         * \param user_period период индикатора
+         */
+        void init(const size_t user_period, const T user_point = 1) {
+            ma1 = INDICATOR_TYPE(user_period);
+            ma2 = INDICATOR_TYPE(user_period);
+            buffer = xtechnical::circular_buffer<T>(3 * user_period);
+            point = user_point;
+        }
+
+        inline void set_point(const T user_point) {
+            point = user_point;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T &in, T &out) {
+            output = out = std::numeric_limits<T>::quiet_NaN();
+            /* сначала имеем два значения скользящих средних */
+            T v1, v2 = 0;
+            if(ma1.update(in, v1) != OK) return NO_INIT;
+            if(ma2.update(v1, v2) != OK) return NO_INIT;
+
+            /* запоминаем предыдущие значения в перый раз */
+            if(std::isnan(prev_ma1) || std::isnan(prev_ma2)) {
+                prev_ma1 = v1;
+                prev_ma2 = v2;
+                return NO_INIT;
+            }
+
+            /* проводим вычисления */
+            const T a = v1 - prev_ma1;
+            const T b = v2 - prev_ma2;
+            const T c = std::abs(v1 - v2) / point;
+            const T d = (a + b) / (2.0 * point);
+
+            /* запоминаем предыдущие значения в последующие разы */
+            prev_ma1 = v1;
+            prev_ma2 = v2;
+
+            const T r = c * d *d *d;
+            buffer.update(r);
+            if(buffer.full()) {
+                std::vector<T> data = buffer.to_vector();
+                T h = 0;
+                for (int i = data.size() - 1; i >= 0; i--) {
+                    const T v = std::abs(data[i]);
+                    if (h < v) h = v;
+                }
+                output = out = (h > 0.0) ? (data[0] / h) : 0.0;
+                return OK;
+            };
+            return NO_INIT;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T &in) {
+            output = std::numeric_limits<T>::quiet_NaN();
+            /* сначала имеем два значения скользящих средних */
+            T v1, v2 = 0;
+            if(ma1.update(in, v1) != OK) return NO_INIT;
+            if(ma2.update(v1, v2) != OK) return NO_INIT;
+
+            /* запоминаем предыдущие значения в перый раз */
+            if(std::isnan(prev_ma1) || std::isnan(prev_ma2)) {
+                prev_ma1 = v1;
+                prev_ma2 = v2;
+                return NO_INIT;
+            }
+
+            /* проводим вычисления */
+            const T a = v1 - prev_ma1;
+            const T b = v2 - prev_ma2;
+            const T c = std::abs(v1 - v2) / point;
+            const T d = (a + b) / (2.0 * point);
+
+            /* запоминаем предыдущие значения в последующие разы */
+            prev_ma1 = v1;
+            prev_ma2 = v2;
+
+            const T r = c * d *d *d;
+            buffer.update(r);
+            if(buffer.full()) {
+                std::vector<T> data = buffer.to_vector();
+                T h = 0;
+                for (int i = data.size() - 1; i >= 0; i--) {
+                    const T v = std::abs(data[i]);
+                    if (h < v) h = v;
+                }
+                output = (h > 0.0) ? (data[0] / h) : 0.0;
+                return OK;
+            };
+            return NO_INIT;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T &in, T &out) {
+            output = out = std::numeric_limits<T>::quiet_NaN();
+            /* сначала имеем два значения скользящих средних */
+            T v1, v2 = 0;
+            if(ma1.test(in, v1) != OK) return NO_INIT;
+            if(ma2.test(v1, v2) != OK) return NO_INIT;
+
+            /* запоминаем предыдущие значения в перый раз */
+            if(std::isnan(prev_ma1) || std::isnan(prev_ma2)) {
+                return NO_INIT;
+            }
+
+            /* проводим вычисления */
+            const T a = v1 - prev_ma1;
+            const T b = v2 - prev_ma2;
+            const T c = std::abs(v1 - v2) / point;
+            const T d = (a + b) / (2.0 * point);
+            const T r = c * d *d *d;
+
+            buffer.test(r);
+            if(buffer.full()) {
+                std::vector<T> data = buffer.to_vector();
+                T h = 0;
+                for (int i = data.size() - 1; i >= 0; i--) {
+                    const T v = std::abs(data[i]);
+                    if (h < v) h = v;
+                }
+                output = out = (h > 0.0) ? (data[0] / h) : 0.0;
+                return OK;
+            };
+            return NO_INIT;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T &in) {
+            output = std::numeric_limits<T>::quiet_NaN();
+            /* сначала имеем два значения скользящих средних */
+            T v1, v2 = 0;
+            if(ma1.test(in, v1) != OK) return NO_INIT;
+            if(ma2.test(v1, v2) != OK) return NO_INIT;
+
+            /* запоминаем предыдущие значения в перый раз */
+            if(std::isnan(prev_ma1) || std::isnan(prev_ma2)) {
+                return NO_INIT;
+            }
+
+            /* проводим вычисления */
+            const T a = v1 - prev_ma1;
+            const T b = v2 - prev_ma2;
+            const T c = std::abs(v1 - v2) / point;
+            const T d = (a + b) / (2.0 * point);
+            const T r = c * d *d *d;
+
+            buffer.test(r);
+            if(buffer.full()) {
+                std::vector<T> data = buffer.to_vector();
+                T h = 0;
+                for (int i = data.size() - 1; i >= 0; i--) {
+                    const T v = std::abs(data[i]);
+                    if (h < v) h = v;
+                }
+                output = (h > 0.0) ? (data[0] / h) : 0.0;
+                return OK;
+            };
+            return NO_INIT;
+        }
+
+        inline T get() {return output;};
+
+        /** \brief Очистить данные индикатора
+         */
+        void clear() {
+            ma1.clear();
+            ma2.clear();
+            buffer.clear();
+            prev_ma1 = std::numeric_limits<T>::quiet_NaN();
+            prev_ma2 = std::numeric_limits<T>::quiet_NaN();
+            output = std::numeric_limits<T>::quiet_NaN();
+        }
+    };
 
     /** \brief Мера склонности к чередовнию знаков (z-счет)
      *
