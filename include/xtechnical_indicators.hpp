@@ -3924,7 +3924,7 @@ namespace xtechnical_indicators {
                 is_init = true;
                 return NO_INIT;
             }
-            const T temp = (std::max(in, prev) / std::min(in, prev));
+            const T temp = (std::max(in, prev) / std::min(in, prev)) - 1.0;
             prev = in;
             T vol = 0;
             int err = iSMA.update(temp, vol);
@@ -3939,7 +3939,7 @@ namespace xtechnical_indicators {
                 is_init = true;
                 return NO_INIT;
             }
-            const T temp = (std::max(in, prev) / std::min(in, prev));
+            const T temp = (std::max(in, prev) / std::min(in, prev)) - 1.0;
             prev = in;
             T vol = 0;
             int err = iSMA.update(temp, vol);
@@ -3950,7 +3950,7 @@ namespace xtechnical_indicators {
 
         int test(const T in, T &out) {
             if(!is_init) return NO_INIT;
-            const T temp = (std::max(in, prev) / std::min(in, prev));
+            const T temp = (std::max(in, prev) / std::min(in, prev)) - 1.0;
             T vol = 0;
             int err = iSMA.test(temp, vol);
             if(err != OK) return err;
@@ -3960,7 +3960,7 @@ namespace xtechnical_indicators {
 
         int test(const T in) {
             if(!is_init) return NO_INIT;
-            const T temp = (std::max(in, prev) / std::min(in, prev));
+            const T temp = (std::max(in, prev) / std::min(in, prev)) - 1.0;
             T vol = 0;
             int err = iSMA.test(temp, vol);
             if(err != OK) return err;
