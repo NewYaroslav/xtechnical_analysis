@@ -3628,10 +3628,11 @@ namespace xtechnical_indicators {
 	};
 
 
-    /** \brief Индекс относительной силы
+    /** \brief Trend-Direction-Force-Index
+     * https://www.tradingview.com/script/9oPTFsRu-Trend-Direction-Force-Index/
      */
     template <typename T, class INDICATOR_TYPE>
-    class TrendDetector {
+    class TrendDirectionForceIndex {
     private:
         INDICATOR_TYPE ma1;
         INDICATOR_TYPE ma2;
@@ -3641,25 +3642,47 @@ namespace xtechnical_indicators {
         T output = std::numeric_limits<T>::quiet_NaN();
         T point = 1;
     public:
-        TrendDetector() {}
+        TrendDirectionForceIndex() {}
 
         /** \brief Инициализировать индикатор индекса относительной силы
          * \param user_period период индикатора
          */
-        TrendDetector(const size_t user_period, const T user_point = 1) :
+        TrendDirectionForceIndex(const size_t user_period) :
                 ma1(user_period), ma2(user_period),
                 buffer(3 * user_period) {
-            point = user_point;
+        }
+
+        /** \brief Инициализировать индикатор индекса относительной силы
+         * \param user_period_ma периоды MA индикатора
+         * \param user_period_buffer период внутреннего буфера индикатора
+         */
+        TrendDirectionForceIndex(
+            const size_t user_period_ma,
+            const size_t user_period_buffer) :
+                ma1(user_period_ma),
+                ma2(user_period_ma),
+                buffer(user_period_buffer) {
         }
 
         /** \brief Инициализировать индикатор индекса относительной силы
          * \param user_period период индикатора
          */
-        void init(const size_t user_period, const T user_point = 1) {
+        void init(const size_t user_period) {
             ma1 = INDICATOR_TYPE(user_period);
             ma2 = INDICATOR_TYPE(user_period);
             buffer = xtechnical::circular_buffer<T>(3 * user_period);
-            point = user_point;
+        }
+
+        /** \brief Инициализировать индикатор индекса относительной силы
+         * \param user_period_ma периоды MA индикатора
+         * \param user_period_buffer период внутреннего буфера индикатора
+         */
+        void init(
+                const size_t user_period_ma,
+                const size_t user_period_buffer) {
+            ma1 = INDICATOR_TYPE(user_period_ma);
+            ma2 = INDICATOR_TYPE(user_period_ma);
+            buffer = xtechnical::circular_buffer<T>(user_period_buffer);
         }
 
         inline void set_point(const T user_point) {
@@ -3686,25 +3709,30 @@ namespace xtechnical_indicators {
             }
 
             /* проводим вычисления */
+            /*
             const T a = v1 - prev_ma1;
             const T b = v2 - prev_ma2;
             const T c = std::abs(v1 - v2) / point;
             const T d = (a + b) / (2.0 * point);
+            const T r = c * d *d *d;
+            */
+            const T ma1_diff = v1 - prev_ma1;
+            const T ma2_diff = v2 - prev_ma2;
+            const T ma_diff_avg = (ma1_diff + ma2_diff) / 2.0;
+            const T tdf = std::abs(v1 - v2) * ma_diff_avg * ma_diff_avg * ma_diff_avg;
 
             /* запоминаем предыдущие значения в последующие разы */
             prev_ma1 = v1;
             prev_ma2 = v2;
 
-            const T r = c * d *d *d;
-            buffer.update(r);
+            buffer.update(std::abs(tdf));
             if(buffer.full()) {
-                std::vector<T> data = buffer.to_vector();
                 T h = 0;
-                for (int i = data.size() - 1; i >= 0; i--) {
-                    const T v = std::abs(data[i]);
-                    if (h < v) h = v;
+                std::vector<T> data = buffer.to_vector();
+                for (size_t i = 0; i < data.size(); ++i) {
+                    if (h < data[i]) h = data[i];
                 }
-                output = out = (h > 0.0) ? (data[0] / h) : 0.0;
+                output = out = (h > 0.0) ? (tdf / h) : 0.0;
                 return OK;
             };
             return NO_INIT;
@@ -3729,25 +3757,30 @@ namespace xtechnical_indicators {
             }
 
             /* проводим вычисления */
+            /*
             const T a = v1 - prev_ma1;
             const T b = v2 - prev_ma2;
             const T c = std::abs(v1 - v2) / point;
             const T d = (a + b) / (2.0 * point);
+            const T r = c * d *d *d;
+            */
+            const T ma1_diff = v1 - prev_ma1;
+            const T ma2_diff = v2 - prev_ma2;
+            const T ma_diff_avg = (ma1_diff + ma2_diff) / 2.0;
+            const T tdf = std::abs(v1 - v2) * ma_diff_avg * ma_diff_avg * ma_diff_avg;
 
             /* запоминаем предыдущие значения в последующие разы */
             prev_ma1 = v1;
             prev_ma2 = v2;
 
-            const T r = c * d *d *d;
-            buffer.update(r);
+            buffer.update(std::abs(tdf));
             if(buffer.full()) {
-                std::vector<T> data = buffer.to_vector();
                 T h = 0;
-                for (int i = data.size() - 1; i >= 0; i--) {
-                    const T v = std::abs(data[i]);
-                    if (h < v) h = v;
+                std::vector<T> data = buffer.to_vector();
+                for (size_t i = 0; i < data.size(); ++i) {
+                    if (h < data[i]) h = data[i];
                 }
-                output = (h > 0.0) ? (data[0] / h) : 0.0;
+                output = (h > 0.0) ? (tdf / h) : 0.0;
                 return OK;
             };
             return NO_INIT;
@@ -3774,21 +3807,30 @@ namespace xtechnical_indicators {
             }
 
             /* проводим вычисления */
+            /*
             const T a = v1 - prev_ma1;
             const T b = v2 - prev_ma2;
             const T c = std::abs(v1 - v2) / point;
             const T d = (a + b) / (2.0 * point);
             const T r = c * d *d *d;
+            */
+            const T ma1_diff = v1 - prev_ma1;
+            const T ma2_diff = v2 - prev_ma2;
+            const T ma_diff_avg = (ma1_diff + ma2_diff) / 2.0;
+            const T tdf = std::abs(v1 - v2) * ma_diff_avg * ma_diff_avg * ma_diff_avg;
 
-            buffer.test(r);
+            /* запоминаем предыдущие значения в последующие разы */
+            prev_ma1 = v1;
+            prev_ma2 = v2;
+
+            buffer.test(std::abs(tdf));
             if(buffer.full()) {
-                std::vector<T> data = buffer.to_vector();
                 T h = 0;
-                for (int i = data.size() - 1; i >= 0; i--) {
-                    const T v = std::abs(data[i]);
-                    if (h < v) h = v;
+                std::vector<T> data = buffer.to_vector();
+                for (size_t i = 0; i < data.size(); ++i) {
+                    if (h < data[i]) h = data[i];
                 }
-                output = out = (h > 0.0) ? (data[0] / h) : 0.0;
+                output = out = (h > 0.0) ? (tdf / h) : 0.0;
                 return OK;
             };
             return NO_INIT;
@@ -3815,21 +3857,30 @@ namespace xtechnical_indicators {
             }
 
             /* проводим вычисления */
+            /*
             const T a = v1 - prev_ma1;
             const T b = v2 - prev_ma2;
             const T c = std::abs(v1 - v2) / point;
             const T d = (a + b) / (2.0 * point);
             const T r = c * d *d *d;
+            */
+            const T ma1_diff = v1 - prev_ma1;
+            const T ma2_diff = v2 - prev_ma2;
+            const T ma_diff_avg = (ma1_diff + ma2_diff) / 2.0;
+            const T tdf = std::abs(v1 - v2) * ma_diff_avg * ma_diff_avg * ma_diff_avg;
 
-            buffer.test(r);
+            /* запоминаем предыдущие значения в последующие разы */
+            prev_ma1 = v1;
+            prev_ma2 = v2;
+
+            buffer.test(std::abs(tdf));
             if(buffer.full()) {
-                std::vector<T> data = buffer.to_vector();
                 T h = 0;
-                for (int i = data.size() - 1; i >= 0; i--) {
-                    const T v = std::abs(data[i]);
-                    if (h < v) h = v;
+                std::vector<T> data = buffer.to_vector();
+                for (size_t i = 0; i < data.size(); ++i) {
+                    if (h < data[i]) h = data[i];
                 }
-                output = (h > 0.0) ? (data[0] / h) : 0.0;
+                output = (h > 0.0) ? (tdf / h) : 0.0;
                 return OK;
             };
             return NO_INIT;
@@ -3845,6 +3896,88 @@ namespace xtechnical_indicators {
             buffer.clear();
             prev_ma1 = std::numeric_limits<T>::quiet_NaN();
             prev_ma2 = std::numeric_limits<T>::quiet_NaN();
+            output = std::numeric_limits<T>::quiet_NaN();
+        }
+    };
+
+    /** \brief Скользящая средняя относительной волатильности
+     */
+    template <typename T>
+    class MAV {
+    private:
+        xtechnical_indicators::SMA<T> iSMA;
+        T prev = std::numeric_limits<T>::quiet_NaN();
+        T output = std::numeric_limits<T>::quiet_NaN();
+        bool is_init = false;
+    public:
+
+        MAV() : iSMA() {};
+
+        MAV(const size_t period) :
+            iSMA(period) {
+
+        }
+
+        int update(const T in, T &out) {
+            if(!is_init) {
+                prev = in;
+                is_init = true;
+                return NO_INIT;
+            }
+            const T temp = (std::max(in, prev) / std::min(in, prev));
+            prev = in;
+            T vol = 0;
+            int err = iSMA.update(temp, vol);
+            if(err != OK) return err;
+            output = out = (vol * 100000.0d);
+            return OK;
+        }
+
+        int update(const T in) {
+            if(!is_init) {
+                prev = in;
+                is_init = true;
+                return NO_INIT;
+            }
+            const T temp = (std::max(in, prev) / std::min(in, prev));
+            prev = in;
+            T vol = 0;
+            int err = iSMA.update(temp, vol);
+            if(err != OK) return err;
+            output = (vol * 100000.0d);
+            return OK;
+        }
+
+        int test(const T in, T &out) {
+            if(!is_init) return NO_INIT;
+            const T temp = (std::max(in, prev) / std::min(in, prev));
+            T vol = 0;
+            int err = iSMA.test(temp, vol);
+            if(err != OK) return err;
+            output = out = (vol * 100000.0d);
+            return OK;
+        }
+
+        int test(const T in) {
+            if(!is_init) return NO_INIT;
+            const T temp = (std::max(in, prev) / std::min(in, prev));
+            T vol = 0;
+            int err = iSMA.test(temp, vol);
+            if(err != OK) return err;
+            output = (vol * 100000.0d);
+            return OK;
+        }
+
+        inline T get() {return output;};
+
+        inline uint32_t get_index() {
+            return std::isnan(output) ? 0 : (uint32_t)(output + 0.5d);
+        };
+
+        void clear() {
+            is_init = false;
+            iSMA.clear();
+            prev = std::numeric_limits<T>::quiet_NaN();
             output = std::numeric_limits<T>::quiet_NaN();
         }
     };
