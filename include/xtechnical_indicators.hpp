@@ -1798,7 +1798,7 @@ namespace xtechnical_indicators {
                 return NO_INIT;
             }
             if(delay_line.update(in) != OK) {
-               tl = output_tl = std::numeric_limits<T>::quiet_NaN();
+                tl = output_tl = std::numeric_limits<T>::quiet_NaN();
                 ml = output_ml = std::numeric_limits<T>::quiet_NaN();
                 bl = output_bl = std::numeric_limits<T>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
@@ -1931,7 +1931,7 @@ namespace xtechnical_indicators {
                 return NO_INIT;
             }
             if(delay_line.test(in) != OK) {
-               tl = output_tl = std::numeric_limits<T>::quiet_NaN();
+                tl = output_tl = std::numeric_limits<T>::quiet_NaN();
                 ml = output_ml = std::numeric_limits<T>::quiet_NaN();
                 bl = output_bl = std::numeric_limits<T>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
