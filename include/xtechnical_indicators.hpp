@@ -3982,6 +3982,99 @@ namespace xtechnical_indicators {
         }
     };
 
+    /** \brief Linear Regression Moving Average - линейно-регрессионная скользящая средняя
+     * LRMA = 3.0 * LWMA - 2.0 * SMA
+     * LWMA - Linear Weighted Moving Average(Close, Period)
+     * SMA - Simple Moving Average(Close, Period)
+     */
+    template <typename T>
+    class LRMA {
+    private:
+        xtechnical_indicators::SMA<T> iSMA;
+        xtechnical_indicators::WMA<T> iWMA;
+        T output = std::numeric_limits<T>::quiet_NaN();
+    public:
+
+        LRMA() : iSMA(), iWMA() {};
+
+        LRMA(const size_t period) :
+            iSMA(period), iWMA(period) {
+
+        }
+
+        int update(const T in, T &out) {
+            T x1, x2;
+            int err = iSMA.update(in, x1);
+            if(err != OK) {
+                output = out = std::numeric_limits<T>::quiet_NaN();
+                return err;
+            }
+            err = iWMA.update(in, x2);
+            if(err != OK) {
+                output = out = std::numeric_limits<T>::quiet_NaN();
+                return err;
+            }
+            output = out = 3.0 * x2 - 2.0 * x1;
+            return OK;
+        }
+
+        int update(const T in) {
+            T x1, x2;
+            int err = iSMA.update(in, x1);
+            if(err != OK) {
+                output = std::numeric_limits<T>::quiet_NaN();
+                return err;
+            }
+            err = iWMA.update(in, x2);
+            if(err != OK) {
+                output = std::numeric_limits<T>::quiet_NaN();
+                return err;
+            }
+            output = 3.0 * x2 - 2.0 * x1;
+            return OK;
+        }
+
+        int test(const T in, T &out) {
+            T x1, x2;
+            int err = iSMA.test(in, x1);
+            if(err != OK) {
+                output = out = std::numeric_limits<T>::quiet_NaN();
+                return err;
+            }
+            err = iWMA.test(in, x2);
+            if(err != OK) {
+                output = out = std::numeric_limits<T>::quiet_NaN();
+                return err;
+            }
+            output = out = 3.0 * x2 - 2.0 * x1;
+            return OK;
+        }
+
+        int test(const T in) {
+            T x1, x2;
+            int err = iSMA.test(in, x1);
+            if(err != OK) {
+                output = std::numeric_limits<T>::quiet_NaN();
+                return err;
+            }
+            err = iWMA.test(in, x2);
+            if(err != OK) {
+                output = std::numeric_limits<T>::quiet_NaN();
+                return err;
+            }
+            output = 3.0 * x2 - 2.0 * x1;
+            return OK;
+        }
+
+        inline T get() {return output;};
+
+        void clear() {
+            iSMA.clear();
+            iWMA.clear();
+            output = std::numeric_limits<T>::quiet_NaN();
+        }
+    };
+
     /** \brief Мера склонности к чередовнию знаков (z-счет)
      *
      * Z - число СКО, на которое количество серий в выборке отклоняется
