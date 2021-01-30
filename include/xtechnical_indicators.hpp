@@ -446,6 +446,157 @@ namespace xtechnical_indicators {
         }
     };
 
+    /** \brief Стандартное отклонение
+     */
+    template <typename T>
+    class StdDev {
+    private:
+        xtechnical::circular_buffer<T> buffer;
+        T last_data = 0;
+        T output_value = std::numeric_limits<T>::quiet_NaN();
+        size_t period = 0;
+    public:
+        StdDev() {};
+
+        /** \brief Инициализировать простую скользящую среднюю
+         * \param user_period период
+         */
+        StdDev(const size_t user_period) :
+                buffer(user_period + 1), period(user_period) {
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &out) {
+            if(period == 0) {
+                out = output_value = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            buffer.update(in);
+            if(buffer.full()) {
+                last_data = last_data + (in - buffer.front());
+                T mean = last_data / (T)period;
+                T diff = 0, sum = 0;
+                for(size_t i = 1; i <= period; ++i) {
+                    diff = (buffer[i] - mean);
+                    sum += diff * diff;
+                }
+                sum /= (T)(period - 1);
+                out = output_value = sum > 0 ? std::sqrt(sum) : 0;
+            } else {
+                last_data += in;
+                out = output_value = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in) {
+            if(period == 0) {
+                output_value = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            buffer.update(in);
+            if(buffer.full()) {
+                last_data = last_data + (in - buffer.front());
+                T mean = last_data/(T)period;
+                T diff = 0, sum = 0;
+                for(size_t i = 1; i <= period; ++i) {
+                    diff = (buffer[i] - mean);
+                    sum += diff * diff;
+                }
+                sum /= (T)(period - 1);
+                output_value = sum > 0 ? std::sqrt(sum) : 0;
+            } else {
+                last_data += in;
+                output_value = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \param out сигнал на выходе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in, T &out) {
+            if(period == 0) {
+                out = output_value = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            buffer.test(in);
+            if(buffer.full()) {
+                T mean = (last_data + (in - buffer.front()))/(T)period;
+                T diff = 0, sum = 0;
+                for(size_t i = 1; i <= period; ++i) {
+                    diff = (buffer[i] - mean);
+                    sum += diff * diff;
+                }
+                sum /= (T)(period - 1);
+                out = output_value = sum > 0 ? std::sqrt(sum) : 0;
+            } else {
+                out = output_value = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in) {
+            if(period == 0) {
+                output_value = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            buffer.test(in);
+            if(buffer.full()) {
+                T mean = (last_data + (in - buffer.front()))/(T)period;
+                T diff = 0, sum = 0;
+                for(size_t i = 1; i <= period; ++i) {
+                    diff = (buffer[i] - mean);
+                    sum += diff * diff;
+                }
+                sum /= (T)(period - 1);
+                output_value = sum > 0 ? std::sqrt(sum) : 0;
+            } else {
+                output_value = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Получить значение индикатора
+         * \return Значение индикатора
+         */
+        inline T get() const {
+            return output_value;
+        }
+
+        /** \brief Очистить данные индикатора
+         */
+        void clear() {
+            buffer.clear();
+            output_value = std::numeric_limits<T>::quiet_NaN();
+            last_data = 0;
+        }
+    };
+
     /** \brief Простая скользящая средняя
      */
     template <typename T>
@@ -1591,32 +1742,33 @@ namespace xtechnical_indicators {
 
     /** \brief Индекс относительной силы
      */
-    template <typename T, class INDICATOR_TYPE>
+    template <typename T, class MA_TYPE>
     class RSI {
     private:
-        INDICATOR_TYPE iU;
-        INDICATOR_TYPE iD;
+        MA_TYPE iU;
+        MA_TYPE iD;
         bool is_init_ = false;
         bool is_update_ = false;
         T prev_ = 0;
+        T output_value = std::numeric_limits<T>::quiet_NaN();
     public:
+
         RSI() {}
 
         /** \brief Инициализировать индикатор индекса относительной силы
          * \param period период индикатора
          */
-        RSI(const size_t &period) : iU(period), iD(period) {
-            is_init_ = true;
+        RSI(const size_t period) :
+            iU(period), iD(period) {
         }
 
         /** \brief Инициализировать индикатор индекса относительной силы
          * \param period период индикатора
          */
-        void init(const size_t &period) {
-            is_init_ = true;
+        void init(const size_t period) {
             is_update_ = false;
-            iU = INDICATOR_TYPE(period);
-            iD = INDICATOR_TYPE(period);
+            iU = MA_TYPE(period);
+            iD = MA_TYPE(period);
         }
 
         /** \brief Обновить состояние индикатора
@@ -1624,14 +1776,11 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T &in, T &out) {
-            if(!is_init_) {
-                return NO_INIT;
-            }
+        int update(const T in, T &out) {
             if(!is_update_) {
                 prev_ = in;
+                output_value = out = std::numeric_limits<T>::quiet_NaN();
                 is_update_ = true;
-                out = 50.0;
                 return INDICATOR_NOT_READY_TO_WORK;
             }
             T u = 0;
@@ -1643,21 +1792,19 @@ namespace xtechnical_indicators {
                 d = prev_ - in;
             }
             int erru, errd = 0;
-            T mu = 0;
-            T md = 0;
-            erru = iU.update(u, mu);
-            errd = iD.update(d, md);
+            erru = iU.update(u, u);
+            errd = iD.update(d, d);
             prev_ = in;
             if(erru != OK || errd != OK) {
-                out = 50.0;
+                output_value = out = std::numeric_limits<T>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
             }
-            if(md == 0) {
-                out = 100.0;
+            if(d == 0) {
+                output_value = out = 100.0;
                 return OK;
             }
-            T rs = mu / md;
-            out = 100.0 - (100.0 / (1.0 + rs));
+            T rs = u / d;
+            output_value = out = 100.0 - (100.0 / (1.0 + rs));
             return OK;
         }
 
@@ -1665,12 +1812,10 @@ namespace xtechnical_indicators {
          * \param in сигнал на входе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T &in) {
-            if(!is_init_) {
-                return NO_INIT;
-            }
+        int update(const T in) {
             if(!is_update_) {
                 prev_ = in;
+                output_value = std::numeric_limits<T>::quiet_NaN();
                 is_update_ = true;
                 return INDICATOR_NOT_READY_TO_WORK;
             }
@@ -1686,8 +1831,15 @@ namespace xtechnical_indicators {
             errd = iD.update(d, d);
             prev_ = in;
             if(erru != OK || errd != OK) {
+                output_value = std::numeric_limits<T>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
             }
+            if(d == 0) {
+                output_value = 100.0;
+                return OK;
+            }
+            T rs = u / d;
+            output_value = 100.0 - (100.0 / (1.0 + rs));
             return OK;
         }
 
@@ -1699,12 +1851,9 @@ namespace xtechnical_indicators {
          * \param out сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T &in, T &out) {
-            if(!is_init_) {
-                return NO_INIT;
-            }
+        int test(const T in, T &out) {
             if(!is_update_) {
-                out = 50.0;
+                output_value = out = std::numeric_limits<T>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
             }
             T u = 0, d = 0;
@@ -1718,21 +1867,64 @@ namespace xtechnical_indicators {
             erru = iU.test(u, u);
             errd = iD.test(d, d);
             if(erru != OK || errd != OK) {
-                out = 50.0;
+                output_value = out = std::numeric_limits<T>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
             }
             if(d == 0) {
-                out = 100.0;
+                output_value = out = 100.0;
                 return OK;
             }
             T rs = u / d;
-            out = 100.0 - (100.0 / (1.0 + rs));
+            output_value = out = 100.0 - (100.0 / (1.0 + rs));
             return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in) {
+            if(!is_update_) {
+                output_value = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            T u = 0, d = 0;
+            if(prev_ < in) {
+                u = in - prev_;
+            } else
+            if(prev_ > in) {
+                d = prev_ - in;
+            }
+            int erru, errd = 0;
+            erru = iU.test(u, u);
+            errd = iD.test(d, d);
+            if(erru != OK || errd != OK) {
+                output_value = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            if(d == 0) {
+                output_value = 100.0;
+                return OK;
+            }
+            T rs = u / d;
+            output_value = 100.0 - (100.0 / (1.0 + rs));
+            return OK;
+        }
+
+        /** \brief Получить значение индикатора
+         * \return Значение индикатора
+         */
+        inline T get() const {
+            return output_value;
         }
 
         /** \brief Очистить данные индикатора
          */
         void clear() {
+            output_value = std::numeric_limits<T>::quiet_NaN();
             is_update_ = false;
             iU.clear();
             iD.clear();
@@ -3982,6 +4174,79 @@ namespace xtechnical_indicators {
         }
     };
 
+    /** \brief Скользящая средняя Zscore
+     */
+    template <typename T>
+    class MAZ {
+    private:
+        xtechnical_indicators::Zscore<T> iZscore;
+        xtechnical_indicators::SMA<T> iSMA;
+        T output = std::numeric_limits<T>::quiet_NaN();
+    public:
+
+        MAZ() : iSMA(), iZscore() {};
+
+        /** \brief Конструктор индикатора
+         * \param period_zscore Период Zscore
+         * \param period_ma Период скользящей средней
+         */
+        MAZ(const size_t period_zscore, const size_t period_ma) :
+            iZscore(period_zscore), iSMA(period_ma) {
+        }
+
+        int update(const T in, T &out) {
+            T z, vol;
+            int err = iZscore.update(in, z);
+            if(err != OK) return err;
+            err = iSMA.update(std::abs(z), vol);
+            if(err != OK) return err;
+            output = out = vol;
+            return OK;
+        }
+
+        int update(const T in) {
+            T z, vol;
+            int err = iZscore.update(in, z);
+            if(err != OK) return err;
+            err = iSMA.update(std::abs(z), vol);
+            if(err != OK) return err;
+            output = vol;
+            return OK;
+        }
+
+        int test(const T in, T &out) {
+            T z, vol;
+            int err = iZscore.test(in, z);
+            if(err != OK) return err;
+            err = iSMA.test(std::abs(z), vol);
+            if(err != OK) return err;
+            output = out = vol;
+            return OK;
+        }
+
+        int test(const T in) {
+            T z, vol;
+            int err = iZscore.test(in, z);
+            if(err != OK) return err;
+            err = iSMA.test(std::abs(z), vol);
+            if(err != OK) return err;
+            output = vol;
+            return OK;
+        }
+
+        inline T get() {return output;};
+
+        inline uint32_t get_index() {
+            return std::isnan(output) ? 0 : (uint32_t)(output + 0.5d);
+        };
+
+        void clear() {
+            iZscore.clear();
+            iSMA.clear();
+            output = std::numeric_limits<T>::quiet_NaN();
+        }
+    };
+
     /** \brief Linear Regression Moving Average - линейно-регрессионная скользящая средняя
      * LRMA = 3.0 * LWMA - 2.0 * SMA
      * LWMA - Linear Weighted Moving Average(Close, Period)
@@ -4075,6 +4340,127 @@ namespace xtechnical_indicators {
         }
     };
 
+    /** \brief Percent Range Index Function
+     */
+	template<class T, class RSI_MA_TYPE, class MA_TYPE>
+	class RSHILLMA {
+    private:
+        RSI<T, RSI_MA_TYPE> rsi_indicator;
+        MA_TYPE ma_indicator;
+        StdDev<T> std_dev_indicator;
+
+        T out_tl = std::numeric_limits<T>::quiet_NaN();
+        T out_ml = std::numeric_limits<T>::quiet_NaN();
+        T out_bl = std::numeric_limits<T>::quiet_NaN();
+        T out_rsi = std::numeric_limits<T>::quiet_NaN();
+        T out = std::numeric_limits<T>::quiet_NaN();
+        T deviation = 1.5;
+    public:
+        RSHILLMA() {};
+
+        /** \brief Инициализация линий Боллинджера
+         * \param period_rsi Период RSI, например 14
+         * \param period_ma Период MA, например 12
+         * \param period_std_dev Период стандартного отклонения, например 100
+         * \param deviation_bb Множитель стандартного отклонения для полос, например 1.5
+         */
+        RSHILLMA(
+                const size_t period_rsi,
+                const size_t period_ma,
+                const size_t period_std_dev,
+                const T deviation_bb) :
+                rsi_indicator(period_rsi),
+                ma_indicator(period_ma),
+                std_dev_indicator(period_rsi),
+                deviation(deviation_bb) {
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in Сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in) {
+            int err_rsi = rsi_indicator.update(in);
+            int err_std_dev = std_dev_indicator.update(in);
+            if(err_rsi != OK || err_std_dev != OK) {
+                out_tl = std::numeric_limits<T>::quiet_NaN();
+                out_ml = std::numeric_limits<T>::quiet_NaN();
+                out_bl = std::numeric_limits<T>::quiet_NaN();
+                out_rsi = std::numeric_limits<T>::quiet_NaN();
+                out = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            out_rsi = rsi_indicator.get();
+            if(ma_indicator.update(out_rsi) != OK) {
+                out_tl = std::numeric_limits<T>::quiet_NaN();
+                out_ml = std::numeric_limits<T>::quiet_NaN();
+                out_bl = std::numeric_limits<T>::quiet_NaN();
+                out = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            const T d = std_dev_indicator.get() * deviation;
+            out_ml = ma_indicator.get();
+            out_tl = out_ml + d;
+            out_bl = out_ml - d;
+            const T pre_out = d == 0 ? 0 : (out_rsi - out_bl) / d - 1.0;
+            out = pre_out > 1.0 ? 1.0 :  pre_out < -1.0 ? -1.0 : pre_out;
+            return OK;
+        }
+
+
+
+        /** \brief Протестировать индикатор
+         * \param in Сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in) {
+            int err_rsi = rsi_indicator.test(in);
+            int err_std_dev = std_dev_indicator.test(in);
+            if(err_rsi != OK || err_std_dev != OK) {
+                out_tl = std::numeric_limits<T>::quiet_NaN();
+                out_ml = std::numeric_limits<T>::quiet_NaN();
+                out_bl = std::numeric_limits<T>::quiet_NaN();
+                out_rsi = std::numeric_limits<T>::quiet_NaN();
+                out = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            out_rsi = rsi_indicator.get();
+            if(ma_indicator.test(out_rsi) != OK) {
+                out_tl = std::numeric_limits<T>::quiet_NaN();
+                out_ml = std::numeric_limits<T>::quiet_NaN();
+                out_bl = std::numeric_limits<T>::quiet_NaN();
+                out = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            const T d = std_dev_indicator.get() * deviation;
+            out_ml = ma_indicator.get();
+            out_tl = out_ml + d;
+            out_bl = out_ml - d;
+            const T pre_out = d == 0 ? 0 : (out_rsi - out_bl) / d - 1.0;
+            out = pre_out > 1.0 ? 1.0 :  pre_out < -1.0 ? -1.0 : pre_out;
+            return OK;
+        }
+
+        inline T get() {return out;};
+        inline T get_rsi() {return out_rsi;};
+        inline T get_tl() {return out_tl;};
+        inline T get_ml() {return out_ml;};
+        inline T get_bl() {return out_bl;};
+
+        /** \brief Очистить данные индикатора
+         */
+        void clear() {
+            rsi_indicator.clear();
+            ma_indicator.clear();
+            std_dev_indicator.clear();
+            out_tl = std::numeric_limits<T>::quiet_NaN();
+            out_ml = std::numeric_limits<T>::quiet_NaN();
+            out_bl = std::numeric_limits<T>::quiet_NaN();
+            out_rsi = std::numeric_limits<T>::quiet_NaN();
+            out = std::numeric_limits<T>::quiet_NaN();
+        }
+    };
+
     /** \brief Мера склонности к чередовнию знаков (z-счет)
      *
      * Z - число СКО, на которое количество серий в выборке отклоняется
@@ -4100,7 +4486,7 @@ namespace xtechnical_indicators {
      * \param winperc процент выплаты брокера (от 0.0)
      * \return оптимальная доля капитала
      */
-    double calc_z_scor_capital_share(double p, double winperc) {
+    double calc_z_score_capital_share(double p, double winperc) {
         return p - (1.0 - p) * (1.0/winperc);
     }
 }

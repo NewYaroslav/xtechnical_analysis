@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="check_pri" />
+		<Option pch_mode="2" />
+		<Option compiler="mingw_64_7_3_0" />
+		<Build>
+			<Target title="Release">
+				<Option output="bin/Release/check_pri" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++11" />
+					<Add option="-g" />
+					<Add directory="../../include" />
+				</Compiler>
+				<Linker>
+					<Add directory="../../include" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+		</Compiler>
+		<Unit filename="../../include/xtechnical_circular_buffer.hpp" />
+		<Unit filename="../../include/xtechnical_common.hpp" />
+		<Unit filename="../../include/xtechnical_correlation.hpp" />
+		<Unit filename="../../include/xtechnical_dft.hpp" />
+		<Unit filename="../../include/xtechnical_indicators.hpp" />
+		<Unit filename="../../include/xtechnical_moving_window.hpp" />
+		<Unit filename="../../include/xtechnical_normalization.hpp" />
+		<Unit filename="main.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
