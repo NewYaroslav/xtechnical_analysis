@@ -329,7 +329,7 @@ namespace xtechnical {
                     std::copy(buffer.begin() + start_index, buffer.begin() + stop_index + 1, std::back_inserter(temp));
                 }
             }
-            return temp;
+            return std::move(temp);
         }
 
         /** \brief Очистить данные циклического буфера

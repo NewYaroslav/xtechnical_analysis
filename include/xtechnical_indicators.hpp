@@ -32,6 +32,7 @@
 #include "xtechnical_common.hpp"
 
 #include <vector>
+#include <deque>
 #include <list>
 #include <algorithm>
 #include <numeric>
@@ -56,7 +57,7 @@ namespace xtechnical_indicators {
             T1 &input,
             T2 &output,
             const size_t period,
-            const size_t start_pos = 0) {
+            const size_t start_pos = 0) noexcept {
         if(input.size() <= start_pos + period) return INVALID_PARAMETER;
         using NumType = typename T1::value_type;
         auto sum = std::accumulate(
@@ -79,7 +80,7 @@ namespace xtechnical_indicators {
             T1 &input,
             T2 &output,
             const size_t period,
-            const size_t start_pos = 0) {
+            const size_t start_pos = 0) noexcept {
         if(input.size() < start_pos + period)return INVALID_PARAMETER;
         using NumType = typename T1::value_type;
         auto mean = std::accumulate(
@@ -126,9 +127,106 @@ namespace xtechnical_indicators {
         return OK;
     }
 
-    /** \brief Cкользящий Min Max
+    /** \brief Линия задержки
      */
     template <typename T>
+    class DelayLine {
+    private:
+        xtechnical::circular_buffer<T> buffer;
+        size_t period = 0;
+        T output_value = std::numeric_limits<T>::quiet_NaN();
+    public:
+
+        DelayLine() : buffer() {};
+
+        /** \brief Конструктор линии задержки
+         * \param p     Период
+         */
+        DelayLine(const size_t p) :
+            buffer(p + 1), period(p) {
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in    Сигнал на входе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in) noexcept {
+            if(period == 0) {
+                output_value = in;
+                return OK;
+            }
+            buffer.update(in);
+            if(buffer.full()) {
+                output_value = buffer.front();
+                return OK;
+            } else {
+                output_value = std::numeric_limits<T>::quiet_NaN();
+            }
+            return INDICATOR_NOT_READY_TO_WORK;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in    Сигнал на входе
+         * \param out   Сигнал на выходе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &out) noexcept {
+            const int err = update(in);
+            out = output_value;
+            return err;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данный метод отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in    Сигнал на входе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in) noexcept {
+            if(period == 0) {
+                output_value = in;
+                return OK;
+            }
+            buffer.test(in);
+            if(buffer.full()) {
+                output_value = buffer.front();
+                return OK;
+            } else {
+                output_value = std::numeric_limits<T>::quiet_NaN();
+            }
+            return INDICATOR_NOT_READY_TO_WORK;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данный метод отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in    Сигнал на входе
+         * \param out   Сигнал на выходе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in, T &out) noexcept {
+            const int err = test(in);
+            out = output_value;
+            return err;
+        }
+
+        inline T get() const noexcept {
+            return output_value;
+        }
+
+        /** \brief Очистить данные индикатора
+         */
+        inline void clear() noexcept {
+            buffer.clear();
+            output_value = std::numeric_limits<T>::quiet_NaN();
+        }
+    };
+
+    /** \brief Cкользящий Min Max
+     */
+    template <class T>
     class MinMax {
     private:
         xtechnical::circular_buffer<T> buffer;
@@ -140,23 +238,21 @@ namespace xtechnical_indicators {
         MinMax() {};
 
         /** \brief Конструктор скользящего Min Max
-         * \param user_period Период
-         * \param user_offset Смещение назад
+         * \param p     Период
+         * \param o     Смещение назад
          */
-        MinMax(const size_t user_period, const size_t user_offset = 0) :
-                buffer(user_period + user_offset), period(user_period), offset(user_offset) {
+        MinMax(const size_t p, const size_t o = 0) :
+                buffer(p + o), period(p), offset(o) {
         }
 
         /** \brief Обновить состояние индикатора
          * \param in сигнал на входе
-         * \param min_value сигнал на выходе
-         * \param max_value сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in, T &min_value, T &max_value) {
+        int update(const T in) noexcept {
             if(period == 0) {
-                min_value = output_min_value = std::numeric_limits<T>::quiet_NaN();
-                max_value = output_max_value = std::numeric_limits<T>::quiet_NaN();
+                output_min_value = std::numeric_limits<T>::quiet_NaN();
+                output_max_value = std::numeric_limits<T>::quiet_NaN();
                 return NO_INIT;
             }
             buffer.update(in);
@@ -168,27 +264,41 @@ namespace xtechnical_indicators {
                     if(output_max_value < temp) output_max_value = temp;
                     else if(output_min_value > temp) output_min_value = temp;
                 }
-                min_value = output_min_value;
-                max_value = output_max_value;
             } else {
-                min_value = output_min_value = std::numeric_limits<T>::quiet_NaN();
-                max_value = output_max_value = std::numeric_limits<T>::quiet_NaN();
+                output_min_value = std::numeric_limits<T>::quiet_NaN();
+                output_max_value = std::numeric_limits<T>::quiet_NaN();
                 return INDICATOR_NOT_READY_TO_WORK;
             }
             return OK;
         }
 
         /** \brief Обновить состояние индикатора
+         * \param in        Сигнал на входе
+         * \param min_value Минимальный сигнал на выходе за период
+         * \param max_value Максимальный сигнал на выходе за период
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &min_value, T &max_value) noexcept {
+            const int err = update(in);
+            min_value = output_min_value;
+            max_value = output_max_value;
+            return err;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
          * \param in сигнал на входе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in) {
+        int test(const T in) noexcept {
             if(period == 0) {
                 output_min_value = std::numeric_limits<T>::quiet_NaN();
                 output_max_value = std::numeric_limits<T>::quiet_NaN();
                 return NO_INIT;
             }
-            buffer.update(in);
+            buffer.test(in);
             if(buffer.full()) {
                 T temp = buffer[0];
                 output_max_value = output_min_value = temp;
@@ -208,88 +318,351 @@ namespace xtechnical_indicators {
         /** \brief Протестировать индикатор
          *
          * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
-         * \param in Сигнал на входе
-         * \param min_value Минимальный сигнал на выходе
-         * \param max_value Максимальный сигнал на выходе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         * \param in        Сигнал на входе
+         * \param min_value Минимальный сигнал на выходе за период
+         * \param max_value Максимальный сигнал на выходе за период
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in, T &min_value, T &max_value) {
-            if(period == 0) {
-                min_value = output_min_value = std::numeric_limits<T>::quiet_NaN();
-                max_value = output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
-            }
-            buffer.test(in);
-            if(buffer.full()) {
-                T temp = buffer[0];
-                output_max_value = output_min_value = temp;
-                for(size_t i = 1; i < period; ++i) {
-                    temp = buffer[i];
-                    if(output_max_value < temp) output_max_value = temp;
-                    else if(output_min_value > temp) output_min_value = temp;
-                }
-                min_value = output_min_value;
-                max_value = output_max_value;
-            } else {
-                min_value = output_min_value = std::numeric_limits<T>::quiet_NaN();
-                max_value = output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
-            return OK;
-        }
-
-        /** \brief Протестировать индикатор
-         *
-         * Данная функция отличается от update тем,
-         * что не влияет на внутреннее состояние индикатора
-         * \param in сигнал на входе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
-         */
-        int test(const T in) {
-            if(period == 0) {
-                output_min_value = std::numeric_limits<T>::quiet_NaN();
-                output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
-            }
-            buffer.test(in);
-            if(buffer.full()) {
-                T temp = buffer[0];
-                output_max_value = output_min_value = temp;
-                for(size_t i = 1; i < period; ++i) {
-                    temp = buffer[i];
-                    if(output_max_value < temp) output_max_value = temp;
-                    else if(output_min_value > temp) output_min_value = temp;
-                }
-            } else {
-                output_min_value = std::numeric_limits<T>::quiet_NaN();
-                output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
-            return OK;
+        int test(const T in, T &min_value, T &max_value) noexcept {
+            const int err = test(in);
+            min_value = output_min_value;
+            max_value = output_max_value;
+            return err;
         }
 
         /** \brief Получить минимальное значение индикатора
          * \return Минимальное значение индикатора
          */
-        inline T get_min() const {
+        inline T get_min() const noexcept {
             return output_min_value;
         }
 
         /** \brief Получить максимальное значение индикатора
          * \return Максимальное значение индикатора
          */
-        inline T get_max() const {
+        inline T get_max() const noexcept {
             return output_max_value;
         }
 
         /** \brief Очистить данные индикатора
          */
-        void clear() {
+        inline void clear() noexcept {
             buffer.clear();
             output_min_value = std::numeric_limits<T>::quiet_NaN();
             output_max_value = std::numeric_limits<T>::quiet_NaN();
         }
     };
+
+    /** \brief Быстрый алгоритм поиска Min и Max
+     * Оригинал: https://arxiv.org/abs/cs/0610046v5
+     */
+    template <class T>
+    class FastMinMax {
+    private:
+        T output_max_value = std::numeric_limits<T>::quiet_NaN();
+        T output_min_value = std::numeric_limits<T>::quiet_NaN();
+        T last_input = 0;
+        int64_t period = 0;
+        int64_t index = 0;
+        std::deque<std::pair<int64_t, T>> U, L;
+        DelayLine<T> delay_line;
+    public:
+        FastMinMax() {};
+
+        FastMinMax(const size_t p, const size_t o = 0) :
+            period((int64_t)p), delay_line(o) {
+        };
+
+        int update(T input) noexcept {
+            if(delay_line.update(input) != OK) {
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            input = delay_line.get();
+            if (index == 0) {
+                ++index;
+                last_input = input;
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            if (input > last_input) {
+                L.push_back(std::make_pair(index - 1, last_input));
+                if (index == period + L.front().first) L.pop_front() ;
+                while (U.size() > 0) {
+                    if (input <= U.back().second) {
+                        if (index == period + U.front().first) U.pop_front();
+                        break ;
+                    } // end if
+                    U.pop_back() ;
+                } // end while
+            } else {
+                U.push_back(std::make_pair(index - 1, last_input)) ;
+                if (index == period + U.front().first) U.pop_front() ;
+                while (L.size() > 0) {
+                    if (input >= L.back().second) {
+                        if (index == period + L.front().first) L.pop_front();
+                        break ;
+                    } // end if
+                    L.pop_back();
+                } // end while
+            } // end if else
+            ++index;
+            if (index >= period) {
+                output_max_value = U.size() > 0 ? U.front().second : input;
+                output_min_value = L.size() > 0 ? L.front().second : input;
+                last_input = input;
+                return OK;
+            }
+            last_input = input;
+            return INDICATOR_NOT_READY_TO_WORK;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param input     Сигнал на входе
+         * \param min_value Минимальный сигнал на выходе за период
+         * \param max_value Максимальный сигнал на выходе за период
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T input, T &min_value, T &max_value) noexcept {
+            const int err = update(input);
+            min_value = output_min_value;
+            max_value = output_max_value;
+            return err;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
+         * \param input     Сигнал на входе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(T input) noexcept {
+            if(delay_line.test(input) != OK) {
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            input = delay_line.get();
+            if (index == 0) return INDICATOR_NOT_READY_TO_WORK;
+            std::deque<std::pair<int64_t, T>> tU(U), tL(L);
+            if (input > last_input) {
+                tL.push_back(std::make_pair(index - 1, last_input));
+                if (index == period + tL.front().first) tL.pop_front() ;
+                while (tU.size() > 0) {
+                    if (input <= tU.back().second) {
+                        if (index == period + tU.front().first) tU.pop_front();
+                        break ;
+                    } // end if
+                    tU.pop_back() ;
+                } // end while
+            } else {
+                tU.push_back(std::make_pair(index - 1, last_input)) ;
+                if (index == period + tU.front().first) tU.pop_front() ;
+                while (tL.size() > 0) {
+                    if (input >= tL.back().second) {
+                        if (index == period + tL.front().first) tL.pop_front();
+                        break ;
+                    } // end if
+                    tL.pop_back();
+                } // end while
+            } // end if else
+            if ((index + 1) >= period) {
+                output_max_value = tU.size() > 0 ? tU.front().second : input;
+                output_min_value = tL.size() > 0 ? tL.front().second : input;
+                return OK;
+            }
+            return INDICATOR_NOT_READY_TO_WORK;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем, что не влияет на внутреннее состояние индикатора
+         * \param input     Сигнал на входе
+         * \param min_value Минимальный сигнал на выходе за период
+         * \param max_value Максимальный сигнал на выходе за период
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T input, T &min_value, T &max_value) {
+            const int err = test(input);
+            min_value = output_min_value;
+            max_value = output_max_value;
+            return err;
+        }
+
+        /** \brief Получить минимальное значение индикатора
+         * \return Минимальное значение индикатора
+         */
+        inline T get_min() const noexcept {
+            return output_min_value;
+        }
+
+        /** \brief Получить максимальное значение индикатора
+         * \return Максимальное значение индикатора
+         */
+        inline T get_max() const noexcept {
+            return output_max_value;
+        }
+
+        /** \brief Очистить данные индикатора
+         */
+        inline void clear() noexcept {
+            output_min_value = std::numeric_limits<T>::quiet_NaN();
+            output_max_value = std::numeric_limits<T>::quiet_NaN();
+            last_input = 0;
+            index = 0;
+            U.clear();
+            L.clear();
+            delay_line.clear();
+        }
+    };
+
+    /** \brief Индикатор Stochastics
+     */
+	template <typename T, class MA_TYPE>
+	class Stochastics {
+	private:
+		//xtechnical::circular_buffer<T> buffer;
+		FastMinMax<T> min_max;
+		MA_TYPE k_ma;
+		MA_TYPE d_ma;
+
+		T output_value = std::numeric_limits<T>::quiet_NaN();
+        T output_k_value = std::numeric_limits<T>::quiet_NaN();
+        T output_d_value = std::numeric_limits<T>::quiet_NaN();
+
+        size_t period = 0;
+	public:
+		Stochastics() {};
+
+        /** \brief Конструктор Stochastics
+         * \param p     Период
+         * \param pk    Период %K
+         * \param pd    Период %D
+         * \param o     Смещение назад
+         */
+        Stochastics(
+				const size_t p,
+				const size_t pk,
+				const size_t pd,
+				const size_t o = 0) :
+            min_max(p, o),
+			k_ma(pk),
+			d_ma(pd),
+			period(p)  {
+        }
+
+		/** \brief Обновить состояние индикатора
+         * \param in 		Котировка на входе индикатора
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in) noexcept {
+            if(period == 0) {
+                output_k_value = std::numeric_limits<T>::quiet_NaN();
+                output_d_value = std::numeric_limits<T>::quiet_NaN();
+				output_value = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if (min_max.update(in) == OK) {
+                const T diff = min_max.get_max() - min_max.get_min();
+				output_value = diff == 0 ? (T)50 : (T)100 * ((in - min_max.get_min()) / diff);
+				k_ma.update(output_value);
+				output_k_value = k_ma.get();
+				if (!std::isnan(output_k_value)) {
+					d_ma.update(output_k_value);
+					output_d_value = d_ma.get();
+				}
+            } else {
+				output_value = std::numeric_limits<T>::quiet_NaN();
+				output_k_value = std::numeric_limits<T>::quiet_NaN();
+				output_d_value = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in 		Котировка на входе индикатора
+         * \param k_value 	Линия %K
+         * \param d_value 	Линия %D
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &k_value, T &d_value) noexcept {
+            const int err = update(in);
+            k_value = output_k_value;
+            d_value = output_d_value;
+            return err;
+        }
+
+		/** \brief Протестировать индикатор
+         * \param in 		Котировка на входе индикатора
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in) noexcept {
+            if(period == 0) {
+                output_k_value = std::numeric_limits<T>::quiet_NaN();
+                output_d_value = std::numeric_limits<T>::quiet_NaN();
+				output_value = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if (min_max.test(in) == OK) {
+                const T diff = min_max.get_max() - min_max.get_min();
+				output_value = diff == 0 ? (T)50 : (T)100 * ((in - min_max.get_min()) / diff);
+				k_ma.test(output_value);
+				output_k_value = k_ma.get();
+				if (!std::isnan(output_k_value)) {
+					d_ma.test(output_k_value);
+					output_d_value = d_ma.get();
+				}
+            } else {
+				output_value = std::numeric_limits<T>::quiet_NaN();
+				output_k_value = std::numeric_limits<T>::quiet_NaN();
+				output_d_value = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Протестировать индикатор
+         * \param in 		Котировка на входе индикатора
+         * \param k_value 	Линия %K
+         * \param d_value 	Линия %D
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in, T &k_value, T &d_value) noexcept {
+            const int err = test(in);
+            k_value = output_k_value;
+            d_value = output_d_value;
+            return err;
+        }
+
+		/** \brief Получить значение %K до сглаживания
+         * \return Значение %K до сглаживания или NaN, если значение отсутствует
+         */
+        inline T get() const noexcept {
+            return output_value;
+        }
+
+        /** \brief Получить сглаженное значение %K
+         * \return Значение %K после сглаживания или NaN, если значение отсутствует
+         */
+        inline T get_k() const noexcept {
+            return output_k_value;
+        }
+
+		/** \brief Получить сглаженное значение %D
+         * \return Значение %D после сглаживания или NaN, если значение отсутствует
+         */
+        inline T get_d() const noexcept {
+            return output_d_value;
+        }
+
+        /** \brief Очистить данные индикатора
+         */
+        inline void clear() noexcept {
+            min_max.clear();
+			k_ma.clear();
+			d_ma.clear();
+			output_value = std::numeric_limits<T>::quiet_NaN();
+            output_k_value = std::numeric_limits<T>::quiet_NaN();
+            output_d_value = std::numeric_limits<T>::quiet_NaN();
+        }
+	};
 
     /** \brief Cкользящий Z-score
      */
@@ -304,47 +677,17 @@ namespace xtechnical_indicators {
         Zscore() {};
 
         /** \brief Инициализировать простую скользящую среднюю
-         * \param user_period период
+         * \param p     Период
          */
-        Zscore(const size_t user_period) :
-                buffer(user_period + 1), period(user_period) {
+        Zscore(const size_t p) :
+                buffer(p + 1), period(p) {
         }
 
         /** \brief Обновить состояние индикатора
-         * \param in сигнал на входе
-         * \param out сигнал на выходе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         * \param in    Сигнал на входе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in, T &out) {
-            if(period == 0) {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
-            }
-            buffer.update(in);
-            if(buffer.full()) {
-                last_data = last_data + (in - buffer.front());
-                T mean = last_data/(T)period;
-                T diff = 0, sum = 0;
-                for(size_t i = 1; i <= period; ++i) {
-                    diff = (buffer[i] - mean);
-                    sum += diff * diff;
-                }
-                sum /= (T)(period - 1);
-                T std_dev = sum > 0 ? std::sqrt(sum) : 0;
-                out = output_value = std_dev > 0 ? ((in - mean) / std_dev) : 0;
-            } else {
-                last_data += in;
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
-            return OK;
-        }
-
-        /** \brief Обновить состояние индикатора
-         * \param in сигнал на входе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
-         */
-        int update(const T in) {
+        int update(const T in) noexcept {
             if(period == 0) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 return NO_INIT;
@@ -369,43 +712,23 @@ namespace xtechnical_indicators {
             return OK;
         }
 
-        /** \brief Протестировать индикатор
-         *
-         * Данная функция отличается от update тем,
-         * что не влияет на внутреннее состояние индикатора
-         * \param in сигнал на входе
-         * \param out сигнал на выходе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
+        /** \brief Обновить состояние индикатора
+         * \param in    Cигнал на входе
+         * \param out   Cигнал на выходе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in, T &out) {
-            if(period == 0) {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
-            }
-            buffer.test(in);
-            if(buffer.full()) {
-                T mean = (last_data + (in - buffer.front()))/(T)period;
-                T diff = 0, sum = 0;
-                for(size_t i = 1; i <= period; ++i) {
-                    diff = (buffer[i] - mean);
-                    sum += diff * diff;
-                }
-                sum /= (T)(period - 1);
-                T std_dev = sum > 0 ? std::sqrt(sum) : 0;
-                out = output_value = std_dev > 0 ? ((in - mean) / std_dev) : 0;
-            } else {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
-            return OK;
+        int update(const T in, T &out) noexcept {
+            const int err = update(in);
+            out = output_value;
+            return err;
         }
 
         /** \brief Протестировать индикатор
          *
          * Данная функция отличается от update тем,
          * что не влияет на внутреннее состояние индикатора
-         * \param in сигнал на входе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         * \param in    Сигнал на входе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
         int test(const T in) {
             if(period == 0) {
@@ -430,16 +753,30 @@ namespace xtechnical_indicators {
             return OK;
         }
 
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in    Сигнал на входе
+         * \param out   Сигнал на выходе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in, T &out) noexcept {
+            const int err = test(in);
+            out = output_value;
+            return err;
+        }
+
         /** \brief Получить значение индикатора
          * \return Значение индикатора
          */
-        inline T get() const {
+        inline T get() const noexcept {
             return output_value;
         }
 
         /** \brief Очистить данные индикатора
          */
-        void clear() {
+        inline void clear() noexcept {
             buffer.clear();
             output_value = std::numeric_limits<T>::quiet_NaN();
             last_data = 0;
@@ -459,46 +796,17 @@ namespace xtechnical_indicators {
         StdDev() {};
 
         /** \brief Инициализировать простую скользящую среднюю
-         * \param user_period период
+         * \param p     Период
          */
-        StdDev(const size_t user_period) :
-                buffer(user_period + 1), period(user_period) {
+        StdDev(const size_t p) :
+                buffer(p + 1), period(p) {
         }
 
         /** \brief Обновить состояние индикатора
-         * \param in сигнал на входе
-         * \param out сигнал на выходе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         * \param in    Сигнал на входе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in, T &out) {
-            if(period == 0) {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
-            }
-            buffer.update(in);
-            if(buffer.full()) {
-                last_data = last_data + (in - buffer.front());
-                T mean = last_data / (T)period;
-                T diff = 0, sum = 0;
-                for(size_t i = 1; i <= period; ++i) {
-                    diff = (buffer[i] - mean);
-                    sum += diff * diff;
-                }
-                sum /= (T)(period - 1);
-                out = output_value = sum > 0 ? std::sqrt(sum) : 0;
-            } else {
-                last_data += in;
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
-            return OK;
-        }
-
-        /** \brief Обновить состояние индикатора
-         * \param in сигнал на входе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
-         */
-        int update(const T in) {
+        int update(const T in) noexcept {
             if(period == 0) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 return NO_INIT;
@@ -522,33 +830,14 @@ namespace xtechnical_indicators {
             return OK;
         }
 
-        /** \brief Протестировать индикатор
-         *
-         * Данная функция отличается от update тем,
-         * что не влияет на внутреннее состояние индикатора
-         * \param in сигнал на входе
-         * \param out сигнал на выходе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
+        /** \brief Обновить состояние индикатора
+         * \param in    Сигнал на входе
+         * \param out   Сигнал на выходе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in, T &out) {
-            if(period == 0) {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
-            }
-            buffer.test(in);
-            if(buffer.full()) {
-                T mean = (last_data + (in - buffer.front()))/(T)period;
-                T diff = 0, sum = 0;
-                for(size_t i = 1; i <= period; ++i) {
-                    diff = (buffer[i] - mean);
-                    sum += diff * diff;
-                }
-                sum /= (T)(period - 1);
-                out = output_value = sum > 0 ? std::sqrt(sum) : 0;
-            } else {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
+        int update(const T in, T &out) {
+            const int err = update(in);
+            out = output_value;
             return OK;
         }
 
@@ -556,10 +845,10 @@ namespace xtechnical_indicators {
          *
          * Данная функция отличается от update тем,
          * что не влияет на внутреннее состояние индикатора
-         * \param in сигнал на входе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         * \param in    Сигнал на входе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in) {
+        int test(const T in) noexcept {
             if(period == 0) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 return NO_INIT;
@@ -581,16 +870,30 @@ namespace xtechnical_indicators {
             return OK;
         }
 
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in    Сигнал на входе
+         * \param out   Сигнал на выходе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in, T &out) {
+            const int err = test(in);
+            out = output_value;
+            return err;
+        }
+
         /** \brief Получить значение индикатора
          * \return Значение индикатора
          */
-        inline T get() const {
+        inline T get() const noexcept {
             return output_value;
         }
 
         /** \brief Очистить данные индикатора
          */
-        void clear() {
+        void clear() noexcept {
             buffer.clear();
             output_value = std::numeric_limits<T>::quiet_NaN();
             last_data = 0;
@@ -610,39 +913,17 @@ namespace xtechnical_indicators {
         SMA() {};
 
         /** \brief Инициализировать простую скользящую среднюю
-         * \param user_period период
+         * \param p     Период
          */
-        SMA(const size_t user_period) :
-                buffer(user_period + 1), period(user_period) {
-        }
-
-        /** \brief Обновить состояние индикатора
-         * \param in сигнал на входе
-         * \param out сигнал на выходе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
-         */
-        int update(const T in, T &out) {
-            if(period == 0) {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
-            }
-            buffer.update(in);
-            if(buffer.full()) {
-                last_data = last_data + (in - buffer.front());
-                out = output_value = last_data/(T)period;
-            } else {
-                last_data += in;
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
-            return OK;
+        SMA(const size_t p) :
+                buffer(p + 1), period(p) {
         }
 
         /** \brief Обновить состояние индикатора
          * \param in сигнал на входе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in) {
+        int update(const T in) noexcept {
             if(period == 0) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 return NO_INIT;
@@ -659,26 +940,14 @@ namespace xtechnical_indicators {
             return OK;
         }
 
-        /** \brief Протестировать индикатор
-         *
-         * Данная функция отличается от update тем,
-         * что не влияет на внутреннее состояние индикатора
-         * \param in сигнал на входе
-         * \param out сигнал на выходе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
+        /** \brief Обновить состояние индикатора
+         * \param in    Сигнал на входе
+         * \param out   Сигнал на выходе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in, T &out) {
-            if(period == 0) {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
-            }
-            buffer.test(in);
-            if(buffer.full()) {
-                out = output_value = (last_data + (in - buffer.front()))/(T)period;
-            } else {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
+        int update(const T in, T &out) noexcept {
+            const int err = update(in);
+            out = output_value;
             return OK;
         }
 
@@ -689,7 +958,7 @@ namespace xtechnical_indicators {
          * \param in сигнал на входе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in) {
+        int test(const T in) noexcept {
             if(period == 0) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 return NO_INIT;
@@ -704,16 +973,30 @@ namespace xtechnical_indicators {
             return OK;
         }
 
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in    Сигнал на входе
+         * \param out   Сигнал на выходе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in, T &out) noexcept {
+            const int err = test(in);
+            out = output_value;
+            return OK;
+        }
+
         /** \brief Получить значение индикатора
          * \return Значение индикатора
          */
-        inline T get() const {
+        inline T get() const noexcept {
             return output_value;
         }
 
         /** \brief Очистить данные индикатора
          */
-        void clear() {
+        inline void clear() noexcept {
             buffer.clear();
             output_value = std::numeric_limits<T>::quiet_NaN();
             last_data = 0;
@@ -777,121 +1060,6 @@ namespace xtechnical_indicators {
         }
     };
 
-	/** \brief Линия задержки
-     */
-    template <typename T>
-    class DelayLine {
-    private:
-        xtechnical::circular_buffer<T> buffer;
-        size_t period = 0;
-        T output_value = std::numeric_limits<T>::quiet_NaN();
-    public:
-
-        DelayLine() : buffer() {};
-
-        /** \brief Конструктор линии задержки
-         * \param period период
-         */
-        DelayLine(const size_t user_period) :
-            buffer(user_period + 1), period(user_period) {
-        }
-
-        /** \brief Обновить состояние индикатора
-         * \param in сигнал на входе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
-         */
-        int update(const T in) {
-            if(period == 0) {
-                output_value = in;
-                return OK;
-            }
-            buffer.update(in);
-            if(buffer.full()) {
-                output_value = buffer.front();
-                return OK;
-            } else {
-                output_value = std::numeric_limits<T>::quiet_NaN();
-            }
-            return INDICATOR_NOT_READY_TO_WORK;
-        }
-
-        /** \brief Обновить состояние индикатора
-         * \param in сигнал на входе
-         * \param out сигнал на выходе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
-         */
-        int update(const T in, T &out) {
-            if(period == 0) {
-                out = output_value = in;
-                return OK;
-            }
-            buffer.update(in);
-            if(buffer.full()) {
-                out = output_value = buffer.front();
-                return OK;
-            } else {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-            }
-            return INDICATOR_NOT_READY_TO_WORK;
-        }
-
-        /** \brief Протестировать индикатор
-         *
-         * Данный метод отличается от update тем,
-         * что не влияет на внутреннее состояние индикатора
-         * \param in сигнал на входе
-         * \param out сигнал на выходе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
-         */
-        int test(const T in, T &out) {
-            if(period == 0) {
-                out = output_value = in;
-                return OK;
-            }
-            buffer.test(in);
-            if(buffer.full()) {
-                out = output_value = buffer.front();
-                return OK;
-            } else {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-            }
-            return INDICATOR_NOT_READY_TO_WORK;
-        }
-
-        /** \brief Протестировать индикатор
-         *
-         * Данный метод отличается от update тем,
-         * что не влияет на внутреннее состояние индикатора
-         * \param in сигнал на входе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
-         */
-        int test(const T in) {
-            if(period == 0) {
-                output_value = in;
-                return OK;
-            }
-            buffer.test(in);
-            if(buffer.full()) {
-                output_value = buffer.front();
-                return OK;
-            } else {
-                output_value = std::numeric_limits<T>::quiet_NaN();
-            }
-            return INDICATOR_NOT_READY_TO_WORK;
-        }
-
-        inline T get() {
-            return output_value;
-        }
-
-        /** \brief Очистить данные индикатора
-         */
-        void clear() {
-            buffer.clear();
-            output_value = std::numeric_limits<T>::quiet_NaN();
-        }
-    };
-
     /** \brief Cкользящий Min Max Difference
      */
     template <typename T>
@@ -908,60 +1076,19 @@ namespace xtechnical_indicators {
         MinMaxDiff() {};
 
         /** \brief Конструктор скользящего Min Max Difference
-         * \param user_period Период
-         * \param user_offset Смещение назад
+         * \param p     Период
+         * \param o     Смещение назад
          */
-        MinMaxDiff(const size_t user_period, const size_t user_offset = 0) :
-                buffer(user_period + user_offset), delay_line(1),
-                period(user_period), offset(user_offset) {
-        }
-
-        /** \brief Обновить состояние индикатора
-         * \param in сигнал на входе
-         * \param out Сигнал на выходе
-         * \param min_value Минимальный сигнал на выходе
-         * \param max_value Максимальный сигнал на выходе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
-         */
-        int update(const T in, T &out, T &min_value, T &max_value) {
-            if(period == 0) {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                min_value = output_min_value = std::numeric_limits<T>::quiet_NaN();
-                max_value = output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
-            }
-            if(delay_line.update(in) != OK) {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                min_value = output_min_value = std::numeric_limits<T>::quiet_NaN();
-                max_value = output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
-            out = output_value = std::abs(in - delay_line.get());
-            buffer.update(output_value);
-            if(buffer.full()) {
-                T temp = buffer[0];
-                output_max_value = output_min_value = temp;
-                for(size_t i = 1; i < period; ++i) {
-                    temp = buffer[i];
-                    if(output_max_value < temp) output_max_value = temp;
-                    else if(output_min_value > temp) output_min_value = temp;
-                }
-                min_value = output_min_value;
-                max_value = output_max_value;
-            } else {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                min_value = output_min_value = std::numeric_limits<T>::quiet_NaN();
-                max_value = output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
-            return OK;
+        MinMaxDiff(const size_t p, const size_t o = 0) :
+                buffer(p + o), delay_line(1),
+                period(p), offset(o) {
         }
 
         /** \brief Обновить состояние индикатора
          * \param in сигнал на входе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int update(const T in) {
+        int update(const T in) noexcept {
             if(period == 0) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 output_min_value = std::numeric_limits<T>::quiet_NaN();
@@ -977,6 +1104,60 @@ namespace xtechnical_indicators {
             }
             output_value = std::abs(in - delay_line.get());
             buffer.update(output_value);
+            if(buffer.full()) {
+                T temp = buffer[0];
+                output_max_value = output_min_value = temp;
+                for(size_t i = 1; i < period; ++i) {
+                    temp = buffer[i];
+                    if(output_max_value < temp) output_max_value = temp;
+                    else if(output_min_value > temp) output_min_value = temp;
+                }
+            } else {
+                output_value = std::numeric_limits<T>::quiet_NaN();
+                output_min_value = std::numeric_limits<T>::quiet_NaN();
+                output_max_value = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            return OK;
+        }
+
+        /** \brief Обновить состояние индикатора
+         * \param in        Сигнал на входе
+         * \param out       Сигнал на выходе
+         * \param min_value Минимальный сигнал на выходе
+         * \param max_value Максимальный сигнал на выходе
+         * \return Вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int update(const T in, T &out, T &min_value, T &max_value) noexcept {
+            const int err = update(in);
+            out = output_value;
+            min_value = output_min_value;
+            max_value = output_max_value;
+            return err;
+        }
+
+        /** \brief Протестировать индикатор
+         *
+         * Данная функция отличается от update тем,
+         * что не влияет на внутреннее состояние индикатора
+         * \param in сигнал на входе
+         * \return вернет 0 в случае успеха, иначе см. ErrorType
+         */
+        int test(const T in) noexcept {
+            if(period == 0) {
+                output_value = std::numeric_limits<T>::quiet_NaN();
+                output_min_value = std::numeric_limits<T>::quiet_NaN();
+                output_max_value = std::numeric_limits<T>::quiet_NaN();
+                return NO_INIT;
+            }
+            if(delay_line.test(in) != OK) {
+                output_value = std::numeric_limits<T>::quiet_NaN();
+                output_min_value = std::numeric_limits<T>::quiet_NaN();
+                output_max_value = std::numeric_limits<T>::quiet_NaN();
+                return INDICATOR_NOT_READY_TO_WORK;
+            }
+            output_value = std::abs(in - delay_line.get());
+            buffer.test(output_value);
             if(buffer.full()) {
                 T temp = buffer[0];
                 output_max_value = output_min_value = temp;
@@ -1003,103 +1184,38 @@ namespace xtechnical_indicators {
          * \param max_value Максимальный сигнал на выходе
          * \return вернет 0 в случае успеха, иначе см. ErrorType
          */
-        int test(const T in, T &out, T &min_value, T &max_value) {
-            if(period == 0) {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                min_value = output_min_value = std::numeric_limits<T>::quiet_NaN();
-                max_value = output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
-            }
-            if(delay_line.test(in) != OK) {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                min_value = output_min_value = std::numeric_limits<T>::quiet_NaN();
-                max_value = output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
-            out = output_value = std::abs(in - delay_line.get());
-            buffer.test(output_value);
-            if(buffer.full()) {
-                T temp = buffer[0];
-                output_max_value = output_min_value = temp;
-                for(size_t i = 1; i < period; ++i) {
-                    temp = buffer[i];
-                    if(output_max_value < temp) output_max_value = temp;
-                    else if(output_min_value > temp) output_min_value = temp;
-                }
-                min_value = output_min_value;
-                max_value = output_max_value;
-            } else {
-                out = output_value = std::numeric_limits<T>::quiet_NaN();
-                min_value = output_min_value = std::numeric_limits<T>::quiet_NaN();
-                max_value = output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
-            return OK;
-        }
-
-        /** \brief Протестировать индикатор
-         *
-         * Данная функция отличается от update тем,
-         * что не влияет на внутреннее состояние индикатора
-         * \param in сигнал на входе
-         * \return вернет 0 в случае успеха, иначе см. ErrorType
-         */
-        int test(const T in) {
-            if(period == 0) {
-                output_value = std::numeric_limits<T>::quiet_NaN();
-                output_min_value = std::numeric_limits<T>::quiet_NaN();
-                output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
-            }
-            if(delay_line.test(in) != OK) {
-                output_value = std::numeric_limits<T>::quiet_NaN();
-                output_min_value = std::numeric_limits<T>::quiet_NaN();
-                output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
-            output_value = std::abs(in - delay_line.get());
-            buffer.test(output_value);
-            if(buffer.full()) {
-                T temp = buffer[0];
-                output_max_value = output_min_value = temp;
-                for(size_t i = 1; i < period; ++i) {
-                    temp = buffer[i];
-                    if(output_max_value < temp) output_max_value = temp;
-                    else if(output_min_value > temp) output_min_value = temp;
-                }
-            } else {
-                output_value = std::numeric_limits<T>::quiet_NaN();
-                output_min_value = std::numeric_limits<T>::quiet_NaN();
-                output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
-            }
+        int test(const T in, T &out, T &min_value, T &max_value) noexcept {
+            const int err = test(in);
+            out = output_value;
+            min_value = output_min_value;
+            max_value = output_max_value;
             return OK;
         }
 
         /** \brief Получить значение индикатора
          * \return Значение индикатора
          */
-        inline T get() const {
+        inline T get() const noexcept {
             return output_value;
         }
 
         /** \brief Получить минимальное значение индикатора
          * \return Минимальное значение индикатора
          */
-        inline T get_min() const {
+        inline T get_min() const noexcept {
             return output_min_value;
         }
 
         /** \brief Получить максимальное значение индикатора
          * \return Максимальное значение индикатора
          */
-        inline T get_max() const {
+        inline T get_max() const noexcept {
             return output_max_value;
         }
 
         /** \brief Очистить данные индикатора
          */
-        void clear() {
+        inline void clear() noexcept {
             buffer.clear();
             output_value = std::numeric_limits<T>::quiet_NaN();
             output_min_value = std::numeric_limits<T>::quiet_NaN();
@@ -1119,14 +1235,14 @@ namespace xtechnical_indicators {
     public:
         CMA() {};
 
-        double update(const T in) {
+        double update(const T in) noexcept {
             sum += in;
             ++n;
             is_test = false;
             return sum / (T)n;
         }
 
-        void update(const T in, T &out) {
+        void update(const T in, T &out) noexcept {
             sum += in;
             ++n;
             out = sum / (T)n;
@@ -3516,7 +3632,7 @@ namespace xtechnical_indicators {
 	template<class T>
 	class PRI {
     private:
-        MinMax<T> min_max;
+        FastMinMax<T> min_max;
         size_t period = 0;
         size_t offset = 0;
         T output = std::numeric_limits<T>::quiet_NaN();
