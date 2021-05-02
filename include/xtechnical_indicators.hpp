@@ -35,6 +35,7 @@
 #include <deque>
 #include <list>
 #include <algorithm>
+#include <functional>
 #include <numeric>
 #include <cmath>
 
@@ -4487,6 +4488,202 @@ namespace xtechnical_indicators {
             out_bl = std::numeric_limits<T>::quiet_NaN();
             out_rsi = std::numeric_limits<T>::quiet_NaN();
             out = std::numeric_limits<T>::quiet_NaN();
+        }
+    };
+
+    /** \brief Формирователь баров для усредненной цены
+     */
+    template<class T>
+    class BarShaperV1 {
+    public:
+
+        /** \brief Данные бара
+         */
+        class Bar {
+        public:
+            T open = 0, high = 0, low = 0, close = 0;
+            uint64_t timestamp = 0;
+        };
+
+    private:
+        Bar bar;
+        uint64_t period = 0;
+        uint64_t last_bar = 0;
+
+        bool is_open_equal_prev_close = false;
+        bool is_use_bar_stop_time = false;
+        bool is_fill = false;
+        bool is_once = false;
+
+    public:
+
+        BarShaperV1() {};
+
+        /** \brief Инициализировать формирователь баров
+         * \param p     Период
+         * \param oepc  Флаг, включает эквивалетность цены открытия цене закрытия предыдущего бара
+         * \param ubst  Флаг, включает использование последней метки времени бара вместо начала бара, как времени бара
+         * \param uf    Флаг, включает заполнение пропущенных баров
+         */
+        BarShaperV1(const uint64_t p, const bool oepc = false, const bool ubst = false, const bool uf = false) :
+            period(p),
+            is_open_equal_prev_close(oepc),
+            is_use_bar_stop_time(ubst),
+            is_fill(uf)  {};
+
+        std::function<void(const Bar &bar)> on_close_bar;               /**< Функция обратного вызова в момент закрытия бара */
+        std::function<void(const Bar &bar)> on_unformed_bar = nullptr;  /**< Функция обратного вызова для несформированного бара */
+
+        /** \brief Обновить состояние индикатора
+         * \param input     Текущая цена
+         * \param timestamp Метка времени
+         */
+        void update(const T input, const uint64_t timestamp) {
+            if (period == 0) return;
+            if (last_bar == 0) {
+                last_bar = timestamp / period;
+                return;
+            }
+            const uint64_t current_bar = timestamp / period;
+            if (current_bar > last_bar) {
+                if (is_once) {
+                    bar.timestamp = is_use_bar_stop_time ?
+                        (last_bar * period + period) : (last_bar * period);
+                    on_close_bar(bar);
+                    if (is_fill) {
+                        for (uint64_t b = (last_bar + 1); b < current_bar; ++b) {
+                            bar.open = bar.low = bar.high = bar.close;
+                            bar.timestamp = is_use_bar_stop_time ?
+                                (b * period + period) : (b * period);
+                            on_close_bar(bar);
+                        }
+                    }
+                }
+                if (is_open_equal_prev_close) {
+                    if (bar.close != 0) {
+                        bar.open = bar.close;
+                        is_once = true;
+                    }
+                } else {
+                    bar.open = input;
+                    is_once = true;
+                }
+                bar.high = input;
+                bar.low = input;
+                bar.close = input;
+                last_bar = current_bar;
+            } else
+            if (current_bar == last_bar) {
+                if (is_once) {
+                    bar.high = std::max(input, bar.high);
+                    bar.low = std::min(input, bar.low);
+                    bar.close = input;
+                    if (on_unformed_bar != nullptr) {
+                        bar.timestamp = is_use_bar_stop_time ?
+                            (last_bar * period + period) : (last_bar * period);
+                        on_unformed_bar(bar);
+                    }
+                } else {
+                    bar.close = input;
+                }
+            }
+        }
+    };
+
+
+    /** \brief График ренко
+     */
+    template<class T>
+    class RenkoChart {
+    public:
+
+        /** \brief Данные бара
+         */
+        class Bar {
+        public:
+            T close = 0;
+            uint64_t timestamp = 0;
+        };
+
+    private:
+        uint64_t digits = 0;
+        uint64_t step = 0;
+        int64_t last_level = 0;
+        Bar bar;
+
+        std::array<double, 9> digits_to_value = {0.0, 0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001, 0.00000001};
+
+        bool is_once = false;
+    public:
+
+        std::function<void(const Bar &bar)> on_close_bar;               /**< Функция обратного вызова в момент закрытия бара */
+
+        RenkoChart() {};
+
+        /** \brief Инициализировать график ренко
+         * \param d Количество разрядов
+         * \param s Шаг графика
+         */
+        RenkoChart(const uint64_t d, const uint64_t s) : digits(d), step(s) {};
+
+        void update(const T input, const uint64_t timestamp) {
+            if (digits == 0) return;
+            const int64_t level = (int64_t)(input / (digits_to_value[digits] * (double)step));
+            if (last_level == 0) {
+                last_level = level;
+                return;
+            }
+            if (last_level != level) {
+                if (!is_once) {
+                    last_level = level;
+                    is_once = true;
+                    return;
+                }
+                if (last_level > level) {
+                    bar.timestamp = timestamp;
+                    for (int64_t l = last_level + 1; l <= level; ++l) {
+                        bar.close = (double)l * digits_to_value[digits] * (double)step;
+                        on_close_bar(bar);
+                    }
+                } else
+                if (last_level < level) {
+                    bar.timestamp = timestamp;
+                    for (int64_t l = last_level - 1; l >= level; --l) {
+                        bar.close = (double)l * digits_to_value[digits] * (double)step;
+                        on_close_bar(bar);
+                    }
+                }
+                last_level = level;
+            }
+        }
+
+        void update(const T input) {
+            if (digits == 0) return;
+            const int64_t level = (int64_t)(input / (digits_to_value[digits] * (double)step));
+            if (last_level == 0) {
+                last_level = level;
+                return;
+            }
+            if (last_level != level) {
+                if (!is_once) {
+                    last_level = level;
+                    is_once = true;
+                    return;
+                }
+                if (last_level > level) {
+                    for (int64_t l = last_level + 1; l <= level; ++l) {
+                        bar.close = (double)l * digits_to_value[digits] * (double)step;
+                        on_close_bar(bar);
+                    }
+                } else
+                if (last_level < level) {
+                    for (int64_t l = last_level - 1; l >= level; --l) {
+                        bar.close = (double)l * digits_to_value[digits] * (double)step;
+                        on_close_bar(bar);
+                    }
+                }
+                last_level = level;
+            }
         }
     };
 
