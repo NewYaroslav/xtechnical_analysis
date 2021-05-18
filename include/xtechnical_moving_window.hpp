@@ -34,7 +34,7 @@
 
 #define INDICATORSEASY_DEF_RING_BUFFER_SIZE 1024
 
-namespace xtechnical_indicators {
+namespace xtechnical {
     using namespace xtechnical_common;
 
     /** \brief Скользящее окно

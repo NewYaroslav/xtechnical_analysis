@@ -217,6 +217,6 @@ namespace xtechnical_normalization {
         return OK;
     }
 
-}
+};
 
 #endif // NORMALIZATIONEASY_HPP_INCLUDED
