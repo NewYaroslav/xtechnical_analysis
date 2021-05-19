@@ -26,16 +26,13 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="../../include/backtest/xtechnical_winrate_statistics.hpp" />
 		<Unit filename="../../include/xtechnical_circular_buffer.hpp" />
 		<Unit filename="../../include/xtechnical_common.hpp" />
 		<Unit filename="../../include/xtechnical_correlation.hpp" />
 		<Unit filename="../../include/xtechnical_indicators.hpp" />
 		<Unit filename="../../include/xtechnical_normalization.hpp" />
 		<Unit filename="main.cpp" />
-		<Extensions>
-			<code_completion />
-			<envvars />
-			<debugger />
-		</Extensions>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

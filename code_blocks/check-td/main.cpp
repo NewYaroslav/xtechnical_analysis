@@ -1,5 +1,6 @@
 #include <iostream>
 #include "xtechnical_indicators.hpp"
+#include "../../include/backtest/xtechnical_winrate_statistics.hpp"
 #include <array>
 
 int main() {
@@ -7,7 +8,7 @@ int main() {
     std::array<double, 20> test_data = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
 
     const size_t period = 2;
-    xtechnical_indicators::TrendDirectionForceIndex<double, xtechnical_indicators::EMA<double>> trend(period);
+    xtechnical::TrendDirectionForceIndex<double, xtechnical::EMA<double>> trend(period);
 
     for(size_t i = 0; i < test_data.size(); ++i) {
         trend.update(test_data[i]);
