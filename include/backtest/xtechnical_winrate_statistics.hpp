@@ -18,14 +18,14 @@ namespace xtechnical {
          */
         class Tick {
         public:
-            double ask = 0;         /**< Цена ask */
             double bid = 0;         /**< Цена bid */
+			double ask = 0;         /**< Цена ask */
             uint64_t timestamp = 0; /**< Метка времени */
 			
 			Tick() {};
 			
-			Tick(const double a, const double b, const uint64_t t) :
-				ask(a), bid(b), timestamp(t) {
+			Tick(const double b, const double a, const uint64_t t) :
+				bid(b), ask(a), timestamp(t) {
 			}
         };
 
@@ -82,7 +82,7 @@ namespace xtechnical {
                 const std::string &symbol,
                 const uint64_t timestamp,
                 const int direction,
-                std::function<void(Bet &bet)> &callback = nullptr) {
+                std::function<void(Bet &bet)> &callback = nullptr) noexcept {
             Bet bet;
             bet.broker = broker;
             bet.symbol = symbol;
@@ -110,7 +110,7 @@ namespace xtechnical {
         void update(
                 const std::string &broker,
                 const std::string &symbol,
-                const Tick &tick) {
+                const Tick &tick) noexcept {
             ticks[broker][symbol] = tick;
             if (bets.empty()) return;
             size_t index = 0;
@@ -176,6 +176,15 @@ namespace xtechnical {
                 ++index;
             } // while
         }
+		
+		inline void update(
+                const std::string &broker,
+                const std::string &symbol,
+                const double bid,
+				const double ask,
+				const uint64_t timestamp) noexcept {
+			update(broker, symbol, Tick(bid, ask, timestamp));	
+		}
 
         /** \brief Получить винрейт
          * \return Винрейт
