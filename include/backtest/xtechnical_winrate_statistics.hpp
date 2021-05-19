@@ -82,7 +82,7 @@ namespace xtechnical {
                 const std::string &symbol,
                 const uint64_t timestamp,
                 const int direction,
-                std::function<void(Bet &bet)> &callback = nullptr) noexcept {
+                std::function<void(Bet &bet)> callback = nullptr) noexcept {
             Bet bet;
             bet.broker = broker;
             bet.symbol = symbol;
