@@ -18,9 +18,15 @@ namespace xtechnical {
          */
         class Tick {
         public:
-            double ask = 0;         /**<  */
-            double bid = 0;         /**<  */
-            uint64_t timestamp = 0; /**<  */
+            double ask = 0;         /**< Цена ask */
+            double bid = 0;         /**< Цена bid */
+            uint64_t timestamp = 0; /**< Метка времени */
+			
+			Tick() {};
+			
+			Tick(const double a, const double b, const uint64_t t) :
+				ask(a), bid(b), timestamp(t) {
+			}
         };
 
         /** \brief Класс данных ставок
