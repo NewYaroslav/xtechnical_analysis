@@ -1,0 +1,3 @@
+[submodule "lib/easy_plot_cpp"]
+	path = lib/easy_plot_cpp
+	url = https://github.com/NewYaroslav/easy_plot_cpp.git

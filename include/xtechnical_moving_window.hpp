@@ -35,7 +35,6 @@
 #define INDICATORSEASY_DEF_RING_BUFFER_SIZE 1024
 
 namespace xtechnical {
-    using namespace xtechnical_common;
 
     /** \brief Скользящее окно
      */
@@ -71,20 +70,20 @@ namespace xtechnical {
          */
         int update(const T &in, std::vector<T> &out) {
             is_test_ = false;
-            if(period_ == 0) return NO_INIT;
+            if(period_ == 0) return common::NO_INIT;
             if(data_.size() < period_) {
                 data_.push_back(in);
                 if(data_.size() == period_) {
                     out = data_;
-                    return OK;
+                    return common::OK;
                 }
             } else {
                 data_.push_back(in);
                 data_.erase(data_.begin());
                 out = data_;
-                return OK;
+                return common::OK;
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -93,18 +92,18 @@ namespace xtechnical {
          */
         int update(const T &in) {
             is_test_ = false;
-            if(period_ == 0) return NO_INIT;
+            if(period_ == 0) return common::NO_INIT;
             if(data_.size() < period_) {
                 data_.push_back(in);
                 if(data_.size() == period_) {
-                    return OK;
+                    return common::OK;
                 }
             } else {
                 data_.push_back(in);
                 data_.erase(data_.begin());
-                return OK;
+                return common::OK;
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Протестировать индикатор
@@ -117,21 +116,21 @@ namespace xtechnical {
          */
         int test(const T &in, std::vector<T> &out) {
             is_test_ = true;
-            if(period_ == 0) return NO_INIT;
+            if(period_ == 0) return common::NO_INIT;
             data_test_ = data_;
             if(data_test_.size() < period_) {
                 data_test_.push_back(in);
                 if(data_test_.size() == period_) {
                     out = data_test_;
-                    return OK;
+                    return common::OK;
                 }
             } else {
                 data_test_.push_back(in);
                 data_test_.erase(data_test_.begin());
                 out = data_test_;
-                return OK;
+                return common::OK;
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Протестировать индикатор
@@ -143,19 +142,19 @@ namespace xtechnical {
          */
         int test(const T &in) {
             is_test_ = true;
-            if(period_ == 0) return NO_INIT;
+            if(period_ == 0) return common::NO_INIT;
             data_test_ = data_;
             if(data_test_.size() < period_) {
                 data_test_.push_back(in);
                 if(data_test_.size() == period_) {
-                    return OK;
+                    return common::OK;
                 }
             } else {
                 data_test_.push_back(in);
                 data_test_.erase(data_test_.begin());
-                return OK;
+                return common::OK;
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Получить данные внутреннего буфера индикатора
@@ -178,9 +177,9 @@ namespace xtechnical {
                 const size_t offset = 0) {
             const size_t total_offset = period + offset;
             if(is_test_ && data_test_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
             else if(!is_test_ && data_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
 
             if(is_test_) max_value = *std::max_element(
                 data_test_.end() - total_offset,
@@ -188,7 +187,7 @@ namespace xtechnical {
             else max_value = *std::max_element(
                 data_.end() - total_offset,
                 data_.end() - offset);
-            return xtechnical_common::OK;
+            return common::OK;
         }
 
         /** \brief Получить минимальное значение буфера
@@ -203,9 +202,9 @@ namespace xtechnical {
                 const size_t offset = 0) {
             const size_t total_offset = period + offset;
             if(is_test_ && data_test_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
             else if(!is_test_ && data_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
 
             if(is_test_) min_value = *std::min_element(
                 data_test_.end() - total_offset,
@@ -213,7 +212,7 @@ namespace xtechnical {
             else min_value = *std::min_element(
                 data_.end() - total_offset,
                 data_.end() - offset);
-            return xtechnical_common::OK;
+            return common::OK;
         }
 
         /** \brief Получить сумму
@@ -227,9 +226,9 @@ namespace xtechnical {
                 const size_t offset = 0) {
             const size_t total_offset = period + offset;
             if(is_test_ && data_test_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
             else if(!is_test_ && data_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
 
             if(is_test_) sum_value = std::accumulate(
                 data_test_.end() - total_offset,
@@ -239,7 +238,7 @@ namespace xtechnical {
                 data_.end() - total_offset,
                 data_.end() - offset,
                 (T)0);
-            return xtechnical_common::OK;
+            return common::OK;
         }
 
         /** \brief Получить нормализованные данные
@@ -257,9 +256,9 @@ namespace xtechnical {
                 const size_t offset = 0) {
             const size_t total_offset = period + offset;
             if(is_test_ && data_test_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
             else if(!is_test_ && data_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
 
             std::vector<T> fragment;
             if(is_test_) fragment.assign(
@@ -268,20 +267,20 @@ namespace xtechnical {
             else fragment.assign(
                 data_.end() - total_offset,
                 data_.end() - offset);
-            if( type == xtechnical_common::MINMAX_UNSIGNED ||
-                type == xtechnical_common::MINMAX_UNSIGNED) {
+            if( type == common::MINMAX_UNSIGNED ||
+                type == common::MINMAX_UNSIGNED) {
                 buffer.resize(fragment.size());
-                xtechnical_normalization::calculate_min_max(
+                xtechnical::normalization::calculate_min_max(
                     fragment,
                     buffer,
                     type);
             } else
-            if(type == xtechnical_common::Z_SCORE_TRANSFORMING) {
+            if(type == common::Z_SCORE_TRANSFORMING) {
                 buffer.resize(fragment.size());
-                xtechnical_normalization::calculate_zscore(fragment, buffer);
+                xtechnical::normalization::calculate_zscore(fragment, buffer);
             }
 
-            return xtechnical_common::OK;
+            return common::OK;
         }
 
         /** \brief Получить нормализованные данные
@@ -303,9 +302,9 @@ namespace xtechnical {
                 const size_t offset = 0) {
             const size_t total_offset = period + offset;
             if(is_test_ && data_test_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
             else if(!is_test_ && data_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
 
             std::vector<T> fragment;
             if(is_test_) fragment.assign(
@@ -314,22 +313,22 @@ namespace xtechnical {
             else fragment.assign(
                 data_.end() - total_offset,
                 data_.end() - offset);
-            if(type == xtechnical_common::MINMAX_UNSIGNED ||
-                type == xtechnical_common::MINMAX_SIGNED) {
+            if(type == common::MINMAX_UNSIGNED ||
+                type == common::MINMAX_SIGNED) {
                 buffer.resize(fragment.size());
-                xtechnical_normalization::calculate_min_max(
+                xtechnical::normalization::calculate_min_max(
                     fragment,
                     buffer,
                     min_level,
                     max_level,
                     type);
             } else
-            if(type == xtechnical_common::Z_SCORE_TRANSFORMING) {
+            if(type == common::Z_SCORE_TRANSFORMING) {
                 buffer.resize(fragment.size());
-                xtechnical_normalization::calculate_zscore(fragment, buffer);
+                xtechnical::normalization::calculate_zscore(fragment, buffer);
             }
 
-            return xtechnical_common::OK;
+            return common::OK;
         }
 
         /** \brief Экспериментальный метод
@@ -343,21 +342,21 @@ namespace xtechnical {
                 const size_t period,
                 const size_t offset = 0) {
             std::vector<T> fragment;
-            int err = xtechnical_common::OK;
+            int err = common::OK;
             if(!is_use_min_max_level) err = get_normalized_data(
                 fragment,
-                MINMAX_SIGNED,
+                common::MINMAX_SIGNED,
                 period,
                 offset);
             else err = get_normalized_data(
                 fragment,
-                MINMAX_SIGNED,
+                common::MINMAX_SIGNED,
                 min_level,
                 max_level,
                 period,
                 offset);
-            if(err != xtechnical_common::OK) return err;
-            if(compare_type == xtechnical_common::COMPARE_WITH_ZERO_LINE) {
+            if(err != common::OK) return err;
+            if(compare_type == common::COMPARE_WITH_ZERO_LINE) {
                 compare_result = 0;
                 for(size_t i = 0; i < period; ++i) {
                     compare_result += std::abs(fragment[i]);
@@ -365,7 +364,7 @@ namespace xtechnical {
                 compare_result /= (T)period;
                 compare_result = 1.0 - compare_result;
             } else
-            if(compare_type == xtechnical_common::COMPARE_WITH_STRAIGHT_LINE) {
+            if(compare_type == common::COMPARE_WITH_STRAIGHT_LINE) {
                 /* сначала найдем минимум или максимум */
                 T new_max_level = -1.1;
                 T new_min_level = 1.1;
@@ -386,7 +385,7 @@ namespace xtechnical {
                 compare_result = std::max(result_min, result_max);
                 compare_result = 1.0 - compare_result;
             } else
-            if(compare_type == xtechnical_common::COMPARE_WITH_CENTER_LINE) {
+            if(compare_type == common::COMPARE_WITH_CENTER_LINE) {
                 /* сначала найдем минимум или максимум */
                 T new_max_level = -1.1;
                 T new_min_level = 1.1;
@@ -404,7 +403,7 @@ namespace xtechnical {
                 compare_result /= (T)period;
                 compare_result = 1.0 - compare_result;
             } else
-            if(compare_type == xtechnical_common::CALCULATE_ANGLE) {
+            if(compare_type == common::CALCULATE_ANGLE) {
                 /* найдем приращение */
                 T average_increase = 0;
                 for(size_t i = 1; i < period; ++i) {
@@ -414,7 +413,7 @@ namespace xtechnical {
                 /* найдем угол */
                 compare_result = std::atan(-average_increase / -1.0);
             }
-            return xtechnical_common::OK;
+            return common::OK;
         }
 
         /** \brief Получить среднее значение буфера
@@ -429,9 +428,9 @@ namespace xtechnical {
                 const size_t offset = 0) {
             const size_t total_offset = period + offset;
             if(is_test_ && data_test_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
             else if(!is_test_ && data_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
 
             if(is_test_) {
                 T sum = std::accumulate(
@@ -446,7 +445,7 @@ namespace xtechnical {
                     T(0));
                 average_value = sum / (T)period;
             }
-            return xtechnical_common::OK;
+            return common::OK;
         }
 
         /** \brief Получить стандартное отклонение буфера
@@ -460,9 +459,9 @@ namespace xtechnical {
                 const size_t offset = 0) {
             const size_t total_offset = period + offset;
             if(is_test_ && data_test_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
             else if(!is_test_ && data_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
 
             if(is_test_) {
                 T ml = std::accumulate(
@@ -493,7 +492,7 @@ namespace xtechnical {
                 }
                 std_dev_value = std::sqrt(sum / (T)(period - 1));
             }
-            return xtechnical_common::OK;
+            return common::OK;
         }
 
         /** \brief Получить массив средних значений
@@ -693,9 +692,9 @@ namespace xtechnical {
                 const size_t offset = 0) {
             const size_t total_offset = period + offset;
             if(is_test_ && data_test_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
             else if(!is_test_ && data_.size() < total_offset)
-                return xtechnical_common::INVALID_PARAMETER;
+                return common::INVALID_PARAMETER;
             T std_dev_value = 0;
             if(is_test_) {
                 T ml = std::accumulate(
@@ -728,7 +727,7 @@ namespace xtechnical {
                 std_dev_value = std::sqrt(sum / (T)(period - 1));
                 if(std_dev_value != 0) zscore_value = (data_.back() - ml) / std_dev_value;
             }
-            return xtechnical_common::OK;
+            return common::OK;
         }
 
         /** \brief Очистить данные индикатора

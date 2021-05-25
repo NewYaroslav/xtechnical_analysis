@@ -4,7 +4,6 @@
 #include "../xtechnical_common.hpp"
 
 namespace xtechnical {
-    using namespace xtechnical_common;
 
     /** \brief Индекс относительной силы (RSI)
      */
@@ -46,7 +45,7 @@ namespace xtechnical {
                 prev_ = in;
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 is_update_ = true;
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             T u = 0, d = 0;
             if(prev_ < in) {
@@ -59,17 +58,17 @@ namespace xtechnical {
             erru = iU.update(u, u);
             errd = iD.update(d, d);
             prev_ = in;
-            if(erru != OK || errd != OK) {
+            if(erru != common::OK || errd != common::OK) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             if(d == 0) {
                 output_value = 100.0;
-                return OK;
+                return common::OK;
             }
             T rs = u / d;
             output_value = 100.0 - (100.0 / (1.0 + rs));
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -80,7 +79,7 @@ namespace xtechnical {
         int update(const T in, T &out) noexcept {
             const int err = update(in);
             out = output_value;
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -92,7 +91,7 @@ namespace xtechnical {
         int test(const T in) noexcept {
             if(!is_update_) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             T u = 0, d = 0;
             if(prev_ < in) {
@@ -104,17 +103,17 @@ namespace xtechnical {
             int erru, errd = 0;
             erru = iU.test(u, u);
             errd = iD.test(d, d);
-            if(erru != OK || errd != OK) {
+            if(erru != common::OK || errd != common::OK) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             if(d == 0) {
                 output_value = 100.0;
-                return OK;
+                return common::OK;
             }
             T rs = u / d;
             output_value = 100.0 - (100.0 / (1.0 + rs));
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -128,7 +127,7 @@ namespace xtechnical {
         int test(const T in, T &out) noexcept {
             const int err = test(in);
             out = output_value;
-            return OK;
+            return common::OK;
         }
 
         /** \brief Получить значение индикатора

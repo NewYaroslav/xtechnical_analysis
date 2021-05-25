@@ -25,36 +25,46 @@
 #define XTECHNICAL_COMMON_HPP_INCLUDED
 
 #include <algorithm>
+#include <vector>
+#include <deque>
+#include <list>
+#include <map>
+#include <algorithm>
+#include <functional>
+#include <numeric>
+#include <cmath>
 
-namespace xtechnical_common {
-    const double NAN_DATA = std::numeric_limits<double>::quiet_NaN();
+namespace xtechnical {
+    namespace common {
+        const double NAN_DATA = std::numeric_limits<double>::quiet_NaN();
 
-    /// Набор возможных состояний ошибки
-    enum {
-        OK = 0,                             ///< Ошибок нет, все в порядке
-        NO_INIT = -1,                       ///< Не было инициализации, поэтому метод класса не может быть использован
-        INVALID_PARAMETER = -2,             ///< Один из параметров неверно указан
-        INDICATOR_NOT_READY_TO_WORK = -3,   ///< Индикатор не готов к работе
-    };
+        /// Набор возможных состояний ошибки
+        enum {
+            OK = 0,                             ///< Ошибок нет, все в порядке
+            NO_INIT = -1,                       ///< Не было инициализации, поэтому метод класса не может быть использован
+            INVALID_PARAMETER = -2,             ///< Один из параметров неверно указан
+            INDICATOR_NOT_READY_TO_WORK = -3,   ///< Индикатор не готов к работе
+        };
 
-    /// Типы нормализации данных
-    enum {
-        MINMAX_UNSIGNED = 0,        ///< Нормализация данных. Данные приводятся к уровню от 0 до 1
-        MINMAX_SIGNED = 1,          ///< Нормализация данных. Данные приводятся к уровню от -1 до 1
-        Z_SCORE_TRANSFORMING = 2,   ///< Стандартизация данных. Преобразование данных с использованием z-показателя
-    };
+        /// Типы нормализации данных
+        enum {
+            MINMAX_UNSIGNED = 0,        ///< Нормализация данных. Данные приводятся к уровню от 0 до 1
+            MINMAX_SIGNED = 1,          ///< Нормализация данных. Данные приводятся к уровню от -1 до 1
+            Z_SCORE_TRANSFORMING = 2,   ///< Стандартизация данных. Преобразование данных с использованием z-показателя
+        };
 
-    enum {
-        COMPARE_WITH_ZERO_LINE = 0,
-        COMPARE_WITH_STRAIGHT_LINE = 1,
-        COMPARE_WITH_CENTER_LINE = 2,
-        CALCULATE_ANGLE = 3,
-    };
+        enum {
+            COMPARE_WITH_ZERO_LINE = 0,
+            COMPARE_WITH_STRAIGHT_LINE = 1,
+            COMPARE_WITH_CENTER_LINE = 2,
+            CALCULATE_ANGLE = 3,
+        };
 
-    enum {
-        BUY = 1,
-        SELL = -1,
-    };
-};
+        enum {
+            BUY = 1,
+            SELL = -1,
+        };
+    }; // common
+}; // xtechnical
 
 #endif // XTECHNICAL_COMMON_HPP_INCLUDED

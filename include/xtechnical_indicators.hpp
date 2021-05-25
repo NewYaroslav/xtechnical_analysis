@@ -33,8 +33,12 @@
 #include "math/xtechnical_compare.hpp"
 #include "math/xtechnical_smoothing.hpp"
 
+#include "indicators/xtechnical_delay_line.hpp"
 #include "indicators/xtechnical_sma.hpp"
 #include "indicators/xtechnical_rsi.hpp"
+#include "indicators/xtechnical_fast_min_max.hpp"
+#include "indicators/xtechnical_fisher.hpp"
+#include "indicators/xtechnical_cluster_shaper.hpp"
 
 #include <vector>
 #include <deque>
@@ -47,8 +51,8 @@
 #define INDICATORSEASY_DEF_RING_BUFFER_SIZE 1024
 
 namespace xtechnical {
-    using namespace xtechnical_common;
 
+#if(0)
     /** \brief Линия задержки
      */
     template <typename T>
@@ -145,6 +149,7 @@ namespace xtechnical {
             output_value = std::numeric_limits<T>::quiet_NaN();
         }
     };
+#endif
 
     /** \brief Процент разницы между актуальной ценой и ценой в прошлом
      */
@@ -165,15 +170,15 @@ namespace xtechnical {
          */
         int update(const T in) noexcept {
             delay_line.update(in);
-            if (std::isnan(delay_line.get())) return INDICATOR_NOT_READY_TO_WORK;
+            if (std::isnan(delay_line.get())) return common::INDICATOR_NOT_READY_TO_WORK;
             if (delay_line.get() == 0) {
                 if (in > 0) output_value = 100;
                 else if (in < 0) output_value = -100;
                 else output_value = 0;
-                return OK;
+                return common::OK;
             }
             output_value = ((in - delay_line.get()) / delay_line.get()) * 100;
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -195,15 +200,15 @@ namespace xtechnical {
          */
         int test(const T in) noexcept {
             delay_line.update(in);
-            if (std::isnan(delay_line.get())) return INDICATOR_NOT_READY_TO_WORK;
+            if (std::isnan(delay_line.get())) return common::INDICATOR_NOT_READY_TO_WORK;
             if (delay_line.get() == 0) {
                 if (in > 0) output_value = 100;
                 else if (in < 0) output_value = -100;
                 else output_value = 0;
-                return OK;
+                return common::OK;
             }
             output_value = ((in - delay_line.get()) / delay_line.get()) * 100;
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -262,16 +267,16 @@ namespace xtechnical {
          * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
         int update(const T in) noexcept {
-            if(buffer_size == 0) return NO_INIT;
+            if(buffer_size == 0) return common::NO_INIT;
             buffer.update(in);
             if (buffer.full()) {
                 const T x0 = buffer.front();
                 const T x1 = buffer.back();
                 if(x0 == 0) output_value = x1 > 0 ? 100 : -100;
                 else output_value = ((x1 - x0) / x0) * 100.0;
-                return OK;
+                return common::OK;
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -293,16 +298,16 @@ namespace xtechnical {
          * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
         int test(const T in) noexcept {
-            if(buffer_size == 0) return NO_INIT;
+            if(buffer_size == 0) return common::NO_INIT;
             buffer.test(in);
             if (buffer.full()) {
                 const T x0 = buffer.front();
                 const T x1 = buffer.back();
                 if(x0 == 0) output_value = x1 > 0 ? 100 : -100;
                 else output_value = ((x1 - x0) / x0) * 100.0;
-                return OK;
+                return common::OK;
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Протестировать индикатор
@@ -360,7 +365,7 @@ namespace xtechnical {
             if(period == 0) {
                 output_min_value = std::numeric_limits<T>::quiet_NaN();
                 output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
             buffer.update(in);
             if(buffer.full()) {
@@ -374,9 +379,9 @@ namespace xtechnical {
             } else {
                 output_min_value = std::numeric_limits<T>::quiet_NaN();
                 output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -403,7 +408,7 @@ namespace xtechnical {
             if(period == 0) {
                 output_min_value = std::numeric_limits<T>::quiet_NaN();
                 output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
             buffer.test(in);
             if(buffer.full()) {
@@ -417,9 +422,9 @@ namespace xtechnical {
             } else {
                 output_min_value = std::numeric_limits<T>::quiet_NaN();
                 output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -460,6 +465,7 @@ namespace xtechnical {
         }
     };
 
+#if(0)
     /** \brief Быстрый алгоритм поиска Min и Max
      * Оригинал: https://arxiv.org/abs/cs/0610046v5
      */
@@ -618,6 +624,7 @@ namespace xtechnical {
             delay_line.clear();
         }
     };
+#endif
 
     /** \brief Индикатор Stochastics
      */
@@ -663,9 +670,9 @@ namespace xtechnical {
                 output_k_value = std::numeric_limits<T>::quiet_NaN();
                 output_d_value = std::numeric_limits<T>::quiet_NaN();
 				output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
-            if (min_max.update(in) == OK) {
+            if (min_max.update(in) == common::OK) {
                 const T diff = min_max.get_max() - min_max.get_min();
 				output_value = diff == 0 ? (T)50 : (T)100 * ((in - min_max.get_min()) / diff);
 				k_ma.update(output_value);
@@ -678,9 +685,9 @@ namespace xtechnical {
 				output_value = std::numeric_limits<T>::quiet_NaN();
 				output_k_value = std::numeric_limits<T>::quiet_NaN();
 				output_d_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -705,9 +712,9 @@ namespace xtechnical {
                 output_k_value = std::numeric_limits<T>::quiet_NaN();
                 output_d_value = std::numeric_limits<T>::quiet_NaN();
 				output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
-            if (min_max.test(in) == OK) {
+            if (min_max.test(in) == common::OK) {
                 const T diff = min_max.get_max() - min_max.get_min();
 				output_value = diff == 0 ? (T)50 : (T)100 * ((in - min_max.get_min()) / diff);
 				k_ma.test(output_value);
@@ -720,9 +727,9 @@ namespace xtechnical {
 				output_value = std::numeric_limits<T>::quiet_NaN();
 				output_k_value = std::numeric_limits<T>::quiet_NaN();
 				output_d_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -797,7 +804,7 @@ namespace xtechnical {
         int update(const T in) noexcept {
             if(period == 0) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
             buffer.update(in);
             if(buffer.full()) {
@@ -814,9 +821,9 @@ namespace xtechnical {
             } else {
                 last_data += in;
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -840,7 +847,7 @@ namespace xtechnical {
         int test(const T in) {
             if(period == 0) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
             buffer.test(in);
             if(buffer.full()) {
@@ -855,9 +862,9 @@ namespace xtechnical {
                 output_value = std_dev > 0 ? ((in - mean) / std_dev) : 0;
             } else {
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -916,7 +923,7 @@ namespace xtechnical {
         int update(const T in) noexcept {
             if(period == 0) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
             buffer.update(in);
             if(buffer.full()) {
@@ -932,9 +939,9 @@ namespace xtechnical {
             } else {
                 last_data += in;
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -945,7 +952,7 @@ namespace xtechnical {
         int update(const T in, T &out) {
             const int err = update(in);
             out = output_value;
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -958,7 +965,7 @@ namespace xtechnical {
         int test(const T in) noexcept {
             if(period == 0) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
             buffer.test(in);
             if(buffer.full()) {
@@ -972,9 +979,9 @@ namespace xtechnical {
                 output_value = sum > 0 ? std::sqrt(sum) : 0;
             } else {
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -1097,14 +1104,14 @@ namespace xtechnical {
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 output_min_value = std::numeric_limits<T>::quiet_NaN();
                 output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
 
-            if(delay_line.update(in) != OK) {
+            if(delay_line.update(in) != common::OK) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 output_min_value = std::numeric_limits<T>::quiet_NaN();
                 output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             output_value = std::abs(in - delay_line.get());
             buffer.update(output_value);
@@ -1120,9 +1127,9 @@ namespace xtechnical {
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 output_min_value = std::numeric_limits<T>::quiet_NaN();
                 output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -1152,13 +1159,13 @@ namespace xtechnical {
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 output_min_value = std::numeric_limits<T>::quiet_NaN();
                 output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
-            if(delay_line.test(in) != OK) {
+            if(delay_line.test(in) != common::OK) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 output_min_value = std::numeric_limits<T>::quiet_NaN();
                 output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             output_value = std::abs(in - delay_line.get());
             buffer.test(output_value);
@@ -1174,9 +1181,9 @@ namespace xtechnical {
                 output_value = std::numeric_limits<T>::quiet_NaN();
                 output_min_value = std::numeric_limits<T>::quiet_NaN();
                 output_max_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -1193,7 +1200,7 @@ namespace xtechnical {
             out = output_value;
             min_value = output_min_value;
             max_value = output_max_value;
-            return OK;
+            return common::OK;
         }
 
         /** \brief Получить значение индикатора
@@ -1375,7 +1382,7 @@ namespace xtechnical {
         int update(const T in, T &out) {
             if(period == 0) {
                 out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
             buffer.update(in);
             if(buffer.full()) {
@@ -1384,9 +1391,9 @@ namespace xtechnical {
             } else {
                 last_data += in;
                 out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -1396,7 +1403,7 @@ namespace xtechnical {
         int update(const T in) {
             if(period == 0) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
             buffer.update(in);
             if(buffer.full()) {
@@ -1405,9 +1412,9 @@ namespace xtechnical {
             } else {
                 last_data += in;
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -1421,16 +1428,16 @@ namespace xtechnical {
         int test(const T in, T &out) {
             if(period == 0) {
                 out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
             buffer.test(in);
             if(buffer.full()) {
                 out = output_value = (last_data + (in - buffer.front()));
             } else {
                 out = output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -1443,16 +1450,16 @@ namespace xtechnical {
         int test(const T in) {
             if(period == 0) {
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
             buffer.test(in);
             if(buffer.full()) {
                 output_value = (last_data + (in - buffer.front()));
             } else {
                 output_value = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Получить значение индикатора
@@ -1496,7 +1503,7 @@ namespace xtechnical {
         int update(const T in) noexcept {
             if(period == 0) {
                 output_value = in;
-                return NO_INIT;
+                return common::NO_INIT;
             }
             if(data_.size() < (size_t)period) {
                 data_.push_back(in);
@@ -1506,7 +1513,7 @@ namespace xtechnical {
                         sum += data_[i - 1] * (T)i;
                     }
                     output_value = (sum * 2.0d) / ((T)period * ((T)period + 1.0d));
-                    return OK;
+                    return common::OK;
                 }
             } else {
                 data_.push_back(in);
@@ -1516,9 +1523,9 @@ namespace xtechnical {
                     sum += data_[i - 1] * (T)i;
                 }
                 output_value = (sum * 2.0d) / ((T)period * ((T)period + 1.0d));
-                return OK;
+                return common::OK;
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -1542,7 +1549,7 @@ namespace xtechnical {
         int test(const T in) noexcept {
             if(period == 0) {
                 output_value = in;
-                return NO_INIT;
+                return common::NO_INIT;
             }
             std::vector<T> _data = data_;
             if(_data.size() < (size_t)period) {
@@ -1553,7 +1560,7 @@ namespace xtechnical {
                         sum += _data[i - 1] * (T)i;
                     }
                     output_value = (sum * 2.0d) / ((T)period * ((T)period + 1.0d));
-                    return OK;
+                    return common::OK;
                 }
             } else {
                 _data.push_back(in);
@@ -1563,9 +1570,9 @@ namespace xtechnical {
                     sum += data_[i - 1] * (T)i;
                 }
                 output_value = (sum * 2.0d) / ((T)period * ((T)period + 1.0d));
-                return OK;
+                return common::OK;
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Протестировать индикатор
@@ -1626,7 +1633,7 @@ namespace xtechnical {
         virtual int update(const T in) noexcept {
             if(period_ == 0) {
                 output_value = in;
-                return NO_INIT;
+                return common::NO_INIT;
             }
             if(data_.size() < (size_t)period_) {
                 data_.push_back(in);
@@ -1637,9 +1644,9 @@ namespace xtechnical {
             } else {
                 last_data_ = a * in + (1.0 - a) * last_data_;
                 output_value = last_data_;
-                return OK;
+                return common::OK;
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -1663,13 +1670,13 @@ namespace xtechnical {
         int test(const T &in) noexcept {
             if(period_ == 0) {
                 output_value = in;
-                return NO_INIT;
+                return common::NO_INIT;
             }
             if(data_.size() == period_) {
                 output_value = a * in + (1.0 - a) * last_data_;
-                return OK;
+                return common::OK;
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Протестировать индикатор
@@ -1743,10 +1750,10 @@ namespace xtechnical {
          * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
         int update(const T input, const T weight) noexcept {
-            if(period == 0) return NO_INIT;
+            if(period == 0) return common::NO_INIT;
             price_buffer.update(input);
             weight_buffer.update(weight);
-            if (!weight_buffer.full()) return INDICATOR_NOT_READY_TO_WORK;
+            if (!weight_buffer.full()) return common::INDICATOR_NOT_READY_TO_WORK;
             std::vector<T> price_data(price_buffer.to_vector());
             std::vector<T> weight_data(weight_buffer.to_vector());
             T sum = 0;
@@ -1764,7 +1771,7 @@ namespace xtechnical {
             } else {
                 output_value = sum / (sum_weight);
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -1788,10 +1795,10 @@ namespace xtechnical {
          * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
          int test(const T input, const T weight) noexcept {
-            if(period == 0) return NO_INIT;
+            if(period == 0) return common::NO_INIT;
             price_buffer.test(input);
             weight_buffer.test(weight);
-            if (!weight_buffer.full()) return INDICATOR_NOT_READY_TO_WORK;
+            if (!weight_buffer.full()) return common::INDICATOR_NOT_READY_TO_WORK;
             std::vector<T> price_data(price_buffer.to_vector());
             std::vector<T> weight_data(weight_buffer.to_vector());
             T sum = 0;
@@ -1809,7 +1816,7 @@ namespace xtechnical {
             } else {
                 output_value = sum / (sum_weight);
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -1880,16 +1887,16 @@ namespace xtechnical {
          * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
         int update(const T &in, T &out) {
-            if(!is_init_) return NO_INIT;
+            if(!is_init_) return common::NO_INIT;
             if (!is_update_) {
                 prev_ = in;
                 is_update_ = true;
                 out = in;
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             out = alfa_ * prev_ + beta_ * in;
             prev_ = out;
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -1897,14 +1904,14 @@ namespace xtechnical {
          * \return Вернет 0 в случае успеха, иначе см. ErrorType
          */
         int update(const T &in) {
-            if(!is_init_) return NO_INIT;
+            if(!is_init_) return common::NO_INIT;
             if (!is_update_) {
                 prev_ = in;
                 is_update_ = true;
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             prev_ = alfa_ * prev_ + beta_ * in;
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -1917,14 +1924,14 @@ namespace xtechnical {
          */
         int test(const T in, T &out) {
             if(!is_init_) {
-                return NO_INIT;
+                return common::NO_INIT;
             }
             if (!is_init_) {
                 out = in;
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             out = alfa_ * prev_ + beta_ * in;
-            return OK;
+            return common::OK;
         }
 
         /** \brief Очистить данные индикатора
@@ -1959,7 +1966,7 @@ namespace xtechnical {
          */
         int update(const T &in) noexcept {
             percent_diff.update(in);
-            if (std::isnan(percent_diff.get())) return INDICATOR_NOT_READY_TO_WORK;
+            if (std::isnan(percent_diff.get())) return common::INDICATOR_NOT_READY_TO_WORK;
             const T diff = percent_diff.get();
             if (!mode_offset) buffer.update(diff);
             if (buffer.full()) {
@@ -1971,10 +1978,10 @@ namespace xtechnical {
                 if (mode_offset) buffer.update(diff);
                 if (temp.size() == 0) output_value = 0;
                 else output_value = (counter / (T)temp.size()) * 100;
-                return OK;
+                return common::OK;
             }
             if (mode_offset) buffer.update(diff);
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -1996,7 +2003,7 @@ namespace xtechnical {
          */
         int test(const T &in) noexcept {
             percent_diff.test(in);
-            if (std::isnan(percent_diff.get())) return INDICATOR_NOT_READY_TO_WORK;
+            if (std::isnan(percent_diff.get())) return common::INDICATOR_NOT_READY_TO_WORK;
             const T diff = percent_diff.get();
             if (!mode_offset) buffer.test(diff);
             if (buffer.full()) {
@@ -2008,10 +2015,10 @@ namespace xtechnical {
                 if (mode_offset) buffer.test(diff);
                 if (temp.size() == 0) output_value = 0;
                 else output_value = (counter / (T)temp.size()) * 100;
-                return OK;
+                return common::OK;
             }
             if (mode_offset) buffer.test(diff);
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Протестировать индикатор
@@ -2095,7 +2102,7 @@ namespace xtechnical {
             delay_line.update(price);
             rsi_0.update(price);
             percent_rank.update(price);
-            if (std::isnan(delay_line.get())) return INDICATOR_NOT_READY_TO_WORK;
+            if (std::isnan(delay_line.get())) return common::INDICATOR_NOT_READY_TO_WORK;
             const T diff = price - delay_line.get();
             if (combined_tolerance_compare(price, delay_line.get())) {
                 streak = 0;
@@ -2106,11 +2113,11 @@ namespace xtechnical {
             rsi_1.update(streak);
             if (std::isnan(percent_rank.get()) ||
                 std::isnan(rsi_0.get()) ||
-                std::isnan(rsi_1.get())) return INDICATOR_NOT_READY_TO_WORK;
-            if (sum_weight == 0) return NO_INIT;
+                std::isnan(rsi_1.get())) return common::INDICATOR_NOT_READY_TO_WORK;
+            if (sum_weight == 0) return common::NO_INIT;
             output_value = (weight_a * rsi_0.get() + weight_b * rsi_1.get() +
                 weight_c * percent_rank.get()) / sum_weight;
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -2132,7 +2139,7 @@ namespace xtechnical {
             delay_line.test(price);
             rsi_0.test(price);
             percent_rank.test(price);
-            if (std::isnan(delay_line.get())) return INDICATOR_NOT_READY_TO_WORK;
+            if (std::isnan(delay_line.get())) return common::INDICATOR_NOT_READY_TO_WORK;
             const T diff = price - delay_line.get();
             T save_streak = streak;
             if (combined_tolerance_compare(price, delay_line.get())) {
@@ -2144,11 +2151,11 @@ namespace xtechnical {
             rsi_1.test(save_streak);
             if (std::isnan(percent_rank.get()) ||
                 std::isnan(rsi_0.get()) ||
-                std::isnan(rsi_1.get())) return INDICATOR_NOT_READY_TO_WORK;
-            if (sum_weight == 0) return NO_INIT;
+                std::isnan(rsi_1.get())) return common::INDICATOR_NOT_READY_TO_WORK;
+            if (sum_weight == 0) return common::NO_INIT;
             output_value = (weight_a * rsi_0.get() + weight_b * rsi_1.get() +
                 weight_c * percent_rank.get()) / sum_weight;
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -2199,15 +2206,15 @@ namespace xtechnical {
         int update(const T in) {
             buffer.update(in);
             ma.update(in);
-            if (!buffer.full()) return INDICATOR_NOT_READY_TO_WORK;
-            if (std::isnan(ma.get())) return INDICATOR_NOT_READY_TO_WORK;
+            if (!buffer.full()) return common::INDICATOR_NOT_READY_TO_WORK;
+            if (std::isnan(ma.get())) return common::INDICATOR_NOT_READY_TO_WORK;
             std::vector<T> temp(buffer.to_vector());
             T sum = 0;
             for (size_t  i = 0; i < temp.size(); ++i) {
                 sum += std::abs(temp[i] - ma.get());
             }
             output_value = sum / (T)temp.size();
-            return OK;
+            return common::OK;
         }
 
         int update(const T in, T &out) {
@@ -2219,15 +2226,15 @@ namespace xtechnical {
         int test(const T in) {
             buffer.test(in);
             ma.test(in);
-            if (!buffer.full()) return INDICATOR_NOT_READY_TO_WORK;
-            if (std::isnan(ma.get())) return INDICATOR_NOT_READY_TO_WORK;
+            if (!buffer.full()) return common::INDICATOR_NOT_READY_TO_WORK;
+            if (std::isnan(ma.get())) return common::INDICATOR_NOT_READY_TO_WORK;
             const std::vector<T> temp(buffer.to_vector());
             T sum = 0;
             for (size_t  i = 0; i < temp.size(); ++i) {
                 sum += std::abs(temp[i] - ma.get());
             }
             output_value = sum / (T)temp.size();
-            return OK;
+            return common::OK;
         }
 
         int test(const T in, T &out) {
@@ -2271,8 +2278,8 @@ namespace xtechnical {
         int update(const T in) {
             buffer.update(in);
             ma.update(in);
-            if (!buffer.full()) return INDICATOR_NOT_READY_TO_WORK;
-            if (std::isnan(ma.get())) return INDICATOR_NOT_READY_TO_WORK;
+            if (!buffer.full()) return common::INDICATOR_NOT_READY_TO_WORK;
+            if (std::isnan(ma.get())) return common::INDICATOR_NOT_READY_TO_WORK;
             std::vector<T> temp(buffer.to_vector());
             T sum = 0;
             for (size_t  i = 0; i < temp.size(); ++i) {
@@ -2280,7 +2287,7 @@ namespace xtechnical {
             }
             const T mad = sum / (T)temp.size();
             output_value = (in - ma.get()) / (0.015 * mad);
-            return OK;
+            return common::OK;
         }
 
         int update(const T high, const T low, const T close) {
@@ -2304,8 +2311,8 @@ namespace xtechnical {
         int test(const T in) {
             buffer.test(in);
             ma.test(in);
-            if (!buffer.full()) return INDICATOR_NOT_READY_TO_WORK;
-            if (std::isnan(ma.get())) return INDICATOR_NOT_READY_TO_WORK;
+            if (!buffer.full()) return common::INDICATOR_NOT_READY_TO_WORK;
+            if (std::isnan(ma.get())) return common::INDICATOR_NOT_READY_TO_WORK;
             const std::vector<T> temp(buffer.to_vector());
             T sum = 0;
             for (size_t  i = 0; i < temp.size(); ++i) {
@@ -2313,7 +2320,7 @@ namespace xtechnical {
             }
             const T mad = sum / (T)temp.size();
             output_value = (in - ma.get()) / (0.015 * mad);
-            return OK;
+            return common::OK;
         }
 
         int test(const T high, const T low, const T close) {
@@ -2388,14 +2395,14 @@ namespace xtechnical {
                 output_ml = std::numeric_limits<T>::quiet_NaN();
                 output_bl = std::numeric_limits<T>::quiet_NaN();
                 output_std_dev = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
-            if(delay_line.update(in) != OK) {
+            if(delay_line.update(in) != common::OK) {
                 output_tl = std::numeric_limits<T>::quiet_NaN();
                 output_ml = std::numeric_limits<T>::quiet_NaN();
                 output_bl = std::numeric_limits<T>::quiet_NaN();
                 output_std_dev = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             buffer.update(delay_line.get());
             ma.update(delay_line.get());
@@ -2416,9 +2423,9 @@ namespace xtechnical {
                 output_ml = std::numeric_limits<T>::quiet_NaN();
                 output_bl = std::numeric_limits<T>::quiet_NaN();
                 output_std_dev = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -2459,14 +2466,14 @@ namespace xtechnical {
                 output_ml = std::numeric_limits<T>::quiet_NaN();
                 output_bl = std::numeric_limits<T>::quiet_NaN();
                 output_std_dev = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
-            if(delay_line.test(in) != OK) {
+            if(delay_line.test(in) != common::OK) {
                 output_tl = std::numeric_limits<T>::quiet_NaN();
                 output_ml = std::numeric_limits<T>::quiet_NaN();
                 output_bl = std::numeric_limits<T>::quiet_NaN();
                 output_std_dev = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             buffer.test(delay_line.get());
             ma.test(delay_line.get());
@@ -2487,9 +2494,9 @@ namespace xtechnical {
                 output_ml = std::numeric_limits<T>::quiet_NaN();
                 output_bl = std::numeric_limits<T>::quiet_NaN();
                 output_std_dev = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -2771,7 +2778,7 @@ namespace xtechnical {
         size_t tl_size = tl.size();
         if( input_size == 0 || input_size < period ||
             tl_size != bl.size() || tl_size != input_size ||
-            ml.size() != input_size) return INVALID_PARAMETER;
+            ml.size() != input_size) return common::INVALID_PARAMETER;
         using NumType = typename T1::value_type;
         BollingerBands<NumType> iBB(period, std_dev_factor);
         for(size_t i = input_size - period; i < input_size; ++i) {
@@ -2780,7 +2787,7 @@ namespace xtechnical {
         for(size_t i = 0; i < input_size; ++i) {
             iBB.update(in[i], tl[i], ml[i], bl[i]);
         }
-        return OK;
+        return common::OK;
     }
 
     /** \brief Средняя скорость
@@ -2806,15 +2813,15 @@ namespace xtechnical {
          * \return вернет 0 в случае успеха
          */
         int update(const T &in, T &out) {
-            if(!is_init_) return NO_INIT;
+            if(!is_init_) return common::NO_INIT;
             std::vector<T> mw_out;
             int err = iMW.update(in, mw_out);
-            if(err == OK) {
+            if(err == common::OK) {
                 std::vector<T> mw_diff(mw_out.size());
-                xtechnical_normalization::calculate_difference(mw_out, mw_diff);
+                normalization::calculate_difference(mw_out, mw_diff);
                 T sum = std::accumulate(mw_diff.begin(), mw_diff.end(), T(0));
                 out = sum /(T)mw_diff.size();
-                return OK;
+                return common::OK;
             }
             return err;
         }
@@ -2825,15 +2832,15 @@ namespace xtechnical {
          * \return вернет 0 в случае успеха
          */
         int test(const T &in, T &out) {
-            if(!is_init_) return NO_INIT;
+            if(!is_init_) return common::NO_INIT;
             std::vector<T> mw_out;
             int err = iMW.test(in, mw_out);
-            if(err == OK) {
+            if(err == common::OK) {
                 std::vector<T> mw_diff(mw_out.size());
-                xtechnical_normalization::calculate_difference(mw_out, mw_diff);
+                normalization::calculate_difference(mw_out, mw_diff);
                 T sum = std::accumulate(mw_diff.begin(), mw_diff.end(), T(0));
                 out = sum /(T)mw_diff.size();
-                return OK;
+                return common::OK;
             }
             return err;
         }
@@ -2861,10 +2868,10 @@ namespace xtechnical {
             for(size_t i = 0; i < data.size(); ++i) {
                 data[i] = exp(coeff_exp*(T)i*dt);
             }
-            xtechnical_normalization::calculate_min_max(
+            normalization::calculate_min_max(
                 data,
                 data,
-                xtechnical_normalization::MINMAX_UNSIGNED);
+                common::MINMAX_UNSIGNED);
         }
 
         void init_exp_data_dn(std::vector<T> &data) {
@@ -2872,10 +2879,10 @@ namespace xtechnical {
             for(size_t i = 0; i < data.size(); ++i) {
                 data[i] = -exp(coeff_exp*(T)i*dt);
             }
-            xtechnical_normalization::calculate_min_max(
+            normalization::calculate_min_max(
                 data,
                 data,
-                xtechnical_normalization::MINMAX_UNSIGNED);
+                common::MINMAX_UNSIGNED);
         }
     public:
         /** \brief Инициализировать класс
@@ -2897,7 +2904,7 @@ namespace xtechnical {
         int update(T in, T &out, const int len_waveform) {
             std::vector<T> mw_out;
             int err = iMW.update(in, mw_out);
-            if(err == OK) {
+            if(err == common::OK) {
                 if(mw_out.size() >= MIN_WAVEFORM_LEN &&
                     len_waveform <= mw_out.size()) {
                     std::vector<T> fragment_data;
@@ -2905,29 +2912,29 @@ namespace xtechnical {
                         fragment_data.begin(),
                         mw_out.begin() + mw_out.size() - len_waveform,
                         mw_out.end());
-                    int err_n = xtechnical_normalization::calculate_min_max(
+                    int err_n = normalization::calculate_min_max(
                         fragment_data,
                         fragment_data,
-                        MINMAX_UNSIGNED);
-                    if(err_n != OK) return err_n;
+                        common::MINMAX_UNSIGNED);
+                    if(err_n != common::OK) return err_n;
                     T coeff_up = 0, coeff_dn = 0;
-                    int err_up = xtechnical_correlation::calculate_spearman_rank_correlation_coefficient(
+                    int err_up = correlation::calculate_spearman_rank_correlation_coefficient(
                         fragment_data,
                         exp_data_up_[len_waveform-MIN_WAVEFORM_LEN],
                         coeff_up);
 
-                    int err_dn = xtechnical_correlation::calculate_spearman_rank_correlation_coefficient(
+                    int err_dn = correlation::calculate_spearman_rank_correlation_coefficient(
                         fragment_data,
                         exp_data_dn_[len_waveform-MIN_WAVEFORM_LEN],
                         coeff_dn);
-                    if(err_up != OK) return err_up;
-                    if(err_dn != OK) return err_dn;
+                    if(err_up != common::OK) return err_up;
+                    if(err_dn != common::OK) return err_dn;
                     if(abs(coeff_up) > abs(coeff_dn)) {
                         out = coeff_up;
                     } else {
                         out = coeff_dn;
                     }
-                    return OK;
+                    return common::OK;
                 }
             }
             return err;
@@ -2970,19 +2977,19 @@ namespace xtechnical {
         int update(const T &in, const size_t &num_symbol) {
             is_test_ = false;
             if(period_ == 0) {
-                return NO_INIT;
+                return common::NO_INIT;
             }
             if(data_[num_symbol].size() < period_) {
                 data_[num_symbol].push_back(in);
                 if(data_[num_symbol].size() == period_) {
-                    return OK;
+                    return common::OK;
                 }
             } else {
                 data_[num_symbol].push_back(in);
                 data_[num_symbol].erase(data_[num_symbol].begin());
-                return OK;
+                return common::OK;
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -2993,20 +3000,20 @@ namespace xtechnical {
         int test(const T &in, const size_t &num_symbol) {
             is_test_ = true;
             if(period_ == 0) {
-                return NO_INIT;
+                return common::NO_INIT;
             }
             data_test_ = data_;
             if(data_test_[num_symbol].size() < period_) {
                 data_test_[num_symbol].push_back(in);
                 if(data_test_[num_symbol].size() == period_) {
-                    return OK;
+                    return common::OK;
                 }
             } else {
                 data_test_[num_symbol].push_back(in);
                 data_test_[num_symbol].erase(data_test_[num_symbol].begin());
-                return OK;
+                return common::OK;
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Посчитать корреляцию между двумя валютными парами
@@ -3026,72 +3033,72 @@ namespace xtechnical {
                 if(data_test_[num_symbol_1].size() == (size_t)period_ &&
                     data_test_[num_symbol_2].size() == (size_t)period_) {
                     if(correlation_type == SPEARMAN_RANK) {
-                        xtechnical_normalization::calculate_min_max(
+                        normalization::calculate_min_max(
                             data_test_[num_symbol_1],
                             norm_vec_1,
-                            MINMAX_SIGNED);
-                        xtechnical_normalization::calculate_min_max(
+                            common::MINMAX_SIGNED);
+                        normalization::calculate_min_max(
                             data_test_[num_symbol_2],
                             norm_vec_2,
-                            MINMAX_SIGNED);
-                        return xtechnical_correlation::calculate_spearman_rank_correlation_coefficient(
+                            common::MINMAX_SIGNED);
+                        return correlation::calculate_spearman_rank_correlation_coefficient(
                             norm_vec_1,
                             norm_vec_2,
                             out);
                     } else
                     if(correlation_type == PEARSON) {
-                        xtechnical_normalization::calculate_min_max(
+                        normalization::calculate_min_max(
                             data_test_[num_symbol_1],
                             norm_vec_1,
-                            MINMAX_SIGNED);
-                        xtechnical_normalization::calculate_min_max(
+                            common::MINMAX_SIGNED);
+                        normalization::calculate_min_max(
                             data_test_[num_symbol_2],
                             norm_vec_2,
-                            MINMAX_SIGNED);
-                        return xtechnical_correlation::calculate_pearson_correlation_coefficient(
+                            common::MINMAX_SIGNED);
+                        return correlation::calculate_pearson_correlation_coefficient(
                             norm_vec_1,
                             norm_vec_2,
                             out);
                     } else {
-                        return INVALID_PARAMETER;
+                        return common::INVALID_PARAMETER;
                     }
                 }
             } else {
                 if(data_[num_symbol_1].size() == (size_t)period_ &&
                     data_[num_symbol_2].size() == (size_t)period_) {
                     if(correlation_type == SPEARMAN_RANK) {
-                        xtechnical_normalization::calculate_min_max(
+                        normalization::calculate_min_max(
                             data_[num_symbol_1],
                             norm_vec_1,
-                            MINMAX_SIGNED);
-                        xtechnical_normalization::calculate_min_max(
+                            common::MINMAX_SIGNED);
+                        normalization::calculate_min_max(
                             data_[num_symbol_2],
                             norm_vec_2,
-                            MINMAX_SIGNED);
-                        return xtechnical_correlation::calculate_spearman_rank_correlation_coefficient(
+                            common::MINMAX_SIGNED);
+                        return correlation::calculate_spearman_rank_correlation_coefficient(
                             norm_vec_1,
                             norm_vec_2,
                             out);
                     } else
                     if(correlation_type == PEARSON) {
-                        xtechnical_normalization::calculate_min_max(
+                        normalization::calculate_min_max(
                             data_[num_symbol_1],
                             norm_vec_1,
-                            MINMAX_SIGNED);
-                        xtechnical_normalization::calculate_min_max(
+                            common::MINMAX_SIGNED);
+                        normalization::calculate_min_max(
                             data_[num_symbol_2],
                             norm_vec_2,
-                            MINMAX_SIGNED);
-                        return xtechnical_correlation::calculate_pearson_correlation_coefficient(
+                            common::MINMAX_SIGNED);
+                        return correlation::calculate_pearson_correlation_coefficient(
                             norm_vec_1,
                             norm_vec_2,
                             out);
                     } else {
-                        return INVALID_PARAMETER;
+                        return common::INVALID_PARAMETER;
                     }
                 }
             }
-            return INDICATOR_NOT_READY_TO_WORK;
+            return common::INDICATOR_NOT_READY_TO_WORK;
         }
 
         /** \brief Найти коррелирующие валютные пары
@@ -3120,7 +3127,7 @@ namespace xtechnical {
                                 coeff,
                                 i,
                                 j,
-                                correlation_type) == OK) {
+                                correlation_type) == common::OK) {
                             if(std::abs(coeff) > threshold_coefficient) {
                                 symbol_1.push_back(i);
                                 symbol_2.push_back(j);
@@ -3161,7 +3168,7 @@ namespace xtechnical {
         bool is_square;
         std::vector<T> data;
         MW<T> iMW;
-        int err_std_dev = xtechnical_common::NO_INIT;
+        int err_std_dev = common::NO_INIT;
     public:
 
         AMA(const uint32_t period = 10,
@@ -3196,17 +3203,17 @@ namespace xtechnical {
                 prev_ama = temp;
                 out = prev_ama;
                 err_std_dev = iMW.update(di);
-                if(err_std_dev != xtechnical_common::OK)
-                    return xtechnical_common::OK;
+                if(err_std_dev != common::OK)
+                    return common::OK;
                 T std_dev_value = 0;
                 iMW.get_std_dev(std_dev_value, period_std_dev);
                 filter = coeff * std_dev_value;
-                return xtechnical_common::OK;
+                return common::OK;
             } else {
                 prev_ama = in;
                 filter = 0;
                 out = in;
-                return xtechnical_common::NO_INIT;
+                return common::NO_INIT;
             }
         }
 
@@ -3228,16 +3235,16 @@ namespace xtechnical {
                 T di = temp - prev_ama;
                 out = temp;
                 err_std_dev = iMW.update(di);
-                if(err_std_dev != xtechnical_common::OK)
-                    return xtechnical_common::OK;
+                if(err_std_dev != common::OK)
+                    return common::OK;
                 T std_dev_value = 0;
                 iMW.get_std_dev(std_dev_value, period_std_dev);
                 filter = coeff * std_dev_value;
-                return xtechnical_common::OK;
+                return common::OK;
             } else {
                 filter = 0;
                 out = in;
-                return xtechnical_common::NO_INIT;
+                return common::NO_INIT;
             }
         }
 
@@ -3253,7 +3260,7 @@ namespace xtechnical {
             iMW.clear();
             prev_ama = 0;
             filter = 0;
-            err_std_dev = xtechnical_common::NO_INIT;
+            err_std_dev = common::NO_INIT;
         }
     };
 
@@ -3271,7 +3278,7 @@ namespace xtechnical {
         uint32_t _weight = 2;
         uint32_t LengthMA = 10;
         size_t bars = 0;
-        int err = xtechnical_common::NO_INIT;
+        int err = common::NO_INIT;
 
         inline T calc(const T price, const int length, int r) {
             /* прошу прощения за говнокод,
@@ -3314,7 +3321,7 @@ namespace xtechnical {
                 double sum = 0;
                 for (int k=0; k < nlm_values[_len] && (r-k)>=0; k++)
                     sum += nlm_alphas[k]*nlm_prices[r-k];
-                err = xtechnical_common::OK;
+                err = common::OK;
                 return(sum / nlm_values[_weight]);
             } else return 0;
         }
@@ -3348,7 +3355,7 @@ namespace xtechnical {
             nlm_values.resize(3);
             nlm_prices.clear();
             nlm_alphas.clear();
-            err = xtechnical_common::NO_INIT;
+            err = common::NO_INIT;
         }
     };
 
@@ -3358,7 +3365,7 @@ namespace xtechnical {
     class FreqHist {
     private:
         MW<T> iMW;
-        xtechnical_dft::DftReal<T> iDftReal;
+        dft::DftReal<T> iDftReal;
         size_t dft_period = 0;
     public:
 
@@ -3374,14 +3381,14 @@ namespace xtechnical {
                 std::vector<T> &histogram,
                 const T sample_rate = 0) {
             int err = iMW.update(input);
-            if(err != xtechnical_common::OK) return err;
+            if(err != common::OK) return err;
             std::vector<T> buffer;
             iMW.get_data(buffer);
             std::vector<T> frequencies;
-            xtechnical_normalization::calculate_min_max(
+            normalization::calculate_min_max(
                 buffer,
                 buffer,
-                xtechnical_common::MINMAX_SIGNED);
+                common::MINMAX_SIGNED);
             return iDftReal.update(buffer, histogram, frequencies, sample_rate);
         }
 
@@ -3391,13 +3398,13 @@ namespace xtechnical {
                 std::vector<T> &frequencies,
                 const T sample_rate = 0) {
             int err = iMW.update(input);
-            if(err != xtechnical_common::OK) return err;
+            if(err != common::OK) return err;
             std::vector<T> buffer;
             iMW.get_data(buffer);
-            xtechnical_normalization::calculate_min_max(
+            normalization::calculate_min_max(
                 buffer,
                 buffer,
-                xtechnical_common::MINMAX_SIGNED);
+                common::MINMAX_SIGNED);
             return iDftReal.update(buffer, amplitude, frequencies, sample_rate);
         }
 
@@ -3444,13 +3451,13 @@ namespace xtechnical {
          */
         int update(const T &price, const T &volume, T &out) {
             if(!is_init_) {
-                return NO_INIT;
+                return common::NO_INIT;
             }
             if(!is_update_) {
                 prev_ = price;
                 is_update_ = true;
                 out = 50.0;
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             /* поток необработанных денег */
             T mf = price * volume;
@@ -3471,18 +3478,18 @@ namespace xtechnical {
             erru = iU.update(u, mu);
             errd = iD.update(d, md);
             prev_ = price;
-            if(erru != OK || errd != OK) {
+            if(erru != common::OK || errd != common::OK) {
                 out = 50.0;
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             if(md == 0) {
                 out = 100.0;
-                return OK;
+                return common::OK;
             }
             /* коэффициент денежного потока */
             T mfr = mu / md;
             out = 100.0 - (100.0 / (1.0 + mfr));
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -3510,12 +3517,12 @@ namespace xtechnical {
          */
         int update(const T &price, const T &volume) {
             if(!is_init_) {
-                return NO_INIT;
+                return common::NO_INIT;
             }
             if(!is_update_) {
                 prev_ = price;
                 is_update_ = true;
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             /* поток необработанных денег */
             T mf = price * volume;
@@ -3533,10 +3540,10 @@ namespace xtechnical {
             erru = iU.update(u, u);
             errd = iD.update(d, d);
             prev_ = price;
-            if(erru != OK || errd != OK) {
-                return INDICATOR_NOT_READY_TO_WORK;
+            if(erru != common::OK || errd != common::OK) {
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Обновить состояние индикатора
@@ -3566,11 +3573,11 @@ namespace xtechnical {
          */
         int test(const T &price, const T &volume, T &out) {
             if(!is_init_) {
-                return NO_INIT;
+                return common::NO_INIT;
             }
             if(!is_update_) {
                 out = 50.0;
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             /* поток необработанных денег */
             T mf = price * volume;
@@ -3590,18 +3597,18 @@ namespace xtechnical {
             int erru, errd = 0;
             erru = iU.test(u, mu);
             errd = iD.test(d, md);
-            if(erru != OK || errd != OK) {
+            if(erru != common::OK || errd != common::OK) {
                 out = 50.0;
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             if(d == 0) {
                 out = 100.0;
-                return OK;
+                return common::OK;
             }
             /* коэффициент денежного потока */
             T mfr = mu / md;
             out = 100.0 - (100.0 / (1.0 + mfr));
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -3669,9 +3676,9 @@ namespace xtechnical {
 			T fast_ma = in, slow_ma = in, signal_ma = in;
 			int err_fast = iFastMA.update(in, fast_ma);
 			int err_slow = iSlowMA.update(in, slow_ma);
-			if(err_fast != OK || err_slow != OK) return NO_INIT;
+			if(err_fast != common::OK || err_slow != common::OK) return common::NO_INIT;
 			int err_signal = iSignalMA.update((fast_ma - slow_ma), signal_ma);
-			if(err_signal != OK) return err_signal;
+			if(err_signal != common::OK) return err_signal;
 			return iDelayLine.update(signal_ma, out);
         }
 
@@ -3685,9 +3692,9 @@ namespace xtechnical {
 			T fast_ma = in, slow_ma = in, signal_ma = in;
 			int err_fast = iFastMA.test(in, fast_ma);
 			int err_slow = iSlowMA.test(in, slow_ma);
-			if(err_fast != OK || err_slow != OK) return NO_INIT;
+			if(err_fast != common::OK || err_slow != common::OK) return common::NO_INIT;
 			int err_signal = iSignalMA.test((fast_ma - slow_ma), signal_ma);
-			if(err_signal != OK) return err_signal;
+			if(err_signal != common::OK) return err_signal;
 			return iDelayLine.test(signal_ma, out);
         }
 
@@ -3727,15 +3734,15 @@ namespace xtechnical {
         int update(const T in) noexcept {
             if(period == 0) {
                 output = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
-            if(min_max.update(in) != OK) {
+            if(min_max.update(in) != common::OK) {
                 output = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             const T diff = min_max.get_max() - min_max.get_min();
             output = diff == 0 ? 0 : 2.0 * (((in - min_max.get_min()) / diff) - 0.5);
-            return OK;
+            return common::OK;
         }
 
 
@@ -3757,15 +3764,15 @@ namespace xtechnical {
         int test(const T in) noexcept {
             if(period == 0) {
                 output = std::numeric_limits<T>::quiet_NaN();
-                return NO_INIT;
+                return common::NO_INIT;
             }
-            if(min_max.test(in) != OK) {
+            if(min_max.test(in) != common::OK) {
                 output = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             const T diff = min_max.get_max() - min_max.get_min();
             output = diff == 0 ? 0 : 2.0 * (((in - min_max.get_min()) / diff) - 0.5);
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -3849,18 +3856,18 @@ namespace xtechnical {
             int err_bb_low = iBbLow.update(low, bb_low_tl, bb_low_ml, bb_low_bl);
 
             int err_os_ma = iOsMa.update(close, os_ma_now);
-            int err_os_ma_pre = NO_INIT;
-            if(err_os_ma == OK) {
+            int err_os_ma_pre = common::NO_INIT;
+            if(err_os_ma == common::OK) {
                 err_os_ma_pre = iDelayLineOsMa.update(os_ma_now, os_ma_pre);
             }
 
-            if(err_sma_high != OK || err_sma_low != OK ||
-                err_os_ma != OK || err_os_ma_pre != OK) return NO_INIT;
+            if(err_sma_high != common::OK || err_sma_low != common::OK ||
+                err_os_ma != common::OK || err_os_ma_pre != common::OK) return common::NO_INIT;
             T maup1 = sma_high;
             T madn1 = sma_low;
             int err_maup1 = iDelayLineHigh.update(sma_high, maup1);
             int err_madn1 = iDelayLineLow.update(sma_low, madn1);
-            if(err_maup1 != OK || err_madn1 != OK) return NO_INIT;
+            if(err_maup1 != common::OK || err_madn1 != common::OK) return common::NO_INIT;
 
             T line_1 = 0, line_2 = 0;
             if(maup1 > bb_high_tl) {
@@ -3889,15 +3896,15 @@ namespace xtechnical {
             if((os_ma_now > 0 && os_ma_pre < 0) &&
                 (wma_low < line_2) &&
                 (low < line_2)) {
-                out = BUY;
+                out = common::BUY;
             }
             /* сигнал вниз */
             if((os_ma_now < 0 && os_ma_pre > 0) &&
                 (wma_high > line_1) &&
                 (high > line_1) ) {
-                out = SELL;
+                out = common::SELL;
             }
-            return OK;
+            return common::OK;
         }
 
         /** \brief Протестировать индикатор
@@ -3927,18 +3934,18 @@ namespace xtechnical {
             int err_bb_low = iBbLow.test(low, bb_low_tl, bb_low_ml, bb_low_bl);
 
             int err_os_ma = iOsMa.test(close, os_ma_now);
-            int err_os_ma_pre = NO_INIT;
-            if(err_os_ma == OK) {
+            int err_os_ma_pre = common::NO_INIT;
+            if(err_os_ma == common::OK) {
                 err_os_ma_pre = iDelayLineOsMa.test(os_ma_now, os_ma_pre);
             }
 
-            if(err_sma_high != OK || err_sma_low != OK ||
-                err_os_ma != OK || err_os_ma_pre != OK) return NO_INIT;
+            if(err_sma_high != common::OK || err_sma_low != common::OK ||
+                err_os_ma != common::OK || err_os_ma_pre != common::OK) return common::NO_INIT;
             T maup1 = sma_high;
             T madn1 = sma_low;
             int err_maup1 = iDelayLineHigh.test(sma_high, maup1);
             int err_madn1 = iDelayLineLow.test(sma_low, madn1);
-            if(err_maup1 != OK || err_madn1 != OK) return NO_INIT;
+            if(err_maup1 != common::OK || err_madn1 != common::OK) return common::NO_INIT;
 
             T line_1 = 0, line_2 = 0;
             if(maup1 > bb_high_tl) {
@@ -3967,15 +3974,15 @@ namespace xtechnical {
             if((os_ma_now > 0 && os_ma_pre < 0) &&
                 (wma_low < line_2) &&
                 (low < line_2)) {
-                out = BUY;
+                out = common::BUY;
             }
             /* сигнал вниз */
             if((os_ma_now < 0 && os_ma_pre > 0) &&
                 (wma_high > line_1) &&
                 (high > line_1) ) {
-                out = SELL;
+                out = common::SELL;
             }
-            return OK;
+            return common::OK;
         }
 
         inline void clear() noexcept {
@@ -4062,14 +4069,14 @@ namespace xtechnical {
             output = std::numeric_limits<T>::quiet_NaN();
             /* сначала имеем два значения скользящих средних */
             T v1, v2 = 0;
-            if(ma1.update(in, v1) != OK) return NO_INIT;
-            if(ma2.update(v1, v2) != OK) return NO_INIT;
+            if(ma1.update(in, v1) != common::OK) return common::NO_INIT;
+            if(ma2.update(v1, v2) != common::OK) return common::NO_INIT;
 
             /* запоминаем предыдущие значения в перый раз */
             if(std::isnan(prev_ma1) || std::isnan(prev_ma2)) {
                 prev_ma1 = v1;
                 prev_ma2 = v2;
-                return NO_INIT;
+                return common::NO_INIT;
             }
 
             /* проводим вычисления */
@@ -4097,9 +4104,9 @@ namespace xtechnical {
                     if (h < data[i]) h = data[i];
                 }
                 output = (h > 0.0) ? (tdf / h) : 0.0;
-                return OK;
+                return common::OK;
             };
-            return NO_INIT;
+            return common::NO_INIT;
         }
 
         /** \brief Обновить состояние индикатора
@@ -4125,12 +4132,12 @@ namespace xtechnical {
             output = std::numeric_limits<T>::quiet_NaN();
             /* сначала имеем два значения скользящих средних */
             T v1, v2 = 0;
-            if(ma1.test(in, v1) != OK) return NO_INIT;
-            if(ma2.test(v1, v2) != OK) return NO_INIT;
+            if(ma1.test(in, v1) != common::OK) return common::NO_INIT;
+            if(ma2.test(v1, v2) != common::OK) return common::NO_INIT;
 
             /* запоминаем предыдущие значения в перый раз */
             if(std::isnan(prev_ma1) || std::isnan(prev_ma2)) {
-                return NO_INIT;
+                return common::NO_INIT;
             }
 
             /* проводим вычисления */
@@ -4158,9 +4165,9 @@ namespace xtechnical {
                     if (h < data[i]) h = data[i];
                 }
                 output = (h > 0.0) ? (tdf / h) : 0.0;
-                return OK;
+                return common::OK;
             };
-            return NO_INIT;
+            return common::NO_INIT;
         }
 
         /** \brief Протестировать индикатор
@@ -4213,15 +4220,15 @@ namespace xtechnical {
             if(!is_init) {
                 prev = in;
                 is_init = true;
-                return NO_INIT;
+                return common::NO_INIT;
             }
             const T temp = (std::max(in, prev) / std::min(in, prev)) - 1.0;
             prev = in;
             T vol = 0;
             int err = iSMA.update(temp, vol);
-            if(err != OK) return err;
+            if(err != common::OK) return err;
             output = (vol * 100000.0d);
-            return OK;
+            return common::OK;
         }
 
         int update(const T in, T &out) noexcept {
@@ -4231,13 +4238,13 @@ namespace xtechnical {
         }
 
         int test(const T in) noexcept {
-            if(!is_init) return NO_INIT;
+            if(!is_init) return common::NO_INIT;
             const T temp = (std::max(in, prev) / std::min(in, prev)) - 1.0;
             T vol = 0;
             int err = iSMA.test(temp, vol);
-            if(err != OK) return err;
+            if(err != common::OK) return err;
             output = (vol * 100000.0d);
-            return OK;
+            return common::OK;
         }
 
         int test(const T in, T &out) noexcept {
@@ -4283,11 +4290,11 @@ namespace xtechnical {
         int update(const T in) noexcept {
             T z, vol;
             int err = iZscore.update(in, z);
-            if(err != OK) return err;
+            if(err != common::OK) return err;
             err = iSMA.update(std::abs(z), vol);
-            if(err != OK) return err;
+            if(err != common::OK) return err;
             output = vol;
-            return OK;
+            return common::OK;
         }
 
         int update(const T in, T &out) noexcept {
@@ -4299,11 +4306,11 @@ namespace xtechnical {
         int test(const T in) noexcept {
             T z, vol;
             int err = iZscore.test(in, z);
-            if(err != OK) return err;
+            if(err != common::OK) return err;
             err = iSMA.test(std::abs(z), vol);
-            if(err != OK) return err;
+            if(err != common::OK) return err;
             output = vol;
-            return OK;
+            return common::OK;
         }
 
         int test(const T in, T &out) noexcept {
@@ -4348,16 +4355,16 @@ namespace xtechnical {
         int update(const T in) noexcept {
             T x1, x2;
             int err;
-            if((err = iSMA.update(in, x1)) != OK) {
+            if((err = iSMA.update(in, x1)) != common::OK) {
                 output = std::numeric_limits<T>::quiet_NaN();
                 return err;
             }
-            if((err = iWMA.update(in, x2)) != OK) {
+            if((err = iWMA.update(in, x2)) != common::OK) {
                 output = std::numeric_limits<T>::quiet_NaN();
                 return err;
             }
             output = 3.0 * x2 - 2.0 * x1;
-            return OK;
+            return common::OK;
         }
 
         int update(const T in, T &out) noexcept {
@@ -4369,16 +4376,16 @@ namespace xtechnical {
         int test(const T in) noexcept {
             T x1, x2;
             int err;
-            if((err = iSMA.test(in, x1)) != OK) {
+            if((err = iSMA.test(in, x1)) != common::OK) {
                 output = std::numeric_limits<T>::quiet_NaN();
                 return err;
             }
-            if((err = iWMA.test(in, x2)) != OK) {
+            if((err = iWMA.test(in, x2)) != common::OK) {
                 output = std::numeric_limits<T>::quiet_NaN();
                 return err;
             }
             output = 3.0 * x2 - 2.0 * x1;
-            return OK;
+            return common::OK;
         }
 
         int test(const T in, T &out) noexcept {
@@ -4438,21 +4445,21 @@ namespace xtechnical {
         int update(const T in) {
             int err_rsi = rsi_indicator.update(in);
             int err_std_dev = std_dev_indicator.update(in);
-            if(err_rsi != OK || err_std_dev != OK) {
+            if(err_rsi != common::OK || err_std_dev != common::OK) {
                 out_tl = std::numeric_limits<T>::quiet_NaN();
                 out_ml = std::numeric_limits<T>::quiet_NaN();
                 out_bl = std::numeric_limits<T>::quiet_NaN();
                 out_rsi = std::numeric_limits<T>::quiet_NaN();
                 out = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             out_rsi = rsi_indicator.get();
-            if(ma_indicator.update(out_rsi) != OK) {
+            if(ma_indicator.update(out_rsi) != common::OK) {
                 out_tl = std::numeric_limits<T>::quiet_NaN();
                 out_ml = std::numeric_limits<T>::quiet_NaN();
                 out_bl = std::numeric_limits<T>::quiet_NaN();
                 out = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             const T d = std_dev_indicator.get() * deviation;
             out_ml = ma_indicator.get();
@@ -4460,7 +4467,7 @@ namespace xtechnical {
             out_bl = out_ml - d;
             const T pre_out = d == 0 ? 0 : (out_rsi - out_bl) / d - 1.0;
             out = pre_out > 1.0 ? 1.0 :  pre_out < -1.0 ? -1.0 : pre_out;
-            return OK;
+            return common::OK;
         }
 
 
@@ -4472,21 +4479,21 @@ namespace xtechnical {
         int test(const T in) {
             int err_rsi = rsi_indicator.test(in);
             int err_std_dev = std_dev_indicator.test(in);
-            if(err_rsi != OK || err_std_dev != OK) {
+            if(err_rsi != common::OK || err_std_dev != common::OK) {
                 out_tl = std::numeric_limits<T>::quiet_NaN();
                 out_ml = std::numeric_limits<T>::quiet_NaN();
                 out_bl = std::numeric_limits<T>::quiet_NaN();
                 out_rsi = std::numeric_limits<T>::quiet_NaN();
                 out = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             out_rsi = rsi_indicator.get();
-            if(ma_indicator.test(out_rsi) != OK) {
+            if(ma_indicator.test(out_rsi) != common::OK) {
                 out_tl = std::numeric_limits<T>::quiet_NaN();
                 out_ml = std::numeric_limits<T>::quiet_NaN();
                 out_bl = std::numeric_limits<T>::quiet_NaN();
                 out = std::numeric_limits<T>::quiet_NaN();
-                return INDICATOR_NOT_READY_TO_WORK;
+                return common::INDICATOR_NOT_READY_TO_WORK;
             }
             const T d = std_dev_indicator.get() * deviation;
             out_ml = ma_indicator.get();
@@ -4494,7 +4501,7 @@ namespace xtechnical {
             out_bl = out_ml - d;
             const T pre_out = d == 0 ? 0 : (out_rsi - out_bl) / d - 1.0;
             out = pre_out > 1.0 ? 1.0 :  pre_out < -1.0 ? -1.0 : pre_out;
-            return OK;
+            return common::OK;
         }
 
         inline T get() {return out;};
