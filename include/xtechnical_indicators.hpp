@@ -39,6 +39,10 @@
 #include "indicators/xtechnical_fast_min_max.hpp"
 #include "indicators/xtechnical_fisher.hpp"
 #include "indicators/xtechnical_cluster_shaper.hpp"
+#include "indicators/xtechnical_true_range.hpp"
+#include "indicators/xtechnical_atr.hpp"
+#include "indicators/xtechnical_cci.hpp"
+#include "indicators/xtechnical_super_trend.hpp"
 
 #include <vector>
 #include <deque>
@@ -2259,6 +2263,7 @@ namespace xtechnical {
         }
     };
 
+#if(0)
     /** \brief Индекс товарного канала
      */
     template <typename T, class MA_TYPE>
@@ -2356,6 +2361,7 @@ namespace xtechnical {
             output_value = std::numeric_limits<T>::quiet_NaN();
         }
     };
+#endif
 
     /** \brief Линии Боллинджера
      */

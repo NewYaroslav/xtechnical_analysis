@@ -7,7 +7,7 @@
 		<Option compiler="mingw_64_7_3_0" />
 		<Build>
 			<Target title="trend_direction_force_index">
-				<Option output="bin/Release/test" prefix_auto="1" extension_auto="1" />
+				<Option output="trend_direction_force_index" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="mingw_64_7_3_0" />
@@ -22,7 +22,85 @@
 				</Linker>
 			</Target>
 			<Target title="cluster_shaper">
-				<Option output="bin/Release/test" prefix_auto="1" extension_auto="1" />
+				<Option output="cluster_shaper" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++11" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+				</Linker>
+			</Target>
+			<Target title="atr">
+				<Option output="atr" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++11" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+				</Linker>
+			</Target>
+			<Target title="cci">
+				<Option output="atr" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++11" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+				</Linker>
+			</Target>
+			<Target title="super_trend">
+				<Option output="atr" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="mingw_64_7_3_0" />
@@ -53,7 +131,9 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Unit filename="../../include/backtest/xtechnical_winrate_statistics.hpp" />
+		<Unit filename="../../include/indicators/xtechnical_atr.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_awesome_oscillator.hpp" />
+		<Unit filename="../../include/indicators/xtechnical_cci.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_cluster_shaper.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_crsi.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_delay_line.hpp" />
@@ -61,6 +141,8 @@
 		<Unit filename="../../include/indicators/xtechnical_fisher.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_rsi.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_sma.hpp" />
+		<Unit filename="../../include/indicators/xtechnical_super_trend.hpp" />
+		<Unit filename="../../include/indicators/xtechnical_true_range.hpp" />
 		<Unit filename="../../include/math/xtechnical_compare.hpp" />
 		<Unit filename="../../include/math/xtechnical_ordinary_least_squares.hpp" />
 		<Unit filename="../../include/math/xtechnical_smoothing.hpp" />
@@ -75,8 +157,17 @@
 		<Unit filename="../../include/xtechnical_regression_analysis.hpp" />
 		<Unit filename="../../include/xtechnical_statistics.hpp" />
 		<Unit filename="../../include/xtechnical_streaming_min_max.hpp" />
+		<Unit filename="atr.cpp">
+			<Option target="atr" />
+		</Unit>
+		<Unit filename="cci.cpp">
+			<Option target="cci" />
+		</Unit>
 		<Unit filename="cluster_shaper.cpp">
 			<Option target="cluster_shaper" />
+		</Unit>
+		<Unit filename="super_trend.cpp">
+			<Option target="super_trend" />
 		</Unit>
 		<Unit filename="trend_direction_force_index.cpp">
 			<Option target="trend_direction_force_index" />
