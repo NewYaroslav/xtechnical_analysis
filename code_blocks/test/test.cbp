@@ -125,6 +125,32 @@
 					<Add directory="../../lib/freeglut/include" />
 				</Linker>
 			</Target>
+			<Target title="body_filter">
+				<Option output="atr" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++11" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
@@ -133,6 +159,7 @@
 		<Unit filename="../../include/backtest/xtechnical_winrate_statistics.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_atr.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_awesome_oscillator.hpp" />
+		<Unit filename="../../include/indicators/xtechnical_body_filter.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_cci.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_cluster_shaper.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_crsi.hpp" />
@@ -159,6 +186,9 @@
 		<Unit filename="../../include/xtechnical_streaming_min_max.hpp" />
 		<Unit filename="atr.cpp">
 			<Option target="atr" />
+		</Unit>
+		<Unit filename="body_filter.cpp">
+			<Option target="body_filter" />
 		</Unit>
 		<Unit filename="cci.cpp">
 			<Option target="cci" />

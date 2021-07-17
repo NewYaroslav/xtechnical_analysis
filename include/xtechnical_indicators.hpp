@@ -43,6 +43,7 @@
 #include "indicators/xtechnical_atr.hpp"
 #include "indicators/xtechnical_cci.hpp"
 #include "indicators/xtechnical_super_trend.hpp"
+#include "indicators/xtechnical_body_filter.hpp"
 
 #include <vector>
 #include <deque>
