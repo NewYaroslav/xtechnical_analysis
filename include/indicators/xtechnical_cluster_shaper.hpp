@@ -99,10 +99,10 @@ namespace xtechnical {
 		uint64_t period = 0;
         uint64_t last_bar = 0;
 
+        double pips_size = 0;
         bool is_use_bar_stop_time = false;
         bool is_fill = false;
         bool is_once = false;
-		double pips_size = 0;
 
     public:
         ClusterShaper() {};
