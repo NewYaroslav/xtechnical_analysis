@@ -49,7 +49,7 @@ namespace xtechnical {
         /** \brief Проверить наличие данных
          */
         inline bool empty() noexcept {
-            return !data.empty();
+            return data.empty();
         }
 
         /** \brief Получить максимальное значение
