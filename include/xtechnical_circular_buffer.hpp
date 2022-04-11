@@ -9,6 +9,7 @@ namespace xtechnical {
     template<class T>
     class circular_buffer {
     private:
+	
         std::vector<T> buffer;      /**< Основной буфер */
         std::vector<T> buffer_test; /**< Буфер для теста */
         uint32_t buffer_size;       /**< Размер буфера */
@@ -35,7 +36,9 @@ namespace xtechnical {
         inline const bool check_power_of_two(const uint32_t value) const {
             return value && !(value & (value - 1));
         }
+		
     public:
+	
         typedef T value_t;
 
         /** \brief Конструктор циклического буфера

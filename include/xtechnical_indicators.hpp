@@ -38,6 +38,7 @@
 #include "indicators/xtechnical_rsi.hpp"
 #include "indicators/xtechnical_fast_min_max.hpp"
 #include "indicators/xtechnical_fisher.hpp"
+#include "indicators/xtechnical_fractals.hpp"
 #include "indicators/xtechnical_cluster_shaper.hpp"
 #include "indicators/xtechnical_true_range.hpp"
 #include "indicators/xtechnical_atr.hpp"

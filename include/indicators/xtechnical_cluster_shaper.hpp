@@ -5,10 +5,10 @@
 
 namespace xtechnical {
 
-    /** \brief Формирователь Кластеров
-     */
-    class ClusterShaper {
-    public:
+	/** \brief Формирователь Кластеров
+	 */
+	class ClusterShaper {
+	public:
 
 		/** \brief Кластер
 		*/
@@ -95,54 +95,54 @@ namespace xtechnical {
 		};
 
 	private:
-        Cluster cluster;
+		Cluster cluster;
 		uint64_t period = 0;
-        uint64_t last_bar = 0;
+		uint64_t last_bar = 0;
 
-        double pips_size = 0;
-        bool is_use_bar_stop_time = false;
-        bool is_fill = false;
-        bool is_once = false;
+		double pips_size = 0;
+		bool is_use_bar_stop_time = false;
+		bool is_fill = false;
+		bool is_once = false;
 
-    public:
-        ClusterShaper() {};
+	public:
+		ClusterShaper() {};
 
-        /** \brief Инициализировать формирователь баров
-         * \param p     Период индикатора в секундах
-         * \param ps  	Точность цены, например 0.00001
-         * \param ubst  Флаг, включает использование последней метки времени бара вместо начала бара, как времени бара
-         */
-        ClusterShaper(const size_t p, const double ps, const bool ubst = false) :
+		/** \brief Инициализировать формирователь баров
+		 * \param p		Период индикатора в секундах
+		 * \param ps	Точность цены, например 0.00001
+		 * \param ubst	Флаг, включает использование последней метки времени бара вместо начала бара, как времени бара
+		 */
+		ClusterShaper(const size_t p, const double ps, const bool ubst = false) :
 			period(p), pips_size(ps), is_use_bar_stop_time(ubst)  {
-        }
+		}
 
-		std::function<void(const Cluster &cluster)> on_close_bar;               /**< Функция обратного вызова в момент закрытия бара */
-        std::function<void(const Cluster &cluster)> on_unformed_bar = nullptr;	/**< Функция обратного вызова для несформированного бара */
+		std::function<void(const Cluster &cluster)> on_close_bar;				/**< Функция обратного вызова в момент закрытия бара */
+		std::function<void(const Cluster &cluster)> on_unformed_bar = nullptr;	/**< Функция обратного вызова для несформированного бара */
 
-        /** \brief Обновить состояние индикатора
-         * \param input     Текущая цена
-         * \param timestamp Метка времени в секундах
-         */
-        int update(const double input, const uint64_t timestamp) noexcept {
-            if(period == 0) return common::NO_INIT;
+		/** \brief Обновить состояние индикатора
+		 * \param input		Текущая цена
+		 * \param timestamp Метка времени в секундах
+		 */
+		int update(const double input, const uint64_t timestamp) noexcept {
+			if(period == 0) return common::NO_INIT;
 			const uint64_t current_bar = timestamp / period;
 			if (last_bar == 0) {
-                last_bar = current_bar;
-                return common::INDICATOR_NOT_READY_TO_WORK;
-            }
+				last_bar = current_bar;
+				return common::INDICATOR_NOT_READY_TO_WORK;
+			}
 
 			const int tick = (int)((input / pips_size) + 0.5d);
 
 			if (current_bar > last_bar) {
 				if (is_once) {
-                    cluster.timestamp = is_use_bar_stop_time ?
-                        (last_bar * period + period) : (last_bar * period);
-                    on_close_bar(cluster);
+					cluster.timestamp = is_use_bar_stop_time ?
+						(last_bar * period + period) : (last_bar * period);
+					on_close_bar(cluster);
 					cluster.distribution.clear();
 					cluster.distribution[tick] = 1;
 					last_bar = current_bar;
 					cluster.timestamp = is_use_bar_stop_time ?
-                        (last_bar * period + period) : (last_bar * period);
+						(last_bar * period + period) : (last_bar * period);
 					cluster.open = cluster.close = tick;
 					cluster.volume = 1;
 					cluster.max_volume = 1;
@@ -150,12 +150,12 @@ namespace xtechnical {
 					cluster.high = cluster.low = tick;
 					cluster.pips_size = pips_size;
 					return common::OK;
-                }
+				}
 				cluster.distribution.clear();
 				cluster.distribution[tick] = 1;
 				last_bar = current_bar;
 				cluster.timestamp = is_use_bar_stop_time ?
-                        (last_bar * period + period) : (last_bar * period);
+						(last_bar * period + period) : (last_bar * period);
 				cluster.open = cluster.close = tick;
 				cluster.volume = 1;
 				cluster.max_volume = 1;
@@ -164,10 +164,10 @@ namespace xtechnical {
 				cluster.pips_size = pips_size;
 				is_once = true;
 				return common::OK;
-            } else
-            if (current_bar == last_bar) {
-                if (is_once) {
-                    auto it = cluster.distribution.find(tick);
+			} else
+			if (current_bar == last_bar) {
+				if (is_once) {
+					auto it = cluster.distribution.find(tick);
 					if (it == cluster.distribution.end()) {
 						cluster.distribution[tick] = 1;
 					} else {
@@ -181,13 +181,13 @@ namespace xtechnical {
 					if (tick > cluster.high) cluster.high = tick;
 					if (tick < cluster.low) cluster.low = tick;
 					++cluster.volume;
-                    if (on_unformed_bar != nullptr) {
-                        on_unformed_bar(cluster);
-                    }
-                }
-            }
-            return common::OK;
-        }
+					if (on_unformed_bar != nullptr) {
+						on_unformed_bar(cluster);
+					}
+				}
+			}
+			return common::OK;
+		}
 
 		static inline std::vector<double> get_triangular_distribution(
 				size_t length,
@@ -233,14 +233,14 @@ namespace xtechnical {
 			return sum / (std::sqrt(sum_x) * std::sqrt(sum_y));
 		}
 
-        /** \brief Очистить данные индикатора
-         */
-        inline void clear() noexcept {
+		/** \brief Очистить данные индикатора
+		 */
+		inline void clear() noexcept {
 			cluster = Cluster();
 			last_bar = 0;
 			is_once = false;
-        }
-    }; // ClusterShaper
+		}
+	}; // ClusterShaper
 
 }; // xtechnical
 
