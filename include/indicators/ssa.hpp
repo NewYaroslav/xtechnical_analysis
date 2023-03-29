@@ -286,6 +286,10 @@ namespace xtechnical {
             m_metric = 0;
         }
 
+        inline const bool full() noexcept {
+            return m_buffer.full();
+        }
+
         bool calc(const size_t horizon,
                   const size_t start_period,
                   const size_t num_period,
@@ -335,7 +339,7 @@ namespace xtechnical {
             auto input_data = m_buffer.get_vec();
 
             const size_t len = ssa_rec ? (input_data.size() + horizon): horizon;
-            Eigen::Matrix<T,Eigen::Dynamic,1> mat_mean(num_period, len);
+            Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> mat_mean(num_period, len);
 
             for (size_t n_period = 0; n_period < num_period; ++n_period) {
                 const size_t period = n_period * step_period + start_period;

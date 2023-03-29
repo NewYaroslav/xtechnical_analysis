@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
         SSA.update(x(i), xtechnical::common::PriceType::Close);
     }
 
-    SSA.calc(M, K, 0, 0, xtechnical::SSA<float>::MetricType::RSquared, true, xtechnical::SSA<float>::SSAMode::RestoredSeriesAddition);
+    SSA.calc(M, K, 2, 1, xtechnical::SSA<float>::MetricType::RSquared, true, xtechnical::SSA<float>::SSAMode::RestoredSeriesAddition);
 
     std::cout << "get_last_forecast:\n" << SSA.get_last_forecast() << std::endl;
 
