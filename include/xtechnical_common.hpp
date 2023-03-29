@@ -39,6 +39,11 @@ namespace xtechnical {
     namespace common {
         const double NAN_DATA = std::numeric_limits<double>::quiet_NaN();
 
+        enum class PriceType {
+            IntraBar,
+            Close,
+        };
+
         /// Набор возможных состояний ошибки
         enum {
             OK = 0,                             ///< Ошибок нет, все в порядке
@@ -65,6 +70,7 @@ namespace xtechnical {
             BUY = 1,
             SELL = -1,
         };
+
     }; // common
 }; // xtechnical
 

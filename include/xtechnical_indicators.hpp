@@ -46,6 +46,7 @@
 #include "indicators/xtechnical_super_trend.hpp"
 #include "indicators/xtechnical_body_filter.hpp"
 #include "indicators/xtechnical_period_stats.hpp"
+#include "indicators/ssa.hpp"
 
 #include <vector>
 #include <deque>

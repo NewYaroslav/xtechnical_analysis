@@ -178,7 +178,7 @@
 				</Linker>
 			</Target>
 			<Target title="fractals">
-				<Option output="atr" prefix_auto="1" extension_auto="1" />
+				<Option output="fractals" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="mingw_64_7_3_0" />
@@ -203,12 +203,41 @@
 					<Add directory="../../lib/freeglut/include" />
 				</Linker>
 			</Target>
+			<Target title="ssa">
+				<Option output="ssa" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++11" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/eigen-3.4.0" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/eigen-3.4.0" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Unit filename="../../include/backtest/xtechnical_winrate_statistics.hpp" />
+		<Unit filename="../../include/indicators/ssa.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_atr.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_awesome_oscillator.hpp" />
 		<Unit filename="../../include/indicators/xtechnical_body_filter.hpp" />
@@ -255,6 +284,9 @@
 		</Unit>
 		<Unit filename="period_stats.cpp">
 			<Option target="period_stats" />
+		</Unit>
+		<Unit filename="ssa.cpp">
+			<Option target="ssa" />
 		</Unit>
 		<Unit filename="super_trend.cpp">
 			<Option target="super_trend" />
