@@ -9,7 +9,7 @@ namespace xtechnical {
     template<class T>
     class circular_buffer {
     private:
-	
+
         std::vector<T> buffer;      /**< Основной буфер */
         std::vector<T> buffer_test; /**< Буфер для теста */
         uint32_t buffer_size;       /**< Размер буфера */
@@ -36,9 +36,9 @@ namespace xtechnical {
         inline const bool check_power_of_two(const uint32_t value) const {
             return value && !(value & (value - 1));
         }
-		
+
     public:
-	
+
         typedef T value_t;
 
         /** \brief Конструктор циклического буфера
@@ -98,13 +98,33 @@ namespace xtechnical {
          * \return Вернет true, если циклическй буфер полн
          */
         inline bool full() const {
-            if(is_test) return (count_test >= buffer_size);
+            if (is_test) return (count_test >= buffer_size);
             return (count >= buffer_size);
         }
 
         void fill(const T value) {
             if(is_test) std::fill(buffer_test.begin(), buffer_test.end(), value);
             else std::fill(buffer.begin(), buffer.end(), value);
+        }
+
+        inline bool update(const T value, const common::PriceType type = common::PriceType::Close) noexcept {
+            if (type == common::PriceType::Close) {
+                is_test = false;
+                push_back(value);
+                return full();
+            }
+            if(!is_test) {
+                is_test = true;
+                buffer_test = buffer;
+                offset_test = offset;
+                count_test = count;
+                buffer_test[offset_test++] = value;
+                if(offset_test > count_test) count_test = offset_test;
+                offset_test &= mask;
+            } else {
+                buffer_test[(offset_test - 1) & mask] = value;
+            }
+            return full();
         }
 
         /** \brief Обновить состояние циклического буфера

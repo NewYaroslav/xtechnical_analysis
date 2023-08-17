@@ -2,7 +2,7 @@
 #define XTECHNICAL_FISHER_HPP_INCLUDED
 
 #include "../xtechnical_common.hpp"
-#include "xtechnical_fast_min_max.hpp"
+#include "min_max.hpp"
 
 namespace xtechnical {
 
@@ -11,8 +11,8 @@ namespace xtechnical {
     template <class T>
     class FisherV1 {
     private:
-        FastMinMax<T> max_high;
-		FastMinMax<T> min_low;
+        MinMax<T> max_high;
+		MinMax<T> min_low;
 		T output_value = std::numeric_limits<T>::quiet_NaN();
 		T prev_value = 0;
 		T prev_fish = 0;
@@ -164,7 +164,7 @@ namespace xtechnical {
     template <class T>
     class FisherV2 {
     private:
-		FastMinMax<T> min_max;
+		MinMax<T> min_max;
 		T output_value = std::numeric_limits<T>::quiet_NaN();
 		T prev_value = 0;
 		T prev_fish = 0;
@@ -268,7 +268,7 @@ namespace xtechnical {
     template <class T>
     class FisherV3 {
     private:
-		FastMinMax<T> min_max;
+		MinMax<T> min_max;
 		T output_value = std::numeric_limits<T>::quiet_NaN();
     public:
 

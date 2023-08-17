@@ -2,8 +2,8 @@
 #define XTECHNICAL_SMOOTHING_HPP_INCLUDED
 
 #include "xtechnical_ordinary_least_squares.hpp"
-#include "../indicators/xtechnical_sma.hpp"
-#include "../indicators/xtechnical_rsi.hpp"
+#include "../indicators/sma.hpp"
+#include "../indicators/rsi.hpp"
 
 namespace xtechnical {
 
@@ -166,12 +166,13 @@ namespace xtechnical {
             output_size != input_size)
             return false;
         using NumType = typename T1::value_type;
-        RSI<NumType,SMA<NumType>> iRSI(period);
+        RSI<NumType,SMA> iRSI(period);
         for(size_t i = input_size - period; i < input_size; ++i) {
             iRSI.update(in[i]);
         }
         for(size_t i = 0; i < input_size; ++i) {
-            iRSI.update(in[i], out[i]);
+            iRSI.update(in[i]);
+            out[i] = iRSI.get();
         }
         return true;
     }

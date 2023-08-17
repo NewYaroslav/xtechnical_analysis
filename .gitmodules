@@ -1,3 +1,6 @@
 [submodule "lib/easy_plot_cpp"]
 	path = lib/easy_plot_cpp
 	url = https://github.com/NewYaroslav/easy_plot_cpp.git
+[submodule "lib/googletest"]
+	path = lib/googletest
+	url = https://github.com/google/googletest.git

@@ -1,14 +1,15 @@
 #ifndef XTECHNICAL_SSA_HPP_INCLUDED
 #define XTECHNICAL_SSA_HPP_INCLUDED
 
-#include "../xtechnical_common.hpp"
+#include "../common/common.hpp"
+#include "sma.hpp"
 #include <vector>
 #include <Eigen/Dense>
 
 namespace xtechnical {
 
     template<class T = double>
-    class SSA {
+    class SSA final : public BaseIndicator<T> {
     public:
 
         enum class SSAMode {
@@ -27,12 +28,12 @@ namespace xtechnical {
     private:
 
         template<class VectorType = Eigen::VectorXd>
-        class CircularBuffer {
+        class SSA_CircularBuffer {
         public:
 
-            CircularBuffer() {};
+            SSA_CircularBuffer() {};
 
-            CircularBuffer(const size_t size) {
+            SSA_CircularBuffer(const size_t size) {
                 m_buffer = VectorType::Zero(size);
                 m_head = 0;
                 m_count = 0;
@@ -42,8 +43,8 @@ namespace xtechnical {
             }
 
             template<class InputType = double>
-            inline void update(const InputType value, const common::PriceType type = common::PriceType::Close) noexcept {
-                if (type == common::PriceType::IntraBar) {
+            inline void update(const InputType value, const PriceType type = PriceType::Close) noexcept {
+                if (type == PriceType::IntraBar) {
                     m_intrabar = true;
                     m_intrabar_buffer = m_buffer;
                     m_intrabar_head = m_head;
@@ -244,16 +245,93 @@ namespace xtechnical {
             return mse;
         }
 
-        CircularBuffer<Eigen::Matrix<T,Eigen::Dynamic,1>> m_buffer;
+        SSA_CircularBuffer<Eigen::Matrix<T,Eigen::Dynamic,1>> m_buffer;
         std::vector<T> m_reconstructed;
         std::vector<T> m_forecast;
         T m_metric = 0;
 
+        size_t  m_period    = 0;
+        size_t  m_horizon   = 0;
+        bool    m_ready     = false;
+        bool    m_auto_calc = false;
+        bool    m_add_data  = false;
+
     public:
 
-        SSA() {};
+        SSA() : BaseIndicator<T>(1) {};
 
-        SSA(const size_t window_len) : m_buffer(window_len) {}
+        SSA(const size_t window_len) :
+                BaseIndicator<T>(1), m_buffer(window_len) {
+        }
+
+        /** \brief Конструктор для работы с SSA как с индикатором
+         * \param window_len    Длина скользящего окна
+         * \param period        Период SSA
+         * \param horizon       Горизонт прогноза
+         * \param auto_calc     Флаг включения автоматчиеского вызова calc()
+         * \param add_data      Флаг включения дополнительных даных для вызова методов get_forecast() и get_reconstructed()
+         */
+        SSA(const size_t window_len, const size_t period, const size_t horizon,
+            const bool auto_calc = false, const bool add_data = false) :
+                BaseIndicator<T>(1), m_buffer(period),
+                m_period(period), m_horizon(horizon),
+                m_auto_calc(auto_calc), m_add_data(add_data) {
+        }
+
+        virtual ~SSA() = default;
+
+        //----------------------------------------------------------------------
+        //{ реализуем стандартную логику индикатора
+
+        /** \brief Update the state of the indicator
+         * \param value New value for the indicator, such as price
+         * \param type  Price type (affects the indicator's mode of operation - intra-bar or end-of-bar)
+         * \return Returns true in case of success
+         */
+        inline bool update(const T value, const PriceType type = PriceType::Close) noexcept {
+            m_buffer.update(value, type);
+            if (m_auto_calc) return calc();
+            return true;
+        }
+
+        inline bool calc() noexcept {
+            if (!m_buffer.full()) return false;
+            const size_t r = 0; // автоматический поиск ранга Hankel матрицы
+            auto x = m_buffer.get_vec(); // исходный ряд
+            auto x1 = ssa_multi_tick<
+                Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic>,
+                Eigen::Matrix<T,Eigen::Dynamic,1>>(x, m_horizon, m_period, r, SSAMode::RestoredSeriesAddition);
+            BaseIndicator<T>::output_value[0] = x1(x1.size() - 1);
+            if (m_add_data) {
+                m_reconstructed.resize(x1.size());
+                std::memcpy(m_reconstructed.data(), x1.data(), x1.size() * sizeof(T));
+                m_forecast.resize(m_horizon);
+                std::copy_backward(m_reconstructed.end() - m_horizon, m_reconstructed.end(), m_forecast.end());
+            }
+            m_ready = true;
+            return true;
+        }
+
+        /** \brief Проверить готовность индикатора
+         * \return Если индикатор готов к работе, вернет true
+         */
+        inline bool is_ready() const noexcept {
+            return m_ready;
+        }
+
+        inline void reset() noexcept {
+            for (auto &item : BaseIndicator<T>::output_value) {
+                item = get_empty_value<T>();
+            }
+            m_buffer.clear();
+            m_reconstructed.clear();
+            m_forecast.clear();
+            m_metric = 0;
+            m_ready = false;
+        }
+
+        //}
+        //----------------------------------------------------------------------
 
         /** \brief SSA forecast
          * \param x - time series, one-dimensional
@@ -273,23 +351,29 @@ namespace xtechnical {
             return std::move(x1);
         }
 
+        /*
         template<class InputType = double>
         inline bool update(const InputType in, const common::PriceType type = common::PriceType::Close) noexcept {
             m_buffer.update(in, type);
             return m_buffer.full();
         }
-
-        inline void clear() noexcept {
-            m_buffer.clear();
-            m_reconstructed.clear();
-            m_forecast.clear();
-            m_metric = 0;
-        }
+        */
 
         inline const bool full() noexcept {
             return m_buffer.full();
         }
 
+        /** \brief Расчитать несколько SSA
+         * \param horizon       Горизонт прогноза
+         * \param start_period  Начальный период SSA
+         * \param num_period    Количество периодов SSA
+         * \param step_period   Шаг периодов SSA
+         * \param metric        Метрика для измерения ошибки
+         * \param ssa_rec       Флаг, включает
+         * \param mode          Режим, определяет тип построения прогноза (скорее для экспериментов)
+         * \param r             Ранг матрицы Hankel
+         * \return Вернет true в случае успеха
+         */
         bool calc(const size_t horizon,
                   const size_t start_period,
                   const size_t num_period,
@@ -382,10 +466,16 @@ namespace xtechnical {
             return m_forecast.back();
         }
 
+        /** \brief Получить прогноз
+         * \return Вектор со значениями прогноза
+         */
         inline const std::vector<T> &get_forecast() {
             return m_forecast;
         }
 
+        /** \brief Получить восстановленный ряд
+         * \return Вектор с восстановленным рядом
+         */
         inline const std::vector<T> &get_reconstructed() {
             return m_reconstructed;
         }
@@ -394,6 +484,71 @@ namespace xtechnical {
             return m_metric;
         }
 
+    };
+
+    /** \brief ForecastSSA
+     * Индикатор оболочка позволяет применить SSA прогноз к многим простым индикаторам
+     */
+    template <class T = double, template <class...> class INDIC_TYPE = SMA>
+    class ForecastSSA final : public BaseIndicator<T> {
+    private:
+        INDIC_TYPE<T>   m_indic;
+        SSA<T>          m_ssa;
+        bool            m_done = false;
+
+    public:
+
+        ForecastSSA() : BaseIndicator<T>(1) {};
+
+        /** \brief Конструктор ForecastSSA для настройки прогноза
+         * \param period_ind    Период индикатора
+         * \param window_len    Длина скользящего окна
+         * \param period        Период SSA
+         * \param horizon       Горизонт прогноза
+         * \param auto_calc     Флаг включения автоматчиеского вызова calc()
+         */
+        ForecastSSA(
+                const size_t period_ind,
+                const size_t window_len = 0,
+                const size_t period = 0,
+                const size_t horizon = 0) :
+                    BaseIndicator<T>(1),
+                    m_indic(period_ind),
+                    m_ssa(
+                        window_len == 0 ? period_ind * 2 : window_len,
+                        period == 0 ? period_ind : period,
+                        horizon == 0 ? period_ind/2 : horizon, true) {
+        }
+
+        virtual ~ForecastSSA() = default;
+
+        /** \brief Update the state of the indicator
+         * \param value New value for the indicator, such as price
+         * \param type  Price type (affects the indicator's mode of operation - intra-bar or end-of-bar)
+         * \return Returns true in case of success
+         */
+        inline bool update(const T value, const PriceType type = PriceType::Close) noexcept {
+            m_indic.update(value, type);
+            if (!m_indic.is_ready()) return false;
+            m_ssa.update(m_indic.get(), type);
+            if (!m_ssa.is_ready()) return false;
+            BaseIndicator<T>::output_value[0] = m_ssa.get();
+            m_done = true;
+            return true;
+        }
+
+        inline bool is_ready() const noexcept {
+            return m_done;
+        }
+
+        /** \brief Reset the state of the indicator
+         */
+        inline void reset() noexcept {
+            m_indic.reset();
+            m_ssa.reset();
+            BaseIndicator<T>::output_value[0] = get_empty_value<T>();
+            m_done = false;
+        }
     };
 }; // xtechnical
 

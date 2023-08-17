@@ -3,7 +3,7 @@
 
 #include "../xtechnical_common.hpp"
 #include "xtechnical_atr.hpp"
-#include "xtechnical_cci.hpp"
+#include "cci.hpp"
 
 namespace xtechnical {
 

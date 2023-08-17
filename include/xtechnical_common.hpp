@@ -37,6 +37,7 @@
 
 namespace xtechnical {
     namespace common {
+
         const double NAN_DATA = std::numeric_limits<double>::quiet_NaN();
 
         enum class PriceType {
