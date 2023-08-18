@@ -1,9 +1,85 @@
 # xtechnical_analysis
 C++ header-only библиотека технического анализа для алготрейдинга
 
+## Описание
+
+В библиотеке реализован ряд индикаторов и вспомогательных классов и функций. 
+
+Общий шаблон использования большинства индикаторов выглядит следующим образом:
+
+* Инициализируете класс нужного индикатора
+* Вызываете метод update и передаете цену, а также указываете, является ли значение цены внутри бара или на закрытие бара
+* После метода update проверяете готовность индикатора при помощи метода is_ready
+* Если индикатор готов к работе, получаете нужные значения методом get
+
+Пример:
+
+```cpp
+size_t period = 5;
+xta::LWMA<double> ma(period);
+
+double price = 100.0;
+ma.update(price, xta::PriceType::IntraBar);
+if (ma.is_ready()) {
+	std::cout << ma.get() << std::endl;
+}
+
+price = 101.0;
+ma.update(price, xtechnical::PriceType::Close);
+if (ma.is_ready()) {
+	std::cout << ma.get() << std::endl;
+}
+```
+
+Для некоторых индикаторов могут быть особые условия использования. Например, индикатор QuoteSync используется для синхронизации мультивалютных котировок и он не имеет ряд методов, не наследуется от базового индикатора и имеет функцию обратного вызова.
+
+Многие индикаторы оптимизированы для быстрой работы:
+
+* Используются кольцевые буферы
+* Используются рекурсивные формулы индикаторов
+* Замена деления на умножение там, где возможно
+* Исключение повторых перерасчетов
+* Использование Eigen для вычислений
+
 ## Индикаторы
 
-Библиотека содержит одиночные индикаторы и один универсальный индикатор MW (который может выполнять функцию сразу нескольких индикаторов).
+Примерный список индикаторов:
+
+* CCI 				- Commodity Channel Index
+* CMA
+* CircularBuffer
+* DateBuffer
+* DelayLine 		- Задержка сигнала
+* DeMarker
+* EMA
+* LowPassFilter
+* LWMA
+* MACD
+* MAD 				- Mean Absolute Deviation
+* MFCSI_TWI8 		- Multi-Functional Currency Strength Indicator, Trade-Weighted Index
+* MFCSI_ABS8 		- Multi-Functional Currency Strength Indicator, Индексы валют относительно ABS
+* MinMax 			- ускоренный поиск Min и Max
+* MMA
+* Momentum
+* PercentVolatility
+* PeriodDetector (пока в разработке)
+* PriceChange
+* QuoteSync
+* RPCD 				- Относительное изменение цены
+* RSI
+* SMA
+* SMMA 				- Smoothed Moving Average or Rolling Moving Average
+* SSA 				- Сингулярный спектральный анализ
+* StdDev
+* Stochastic
+* SUM
+* USDX 				- Индекс доллара
+* VCMA
+* VWMA
+* WPR
+* Zscore
+
+# Далее устаревшая информация. В процессе библиотека будет переработана полность
 
 ## Особенности реализации индикаторов
 

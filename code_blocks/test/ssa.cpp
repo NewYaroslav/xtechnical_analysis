@@ -4,7 +4,7 @@
 #include <vector>
 #include <cmath>
 #include <Eigen/Dense>
-#include "xtechnical_indicators.hpp"
+#include "indicators/ssa.hpp"
 #include <chrono>
 
 int main(int argc, char* argv[]) {
@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     xtechnical::SSA<float> SSA(11);
 
     for (size_t i = 0; i < x.size(); ++i) {
-        SSA.update(x(i), xtechnical::common::PriceType::Close);
+        SSA.update(x(i), xtechnical::PriceType::Close);
     }
 
     SSA.calc(M, K, 2, 1, xtechnical::SSA<float>::MetricType::RSquared, true, xtechnical::SSA<float>::SSAMode::RestoredSeriesAddition);

@@ -24,7 +24,7 @@
 
 #include <iostream>
 #include <random>
-#include "indicators/quote_sync.hpp"
+#include "xta/indicators/quote_sync.hpp"
 #include <gtest/gtest.h>
 
 // Тест режима буфера в режиме скользящего окна
@@ -32,17 +32,17 @@ void test_quote_sync_1() {
     std::cout << "test_quote_sync_1" << std::endl;
     const size_t symbols = 3;
     const size_t timeframe = 60;
-    xtechnical::QuoteSync<double> quote_sync(symbols, timeframe, false);
+    xta::QuoteSync<double> quote_sync(symbols, timeframe, false);
 
     quote_sync.on_update = [](
             const size_t index,
             const double &value,
             const uint64_t open_date,
             const uint64_t delay_ms,
-            const xtechnical::PriceType type,
+            const xta::PriceType type,
             const bool is_update){
         std::string update_text;
-        if (type == xtechnical::PriceType::Close) update_text = "close";
+        if (type == xta::PriceType::Close) update_text = "close";
         else update_text = "intrabar";
         std::cout
             << "s: " << index
@@ -173,17 +173,17 @@ void test_quote_sync_2() {
     std::cout << "test_quote_sync_2" << std::endl;
     const size_t symbols = 3;
     const size_t timeframe = 60;
-    xtechnical::QuoteSync<double> quote_sync(symbols, timeframe, true);
+    xta::QuoteSync<double> quote_sync(symbols, timeframe, true);
 
     quote_sync.on_update = [](
             const size_t index,
             const double &value,
             const uint64_t open_date,
             const uint64_t delay_ms,
-            const xtechnical::PriceType type,
+            const xta::PriceType type,
             const bool is_update){
         std::string update_text;
-        if (type == xtechnical::PriceType::Close) update_text = "close";
+        if (type == xta::PriceType::Close) update_text = "close";
         else update_text = "intrabar";
         std::cout
             << "s: " << index

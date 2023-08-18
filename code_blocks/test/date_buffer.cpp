@@ -24,7 +24,7 @@
 
 #include <iostream>
 #include <random>
-#include "indicators/date_buffer.hpp"
+#include "xta/indicators/date_buffer.hpp"
 #include <gtest/gtest.h>
 
 void fill_rnd_values(std::vector<double>& vec, const double min_value, const double max_value) {
@@ -41,7 +41,7 @@ void test_date_buffer_window_mode_1() {
     const size_t buffer_size = 5;
     const size_t timeframe = 60;
     const size_t symbols = 5;
-    xtechnical::DateBuffer<double> date_buffer(buffer_size, timeframe, false, symbols);
+    xta::DateBuffer<double> date_buffer(buffer_size, timeframe, false, symbols);
     // Цикл по дате
     std::vector<double> prices;
     for (size_t i = 0; i < 20; ++i) {
@@ -80,7 +80,7 @@ void test_date_buffer_window_mode_2() {
     const size_t buffer_size = 1;
     const size_t timeframe = 60;
     const size_t symbols = 3;
-    xtechnical::DateBuffer<double> date_buffer(buffer_size, timeframe, false, symbols);
+    xta::DateBuffer<double> date_buffer(buffer_size, timeframe, false, symbols);
     // Цикл по дате
     std::vector<double> prices;
     for (size_t i = 0; i < 5; ++i) {
@@ -125,7 +125,7 @@ void test_date_buffer_period_mode_1() {
     const size_t buffer_size = 5;
     const size_t timeframe = 60;
     const size_t symbols = 5;
-    xtechnical::DateBuffer<double> date_buffer(buffer_size, timeframe, true, symbols);
+    xta::DateBuffer<double> date_buffer(buffer_size, timeframe, true, symbols);
     // Цикл по дате
     std::vector<double> prices;
     for (size_t i = 0; i <= 20; ++i) {

@@ -231,42 +231,364 @@
 					<Add directory="../../lib/eigen-3.4.0" />
 				</Linker>
 			</Target>
+			<Target title="delay_line">
+				<Option output="delay_line" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=gnu++14" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add library="gtest" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Linker>
+			</Target>
+			<Target title="circular_buffer">
+				<Option output="circular_buffer" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=gnu++14" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/googletest/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add library="gtest" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/googletest/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+				</Linker>
+			</Target>
+			<Target title="moving_average">
+				<Option output="moving_average" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=gnu++14" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add library="gtest" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Linker>
+			</Target>
+			<Target title="oscillators">
+				<Option output="oscillators" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=gnu++14" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add library="gtest" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Linker>
+			</Target>
+			<Target title="envelopes">
+				<Option output="envelopes" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=gnu++14" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add library="gtest" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Linker>
+			</Target>
+			<Target title="date_buffer">
+				<Option output="date_buffer" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=gnu++14" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add library="gtest" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Linker>
+			</Target>
+			<Target title="indices">
+				<Option output="indices" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=gnu++14" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+					<Add directory="../../lib/eigen-3.4.0" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add library="gtest" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Linker>
+			</Target>
+			<Target title="quote_sync">
+				<Option output="quote_sync" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=gnu++14" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+					<Add directory="../../lib/eigen-3.4.0" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add library="gtest" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Linker>
+			</Target>
+			<Target title="volatility">
+				<Option output="volatility" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw_64_7_3_0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=gnu++14" />
+					<Add option="-DFREEGLUT_STATIC" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add library="gtest" />
+					<Add directory="../../include" />
+					<Add directory="../../lib/easy_plot_cpp/include" />
+					<Add directory="../../lib/freeglut/lib/x64" />
+					<Add directory="../../lib/freeglut/include" />
+					<Add directory="../../lib/googletest/build/lib" />
+					<Add directory="../../lib/googletest/googletest/include" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
-		<Unit filename="../../include/backtest/xtechnical_winrate_statistics.hpp" />
-		<Unit filename="../../include/indicators/ssa.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_atr.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_awesome_oscillator.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_body_filter.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_cci.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_cluster_shaper.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_crsi.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_delay_line.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_fast_min_max.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_fisher.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_fractals.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_period_stats.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_rsi.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_sma.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_super_trend.hpp" />
-		<Unit filename="../../include/indicators/xtechnical_true_range.hpp" />
-		<Unit filename="../../include/math/xtechnical_compare.hpp" />
-		<Unit filename="../../include/math/xtechnical_ordinary_least_squares.hpp" />
-		<Unit filename="../../include/math/xtechnical_smoothing.hpp" />
-		<Unit filename="../../include/xtechnical_circular_buffer.hpp" />
-		<Unit filename="../../include/xtechnical_common.hpp" />
-		<Unit filename="../../include/xtechnical_correlation.hpp" />
-		<Unit filename="../../include/xtechnical_delay_meter.hpp" />
-		<Unit filename="../../include/xtechnical_dft.hpp" />
-		<Unit filename="../../include/xtechnical_indicators.hpp" />
-		<Unit filename="../../include/xtechnical_moving_window.hpp" />
-		<Unit filename="../../include/xtechnical_normalization.hpp" />
-		<Unit filename="../../include/xtechnical_regression_analysis.hpp" />
-		<Unit filename="../../include/xtechnical_statistics.hpp" />
-		<Unit filename="../../include/xtechnical_streaming_min_max.hpp" />
+		<Unit filename="../../include/xta/common/base_indicator.hpp" />
+		<Unit filename="../../include/xta/common/common.hpp" />
+		<Unit filename="../../include/xta/common/enums.hpp" />
+		<Unit filename="../../include/xta/common/headers.hpp" />
+		<Unit filename="../../include/xta/common/utils.hpp" />
+		<Unit filename="../../include/xta/indicators.hpp" />
+		<Unit filename="../../include/xta/indicators/atr.hpp" />
+		<Unit filename="../../include/xta/indicators/cci.hpp" />
+		<Unit filename="../../include/xta/indicators/circular_buffer.hpp" />
+		<Unit filename="../../include/xta/indicators/cma.hpp" />
+		<Unit filename="../../include/xta/indicators/date_buffer.hpp" />
+		<Unit filename="../../include/xta/indicators/delay_line.hpp" />
+		<Unit filename="../../include/xta/indicators/demarker.hpp" />
+		<Unit filename="../../include/xta/indicators/ema.hpp" />
+		<Unit filename="../../include/xta/indicators/indexes.hpp" />
+		<Unit filename="../../include/xta/indicators/low_pass_filter.hpp" />
+		<Unit filename="../../include/xta/indicators/lwma.hpp" />
+		<Unit filename="../../include/xta/indicators/macd.hpp" />
+		<Unit filename="../../include/xta/indicators/mad.hpp" />
+		<Unit filename="../../include/xta/indicators/mfcsi.hpp" />
+		<Unit filename="../../include/xta/indicators/min_max.hpp" />
+		<Unit filename="../../include/xta/indicators/min_max_diff.hpp" />
+		<Unit filename="../../include/xta/indicators/mma.hpp" />
+		<Unit filename="../../include/xta/indicators/momentum.hpp" />
+		<Unit filename="../../include/xta/indicators/percent_volatility.hpp" />
+		<Unit filename="../../include/xta/indicators/period_detector.hpp" />
+		<Unit filename="../../include/xta/indicators/price_analysis.hpp" />
+		<Unit filename="../../include/xta/indicators/price_change.hpp" />
+		<Unit filename="../../include/xta/indicators/quote_sync.hpp" />
+		<Unit filename="../../include/xta/indicators/rpcd.hpp" />
+		<Unit filename="../../include/xta/indicators/rsi.hpp" />
+		<Unit filename="../../include/xta/indicators/sma.hpp" />
+		<Unit filename="../../include/xta/indicators/smma.hpp" />
+		<Unit filename="../../include/xta/indicators/ssa.hpp" />
+		<Unit filename="../../include/xta/indicators/std_dev.hpp" />
+		<Unit filename="../../include/xta/indicators/stochastic.hpp" />
+		<Unit filename="../../include/xta/indicators/sum.hpp" />
+		<Unit filename="../../include/xta/indicators/true_range.hpp">
+			<Option target="oscillators" />
+			<Option target="volatility" />
+		</Unit>
+		<Unit filename="../../include/xta/indicators/usdx.hpp" />
+		<Unit filename="../../include/xta/indicators/vcma.hpp" />
+		<Unit filename="../../include/xta/indicators/vwma.hpp" />
+		<Unit filename="../../include/xta/indicators/wpr.hpp" />
+		<Unit filename="../../include/xta/indicators/xtechnical_atr.hpp" />
+		<Unit filename="../../include/xta/indicators/xtechnical_awesome_oscillator.hpp" />
+		<Unit filename="../../include/xta/indicators/xtechnical_body_filter.hpp" />
+		<Unit filename="../../include/xta/indicators/xtechnical_cluster_shaper.hpp" />
+		<Unit filename="../../include/xta/indicators/xtechnical_crsi.hpp" />
+		<Unit filename="../../include/xta/indicators/xtechnical_fisher.hpp" />
+		<Unit filename="../../include/xta/indicators/xtechnical_fractals.hpp" />
+		<Unit filename="../../include/xta/indicators/xtechnical_fractals_level.hpp" />
+		<Unit filename="../../include/xta/indicators/xtechnical_period_stats.hpp" />
+		<Unit filename="../../include/xta/indicators/xtechnical_regression_channel.hpp" />
+		<Unit filename="../../include/xta/indicators/xtechnical_super_trend.hpp" />
+		<Unit filename="../../include/xta/indicators/xtechnical_true_range.hpp" />
+		<Unit filename="../../include/xta/indicators/zscore.hpp" />
+		<Unit filename="../../include/xta/math/xtechnical_compare.hpp" />
+		<Unit filename="../../include/xta/math/xtechnical_ordinary_least_squares.hpp" />
+		<Unit filename="../../include/xta/math/xtechnical_smoothing.hpp" />
+		<Unit filename="../../include/xta/xtechnical_circular_buffer.hpp" />
+		<Unit filename="../../include/xta/xtechnical_common.hpp" />
+		<Unit filename="../../include/xta/xtechnical_correlation.hpp" />
+		<Unit filename="../../include/xta/xtechnical_delay_meter.hpp" />
+		<Unit filename="../../include/xta/xtechnical_dft.hpp" />
+		<Unit filename="../../include/xta/xtechnical_indicators.hpp" />
+		<Unit filename="../../include/xta/xtechnical_moving_window.hpp" />
+		<Unit filename="../../include/xta/xtechnical_normalization.hpp" />
+		<Unit filename="../../include/xta/xtechnical_regression_analysis.hpp" />
+		<Unit filename="../../include/xta/xtechnical_statistics.hpp" />
+		<Unit filename="../../include/xta/xtechnical_streaming_min_max.hpp" />
 		<Unit filename="atr.cpp">
 			<Option target="atr" />
 		</Unit>
@@ -276,14 +598,56 @@
 		<Unit filename="cci.cpp">
 			<Option target="cci" />
 		</Unit>
+		<Unit filename="circular_buffer.cpp">
+			<Option target="trend_direction_force_index" />
+			<Option target="cluster_shaper" />
+			<Option target="atr" />
+			<Option target="cci" />
+			<Option target="super_trend" />
+			<Option target="body_filter" />
+			<Option target="period_stats" />
+			<Option target="fractals" />
+			<Option target="ssa" />
+			<Option target="circular_buffer" />
+		</Unit>
 		<Unit filename="cluster_shaper.cpp">
 			<Option target="cluster_shaper" />
+		</Unit>
+		<Unit filename="date_buffer.cpp">
+			<Option target="date_buffer" />
+		</Unit>
+		<Unit filename="delay_line.cpp">
+			<Option target="delay_line" />
+		</Unit>
+		<Unit filename="envelopes.cpp">
+			<Option target="envelopes" />
 		</Unit>
 		<Unit filename="fractals.cpp">
 			<Option target="fractals" />
 		</Unit>
+		<Unit filename="indices.cpp">
+			<Option target="indices" />
+		</Unit>
+		<Unit filename="moving_average.cpp">
+			<Option target="moving_average" />
+		</Unit>
+		<Unit filename="oscillators.cpp">
+			<Option target="oscillators" />
+		</Unit>
 		<Unit filename="period_stats.cpp">
 			<Option target="period_stats" />
+		</Unit>
+		<Unit filename="quote_sync.cpp">
+			<Option target="trend_direction_force_index" />
+			<Option target="cluster_shaper" />
+			<Option target="atr" />
+			<Option target="cci" />
+			<Option target="super_trend" />
+			<Option target="body_filter" />
+			<Option target="period_stats" />
+			<Option target="fractals" />
+			<Option target="ssa" />
+			<Option target="quote_sync" />
 		</Unit>
 		<Unit filename="ssa.cpp">
 			<Option target="ssa" />
@@ -293,6 +657,9 @@
 		</Unit>
 		<Unit filename="trend_direction_force_index.cpp">
 			<Option target="trend_direction_force_index" />
+		</Unit>
+		<Unit filename="volatility.cpp">
+			<Option target="volatility" />
 		</Unit>
 		<Extensions />
 	</Project>

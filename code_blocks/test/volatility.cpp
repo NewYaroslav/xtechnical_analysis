@@ -23,114 +23,96 @@
 */
 
 #include <iostream>
-#include <random>
-#include "xta/indicators/min_max.hpp"
+#include "xta/indicators/atr.hpp"
+#include "xta/indicators/std_dev.hpp"
+#include "xta/indicators/percent_volatility.hpp"
 #include <gtest/gtest.h>
 
-void test_min_max_1() {
-    xta::MinMax<double> os(4,0);
+void test_sd() {
+    xta::StdDev<double> os(5);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
     };
-    std::vector<double> max_data = {
+    std::vector<double> out_data = {
         0,
-        0,
-        0,
-        4,
-        5,
-        5,
-        5,
-        5,
-        4,
-        5,
-    };
-    std::vector<double> min_data = {
-        0,
-        0,
-        0,
-        1,
-        2,
-        1,
-        1,
-        1,
-        1,
-        2,
+        0.707106781,
+        1.0,
+        1.290994449,
+        1.58113883,
+
+        1.58113883,
+        1.58113883,
+        1.58113883,
+        1.58113883,
+        1.58113883,
     };
     size_t index = 0;
-    double tolerance = 0.00001;
     for (auto &item : in_data) {
         os.update(100, xta::PriceType::IntraBar);
         os.update(item, xta::PriceType::IntraBar);
-        if ((index + 1) >= 4) {
-            EXPECT_NEAR(os.get(xta::enum_to_index(xta::MinMaxLineType::MaxLine)), max_data[index], tolerance);
-            EXPECT_NEAR(os.get(xta::enum_to_index(xta::MinMaxLineType::MinLine)), min_data[index], tolerance);
-            EXPECT_NEAR(os.get(), max_data[index], tolerance);
+        if (index > 0) {
+            double tolerance = 0.001;
+            EXPECT_NEAR(os.get(), out_data[index], tolerance);
+        }
+        if ((index + 1) >= 5) {
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
         os.update(item, xta::PriceType::Close);
-        if ((index + 1) >= 4) {
-            EXPECT_NEAR(os.get(xta::enum_to_index(xta::MinMaxLineType::MaxLine)), max_data[index], tolerance);
-            EXPECT_NEAR(os.get(xta::enum_to_index(xta::MinMaxLineType::MinLine)), min_data[index], tolerance);
+        if ((index + 1) >= 5) {
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
+        }
+        if (index > 0) {
+            double tolerance = 0.001;
+            EXPECT_NEAR(os.get(), out_data[index], tolerance);
         }
         ++index;
     }
+    for (size_t i = 0; i < 10000; ++i) {
+        for (auto &item : in_data) {
+            os.update(item, xta::PriceType::Close);
+            double tolerance = 0.00001;
+            double cmp = 1.58113883;
+            EXPECT_NEAR(os.get(), cmp, tolerance);
+        }
+    }
 }
 
-void test_min_max_2() {
-    xta::MinMax<double> os(4,1);
+void test_percent_volatility() {
+    xta::PercentVolatility<double> os(3);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
     };
-    std::vector<double> max_data = {
-        0,
-        0,
-        0,
-        0,
-        4,
-        5,
-        5,
-        5,
-        5,
-        4,
-        5,
-    };
-    std::vector<double> min_data = {
-        0,
-        0,
-        0,
-        0,
-        1,
-        2,
-        1,
-        1,
-        1,
-        1,
-        2,
+    std::vector<double> out_data = {
+        0,0,
+        200,
+        100,
+        66.66666667,
+        400,
+        400,
+        200,
+        100,
+        66.66666667,
     };
     size_t index = 0;
     double tolerance = 0.00001;
     for (auto &item : in_data) {
         os.update(100, xta::PriceType::IntraBar);
         os.update(item, xta::PriceType::IntraBar);
-        if ((index + 1) >= 5) {
-            EXPECT_NEAR(os.get(xta::enum_to_index(xta::MinMaxLineType::MaxLine)), max_data[index], tolerance);
-            EXPECT_NEAR(os.get(xta::enum_to_index(xta::MinMaxLineType::MinLine)), min_data[index], tolerance);
-            EXPECT_NEAR(os.get(), max_data[index], tolerance);
+        if ((index + 1) >= 3) {
+            EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
         os.update(item, xta::PriceType::Close);
-        if ((index + 1) >= 5) {
-            EXPECT_NEAR(os.get(xta::enum_to_index(xta::MinMaxLineType::MaxLine)), max_data[index], tolerance);
-            EXPECT_NEAR(os.get(xta::enum_to_index(xta::MinMaxLineType::MinLine)), min_data[index], tolerance);
+        if ((index + 1) >= 3) {
+            EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
@@ -140,9 +122,12 @@ void test_min_max_2() {
 }
 
 
-TEST(MinMaxTest, TestGetAndUpdate) {
-    test_min_max_1();
-    test_min_max_2();
+TEST(StdDevTest, TestGetAndUpdate) {
+    test_sd();
+}
+
+TEST(PercentVolatilityTest, TestGetAndUpdate) {
+    test_percent_volatility();
 }
 
 int main(int argc, char* argv[]) {

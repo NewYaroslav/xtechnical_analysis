@@ -24,19 +24,19 @@
 
 #include <iostream>
 #include <random>
-#include "indicators/demarker.hpp"
-#include "indicators/mad.hpp"
-#include "indicators/std_dev.hpp"
-#include "indicators/zscore.hpp"
-#include "indicators/cci.hpp"
-#include "indicators/rsi.hpp"
-#include "indicators/momentum.hpp"
-#include "indicators/macd.hpp"
-#include "indicators/stochastic.hpp"
-#include "indicators/wpr.hpp"
-#include "indicators/percent_volatility.hpp"
-#include "indicators/price_change.hpp"
-#include "indicators/rpcd.hpp"
+#include "xta/indicators/demarker.hpp"
+#include "xta/indicators/mad.hpp"
+#include "xta/indicators/std_dev.hpp"
+#include "xta/indicators/zscore.hpp"
+#include "xta/indicators/cci.hpp"
+#include "xta/indicators/rsi.hpp"
+#include "xta/indicators/momentum.hpp"
+#include "xta/indicators/macd.hpp"
+#include "xta/indicators/stochastic.hpp"
+#include "xta/indicators/wpr.hpp"
+#include "xta/indicators/percent_volatility.hpp"
+#include "xta/indicators/price_change.hpp"
+#include "xta/indicators/rpcd.hpp"
 #include <gtest/gtest.h>
 
 void fill_rnd_values(std::vector<double>& vec, const double min_value, const double max_value) {
@@ -49,12 +49,12 @@ void fill_rnd_values(std::vector<double>& vec, const double min_value, const dou
 }
 
 void test_demarker(const size_t period, const bool is_print = false) {
-    xtechnical::DeMarker<double> os(period);
+    xta::DeMarker<double> os(period);
     std::vector<double> data(period * 2);
     fill_rnd_values(data, 0.1, 1.0);
     for (auto &item : data) {
-        os.update(item, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::Close);
         double minRange = 0.0;
         double maxRange = 1.0;
         if (os.is_ready()) {
@@ -66,7 +66,7 @@ void test_demarker(const size_t period, const bool is_print = false) {
 
 
 void test_mad() {
-    xtechnical::MAD<double> os(4);
+    xta::MAD<double> os(4);
     std::vector<double> data = {
         5,8,9,10,
         5,8,9,10,
@@ -77,14 +77,14 @@ void test_mad() {
     size_t index = 0;
     for (auto &item : data) {
         ++index;
-        os.update(item, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if (index >= 4) {
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if (index >= 4) {
             EXPECT_TRUE(os.is_ready());
         } else {
@@ -94,16 +94,16 @@ void test_mad() {
     double tolerance = 0.001;
     double res = 1.5;
     EXPECT_NEAR(os.get(), res, tolerance);
-    os.update(data[data.size()-4], xtechnical::PriceType::Close);
-    os.update(data[data.size()-3], xtechnical::PriceType::Close);
-    os.update(data[data.size()-2], xtechnical::PriceType::Close);
-    os.update(100, xtechnical::PriceType::IntraBar);
-    os.update(data[data.size()-1], xtechnical::PriceType::IntraBar);
+    os.update(data[data.size()-4], xta::PriceType::Close);
+    os.update(data[data.size()-3], xta::PriceType::Close);
+    os.update(data[data.size()-2], xta::PriceType::Close);
+    os.update(100, xta::PriceType::IntraBar);
+    os.update(data[data.size()-1], xta::PriceType::IntraBar);
     EXPECT_NEAR(os.get(), res, tolerance);
 }
 
 void test_sd() {
-    xtechnical::StdDev<double> os(5);
+    xta::StdDev<double> os(5);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -123,8 +123,8 @@ void test_sd() {
     };
     size_t index = 0;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if (index > 0) {
             double tolerance = 0.001;
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
@@ -134,7 +134,7 @@ void test_sd() {
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) >= 5) {
             EXPECT_TRUE(os.is_ready());
         } else {
@@ -148,7 +148,7 @@ void test_sd() {
     }
     for (size_t i = 0; i < 10000; ++i) {
         for (auto &item : in_data) {
-            os.update(item, xtechnical::PriceType::Close);
+            os.update(item, xta::PriceType::Close);
             double tolerance = 0.00001;
             double cmp = 1.58113883;
             EXPECT_NEAR(os.get(), cmp, tolerance);
@@ -157,7 +157,7 @@ void test_sd() {
 }
 
 void test_zscore() {
-    xtechnical::Zscore<double> os(5);
+    xta::Zscore<double> os(5);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -176,8 +176,8 @@ void test_zscore() {
     };
     size_t index = 0;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if (index > 0) {
             double tolerance = 0.001;
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
@@ -187,7 +187,7 @@ void test_zscore() {
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) >= 5) {
             EXPECT_TRUE(os.is_ready());
         } else {
@@ -201,7 +201,7 @@ void test_zscore() {
     }
     for (size_t i = 0; i < 10000; ++i) {
         for (auto &item : in_data) {
-            os.update(item, xtechnical::PriceType::Close);
+            os.update(item, xta::PriceType::Close);
         }
         double tolerance = 0.00001;
         double cmp = 1.264911064;
@@ -210,7 +210,7 @@ void test_zscore() {
 }
 
 void test_cci() {
-    xtechnical::CCI<double> os(4);
+    xta::CCI<double> os(4);
     std::vector<double> data = {
         5,8,9,10,
         5,8,9,10,
@@ -221,14 +221,14 @@ void test_cci() {
     size_t index = 0;
     for (auto &item : data) {
         ++index;
-        os.update(item, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if (index >= 4) {
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if (index >= 4) {
             EXPECT_TRUE(os.is_ready());
         } else {
@@ -238,16 +238,16 @@ void test_cci() {
     double tolerance = 0.001;
     double res = 88.88888889;
     EXPECT_NEAR(os.get(), res, tolerance);
-    os.update(data[data.size()-4], xtechnical::PriceType::Close);
-    os.update(data[data.size()-3], xtechnical::PriceType::Close);
-    os.update(data[data.size()-2], xtechnical::PriceType::Close);
-    os.update(100, xtechnical::PriceType::IntraBar);
-    os.update(data[data.size()-1], xtechnical::PriceType::IntraBar);
+    os.update(data[data.size()-4], xta::PriceType::Close);
+    os.update(data[data.size()-3], xta::PriceType::Close);
+    os.update(data[data.size()-2], xta::PriceType::Close);
+    os.update(100, xta::PriceType::IntraBar);
+    os.update(data[data.size()-1], xta::PriceType::IntraBar);
     EXPECT_NEAR(os.get(), res, tolerance);
 }
 
 void test_rsi() {
-    xtechnical::RSI<double> os(4);
+    xta::RSI<double> os(4);
     std::vector<double> data_up = {
         1,2,3,4,
         5,6,7,8,
@@ -265,14 +265,14 @@ void test_rsi() {
         size_t index = 0;
         for (auto &item : data_up) {
             ++index;
-            os.update(item, xtechnical::PriceType::IntraBar);
-            os.update(item, xtechnical::PriceType::IntraBar);
+            os.update(item, xta::PriceType::IntraBar);
+            os.update(item, xta::PriceType::IntraBar);
             if (index >= 5) {
                 EXPECT_TRUE(os.is_ready());
             } else {
                 EXPECT_FALSE(os.is_ready());
             }
-            os.update(item, xtechnical::PriceType::Close);
+            os.update(item, xta::PriceType::Close);
             if (index >= 5) {
                 EXPECT_TRUE(os.is_ready());
             } else {
@@ -288,14 +288,14 @@ void test_rsi() {
         size_t index = 0;
         for (auto &item : data_dn) {
             ++index;
-            os.update(item, xtechnical::PriceType::IntraBar);
-            os.update(item, xtechnical::PriceType::IntraBar);
+            os.update(item, xta::PriceType::IntraBar);
+            os.update(item, xta::PriceType::IntraBar);
             if (index >= 5) {
                 EXPECT_TRUE(os.is_ready());
             } else {
                 EXPECT_FALSE(os.is_ready());
             }
-            os.update(item, xtechnical::PriceType::Close);
+            os.update(item, xta::PriceType::Close);
             if (index >= 5) {
                 EXPECT_TRUE(os.is_ready());
             } else {
@@ -311,14 +311,14 @@ void test_rsi() {
         size_t index = 0;
         for (auto &item : data_nn) {
             ++index;
-            os.update(item, xtechnical::PriceType::IntraBar);
-            os.update(item, xtechnical::PriceType::IntraBar);
+            os.update(item, xta::PriceType::IntraBar);
+            os.update(item, xta::PriceType::IntraBar);
             if (index >= 5) {
                 EXPECT_TRUE(os.is_ready());
             } else {
                 EXPECT_FALSE(os.is_ready());
             }
-            os.update(item, xtechnical::PriceType::Close);
+            os.update(item, xta::PriceType::Close);
             if (index >= 5) {
                 EXPECT_TRUE(os.is_ready());
             } else {
@@ -332,7 +332,7 @@ void test_rsi() {
 }
 
 void test_momentum() {
-    xtechnical::Momentum<double> os(2);
+    xta::Momentum<double> os(2);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -344,15 +344,15 @@ void test_momentum() {
     size_t index = 0;
     double tolerance = 0.00001;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if ((index + 1) > 2) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) > 2) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
@@ -364,7 +364,7 @@ void test_momentum() {
 }
 
 void test_macd_1() {
-    xtechnical::MACD<double,xtechnical::SMA> os(3,5,0);
+    xta::MACD<double,xta::SMA> os(3,5,0);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -376,15 +376,15 @@ void test_macd_1() {
     size_t index = 0;
     double tolerance = 0.00001;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if ((index + 1) >= 5) {
             EXPECT_NEAR(os.get(), macd_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) >= 5) {
             EXPECT_NEAR(os.get(), macd_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
@@ -396,7 +396,7 @@ void test_macd_1() {
 }
 
 void test_macd_2() {
-    xtechnical::MACD<double,xtechnical::SMA> os(3,5,2);
+    xta::MACD<double,xta::SMA> os(3,5,2);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -408,17 +408,17 @@ void test_macd_2() {
     size_t index = 0;
     double tolerance = 0.00001;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if ((index + 1) >= 6) {
-            EXPECT_NEAR(os.get(xtechnical::MACDLineType::SignalLine), signal_data[index], tolerance);
+            EXPECT_NEAR(os.get(xta::MACDLineType::SignalLine), signal_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) >= 6) {
-            EXPECT_NEAR(os.get(xtechnical::MACDLineType::SignalLine), signal_data[index], tolerance);
+            EXPECT_NEAR(os.get(xta::MACDLineType::SignalLine), signal_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
@@ -428,7 +428,7 @@ void test_macd_2() {
 }
 
 void test_stochastic_1() {
-    xtechnical::Stochastic<double> os(5);
+    xta::Stochastic<double> os(5);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -440,15 +440,15 @@ void test_stochastic_1() {
     size_t index = 0;
     double tolerance = 0.00001;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if ((index + 1) >= 5) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) >= 5) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
@@ -460,7 +460,7 @@ void test_stochastic_1() {
 }
 
 void test_stochastic_2() {
-    xtechnical::Stochastic<double> os(5,2);
+    xta::Stochastic<double> os(5,2);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -476,17 +476,17 @@ void test_stochastic_2() {
     size_t index = 0;
     double tolerance = 0.00001;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if ((index + 1) >= 6) {
-            EXPECT_NEAR(os.get(xtechnical::StochasticLineType::DLine), out_data[index], tolerance);
+            EXPECT_NEAR(os.get(xta::StochasticLineType::DLine), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) >= 6) {
-            EXPECT_NEAR(os.get(xtechnical::StochasticLineType::DLine), out_data[index], tolerance);
+            EXPECT_NEAR(os.get(xta::StochasticLineType::DLine), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
@@ -496,7 +496,7 @@ void test_stochastic_2() {
 }
 
 void test_wpr() {
-    xtechnical::WPR<double> os(5);
+    xta::WPR<double> os(5);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -508,15 +508,15 @@ void test_wpr() {
     size_t index = 0;
     double tolerance = 0.00001;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if ((index + 1) >= 5) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) >= 5) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
@@ -528,7 +528,7 @@ void test_wpr() {
 }
 
 void test_percent_volatility() {
-    xtechnical::PercentVolatility<double> os(3);
+    xta::PercentVolatility<double> os(3);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -547,15 +547,15 @@ void test_percent_volatility() {
     size_t index = 0;
     double tolerance = 0.00001;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if ((index + 1) >= 3) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) >= 3) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
@@ -567,7 +567,7 @@ void test_percent_volatility() {
 }
 
 void test_price_change() {
-    xtechnical::PriceChange<double> os(2);
+    xta::PriceChange<double> os(2);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -586,15 +586,15 @@ void test_price_change() {
     size_t index = 0;
     double tolerance = 0.00001;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if ((index + 1) >= 3) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) >= 3) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
@@ -606,7 +606,7 @@ void test_price_change() {
 }
 
 void test_rpcd_1() {
-    xtechnical::RPCD<double> os(1);
+    xta::RPCD<double> os(1);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -626,15 +626,15 @@ void test_rpcd_1() {
     size_t index = 0;
     double tolerance = 0.00001;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if ((index + 1) >= 3) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) >= 3) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
@@ -646,7 +646,7 @@ void test_rpcd_1() {
 }
 
 void test_rpcd_2() {
-    xtechnical::RPCD<double> os(2);
+    xta::RPCD<double> os(2);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -671,15 +671,15 @@ void test_rpcd_2() {
     size_t index = 0;
     double tolerance = 0.00001;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if ((index + 1) >= 5) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) >= 5) {
             EXPECT_NEAR(os.get(), out_data[index], tolerance);
             EXPECT_TRUE(os.is_ready());
@@ -691,7 +691,7 @@ void test_rpcd_2() {
 }
 
 void test_rpcd_3() {
-    xtechnical::RPCD<double> os(2,3);
+    xta::RPCD<double> os(2,3);
     std::vector<double> in_data = {
         1,2,3,4,5,
         1,2,3,4,5,
@@ -723,19 +723,19 @@ void test_rpcd_3() {
     size_t index = 0;
     double tolerance = 0.00001;
     for (auto &item : in_data) {
-        os.update(100, xtechnical::PriceType::IntraBar);
-        os.update(item, xtechnical::PriceType::IntraBar);
+        os.update(100, xta::PriceType::IntraBar);
+        os.update(item, xta::PriceType::IntraBar);
         if ((index + 1) >= 7) {
-            EXPECT_NEAR(os.get(xtechnical::RPCDLineType::SmoothedLine), out_data_1[index], tolerance);
-            EXPECT_NEAR(os.get(xtechnical::RPCDLineType::VolatilityLine), out_data_2[index], tolerance);
+            EXPECT_NEAR(os.get(xta::RPCDLineType::SmoothedLine), out_data_1[index], tolerance);
+            EXPECT_NEAR(os.get(xta::RPCDLineType::VolatilityLine), out_data_2[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());
         }
-        os.update(item, xtechnical::PriceType::Close);
+        os.update(item, xta::PriceType::Close);
         if ((index + 1) >= 7) {
-            EXPECT_NEAR(os.get(xtechnical::RPCDLineType::SmoothedLine), out_data_1[index], tolerance);
-            EXPECT_NEAR(os.get(xtechnical::RPCDLineType::VolatilityLine), out_data_2[index], tolerance);
+            EXPECT_NEAR(os.get(xta::RPCDLineType::SmoothedLine), out_data_1[index], tolerance);
+            EXPECT_NEAR(os.get(xta::RPCDLineType::VolatilityLine), out_data_2[index], tolerance);
             EXPECT_TRUE(os.is_ready());
         } else {
             EXPECT_FALSE(os.is_ready());

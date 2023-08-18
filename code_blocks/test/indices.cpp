@@ -24,14 +24,14 @@
 
 #include <iostream>
 #include <random>
-#include "indicators/usdx.hpp"
-#include "indicators/mfcsi.hpp"
+#include "xta/indicators/usdx.hpp"
+#include "xta/indicators/mfcsi.hpp"
 #include <gtest/gtest.h>
 
 // Тест режима буфера в режиме скользящего окна
 void test_usdx_1() {
     const size_t timeframe = 60;
-    xtechnical::USDX<double> usdx(timeframe, false);
+    xta::USDX<double> usdx(timeframe, false);
 
     EXPECT_FALSE(usdx.is_ready());
     for (size_t i = 0; i < 3; ++i) {
@@ -48,7 +48,7 @@ void test_usdx_1() {
 
 void test_usdx_2() {
     const size_t timeframe = 60;
-    xtechnical::USDX<double> usdx(timeframe, true);
+    xta::USDX<double> usdx(timeframe, true);
 
     EXPECT_FALSE(usdx.is_ready());
     for (size_t i = 0; i < 3; ++i) {
@@ -65,7 +65,7 @@ void test_usdx_2() {
 void test_mfcsi_twi8_1() {
     const size_t bufsize = 5;
     const size_t timeframe = 60;
-    xtechnical::MFCSI_TWI8<double> mfcsi(bufsize, timeframe, false, false, true);
+    xta::MFCSI_TWI8<double> mfcsi(bufsize, timeframe, false, false, true);
 
     EXPECT_FALSE(mfcsi.is_ready());
     for (size_t i = 0; i < bufsize*2; ++i) {
@@ -89,7 +89,7 @@ void test_mfcsi_twi8_1() {
 
 void test_mfcsi_abs8_1() {
     const size_t timeframe = 60;
-    xtechnical::MFCSI_ABS8<double> mfcsi(timeframe, true);
+    xta::MFCSI_ABS8<double> mfcsi(timeframe, true);
 
     EXPECT_FALSE(mfcsi.is_ready());
     for (size_t i = 0; i < 3; ++i) {
