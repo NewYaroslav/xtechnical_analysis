@@ -70,7 +70,7 @@ namespace xta {
                 return true;
             }
 
-            if (is_init) {
+            if (m_is_init) {
                 BaseIndicator<T>::output_value[0] = m_alfa * m_prev_value + m_beta * value;
                 if (type == PriceType::IntraBar) {
                     if ((m_count + 1) == m_period) {

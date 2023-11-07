@@ -41,7 +41,7 @@ namespace xta {
     private:
         MinMax<T>       m_min_max;
         DelayLine<T>    m_delay_line;
-        bool            m_done = false;
+
     public:
 
         MinMaxDiff() : BaseIndicator<T>(3) {};
@@ -66,16 +66,15 @@ namespace xta {
             m_delay_line.update(value, type);
             if (!m_delay_line.is_ready()) return false;
             BaseIndicator<T>::output_value[0] = std::abs(value - m_delay_line.get());
-            m_min_max.update(BaseIndicator<T>::output_value[2], type);
-            if (!m_delay_line.is_ready()) return false;
+            m_min_max.update(BaseIndicator<T>::output_value[0], type);
+            if (!m_min_max.is_ready()) return false;
             BaseIndicator<T>::output_value[1] = m_min_max.get_max();
             BaseIndicator<T>::output_value[2] = m_min_max.get_min();
-            m_done = true;
             return true;
         }
 
         inline bool is_ready() const noexcept {
-            return m_done;
+            return m_min_max.is_ready();
         }
 
         inline T get_diff() const noexcept {
@@ -95,7 +94,6 @@ namespace xta {
         inline void reset() noexcept {
             m_delay_line.reset();
             m_min_max.reset();
-            m_done = false;
             for (auto &item : BaseIndicator<T>::output_value) {
                 item = get_empty_value<T>();
             }

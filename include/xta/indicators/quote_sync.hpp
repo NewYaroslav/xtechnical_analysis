@@ -40,9 +40,14 @@ namespace xta {
             VAL_TYPE    value;
             uint64_t    open_date   = 0;
             uint64_t    time_ms     = 0;
+            bool        is_filled   = false;
 
-            QuoteData(const VAL_TYPE &v, const uint64_t d, const uint64_t ms) :
-                value(v), open_date(d), time_ms(ms) {
+            QuoteData(
+                    const VAL_TYPE &v,
+                    const uint64_t d,
+                    const uint64_t ms,
+                    const bool f = false) :
+                value(v), open_date(d), time_ms(ms), is_filled(f)  {
             };
         };
 
@@ -56,12 +61,14 @@ namespace xta {
     public:
 
         std::function<void(
-            const size_t index,
-            const VAL_TYPE &value,
-            const uint64_t open_date,
-            const uint64_t delay_ms,
-            const PriceType type,
-            const bool is_update)> on_update = nullptr;
+            const size_t index,         // индекс символа
+            const VAL_TYPE &value,      // значение бара или цены
+            const uint64_t open_date,   // дата открытия бара
+            const uint64_t delay_ms,    // задержка цены по времени
+            const PriceType type,       // тип цены (внутри бара или закорытие бара)
+            const bool is_update,       // флаг обновления текущего бара
+            const bool is_gap)>         // флаг разрыва котировок по всем символам (например, это выходные дни)
+                on_update = nullptr;
 
         /** \brief Конструктор синхронизатора котировок
          * \param s     Количество символов
@@ -84,7 +91,6 @@ namespace xta {
          */
         inline bool update(const size_t index, const VAL_TYPE &value, const uint64_t time_ms) noexcept {
             if (index >= m_buffer.size()) return false;
-            if (!on_update) return false;
             m_last_time_ms = std::max(m_last_time_ms, time_ms);
             const uint64_t timestamp = time_ms / 1000;
             // 1. Получаем время открытия бара
@@ -108,7 +114,8 @@ namespace xta {
                         QuoteData(
                             m_buffer[index].back().value,
                             m_buffer[index].back().open_date + m_timeframe,
-                            m_buffer[index].back().time_ms));
+                            m_buffer[index].back().time_ms,
+                            true)); // ставим флаг, что бар заполнен предыдущим значением
                 }
                 m_buffer[index].push_back(QuoteData(value, open_date, time_ms));
             }
@@ -118,6 +125,7 @@ namespace xta {
         }
 
         inline bool calc() noexcept {
+            if (!on_update) return false;
             // Проверяем наступление события, когда данные есть по всем барам
             for (size_t s = 0; s < m_buffer.size(); ++s) {
                 if (m_buffer[s].empty()) return false;
@@ -132,6 +140,14 @@ namespace xta {
                 // вызываем обновление данных
                 const size_t last_index = min_size - 2;
                 for (size_t i = 0; i <= last_index; ++i) {
+                    bool is_gap = true;
+                    for (size_t s = 0; s < m_buffer.size(); ++s) {
+                        const size_t pos = m_buffer[s].size() - min_size + i;
+                        if (!m_buffer[s][pos].is_filled) {
+                            is_gap = false;
+                            break;
+                        }
+                    }
                     for (size_t s = 0; s < m_buffer.size(); ++s) {
                         const size_t pos = m_buffer[s].size() - min_size + i;
                         const uint64_t delay_ms = m_last_time_ms - m_buffer[s][pos].time_ms;
@@ -141,7 +157,8 @@ namespace xta {
                             m_buffer[s][pos].open_date,
                             delay_ms,
                             PriceType::Close,
-                            false);
+                            false,
+                            is_gap);
                     }
                 }
                 // удаляем старые данные
@@ -159,7 +176,8 @@ namespace xta {
                     m_buffer[s][pos].open_date,
                     delay_ms,
                     PriceType::IntraBar,
-                    m_update_flag[s]);
+                    m_update_flag[s],
+                    false);
                 m_update_flag[s] = false;
             }
             return true;

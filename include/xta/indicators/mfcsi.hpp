@@ -221,7 +221,7 @@ namespace xta {
 
     public:
 
-        MFCSI_ABS8() {};
+        //MFCSI_ABS8() : BaseIndicator<T>(8) {};
 
         /** \brief Конструктор MFCSI_ABS8
          * \param tf    Таймфрейм
@@ -270,7 +270,7 @@ namespace xta {
             price_vec.array().log();
             Eigen::Matrix<T,1,Eigen::Dynamic> result_vec = price_vec * m_matrix_f;
             result_vec.array().exp();
-            for (size_t i = 0; i < result_vec.cols(); ++i) {
+            for (std::ptrdiff_t i = 0; i < result_vec.cols(); ++i) {
                 BaseIndicator<T>::output_value[i] = result_vec(i);
             }
             m_ready = true;
