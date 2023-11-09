@@ -57,5 +57,6 @@
 #include "indicators/vwma.hpp"
 #include "indicators/wpr.hpp"
 #include "indicators/zscore.hpp"
+#include "indicators/bollinger_bands.hpp"
 
 #endif // XTECHNICAL_INDICATORS_HPP_INCLUDED
